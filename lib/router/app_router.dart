@@ -7,7 +7,7 @@ import '../features/auth/presentation/pages/register_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: LoginPage.routePath,
+    initialLocation: HomePage.routePath,
     routes: [
       GoRoute(
         path: LoginPage.routePath,

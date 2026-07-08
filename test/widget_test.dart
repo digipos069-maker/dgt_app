@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  testWidgets('shows login screen', (tester) async {
+  testWidgets('shows home dashboard', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final preferences = await SharedPreferences.getInstance();
 
@@ -17,8 +17,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Welcome back'), findsOneWidget);
-    expect(find.text('Email'), findsOneWidget);
-    expect(find.text('Password'), findsOneWidget);
+    expect(find.text('EduCambodia'), findsOneWidget);
+    expect(find.text('Good morning, Student'), findsOneWidget);
+    expect(find.text('Popular Subjects'), findsOneWidget);
   });
 }

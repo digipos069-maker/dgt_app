@@ -8,7 +8,15 @@ final authControllerProvider =
 
 class AuthController extends AsyncNotifier<UserModel?> {
   @override
-  UserModel? build() => null;
+  UserModel? build() {
+    // Temporary development session. Replace this with persisted/API auth later.
+    return const UserModel(
+      id: 'mock-user',
+      email: 'student@educambodia.com',
+      username: 'Student',
+      grade: 'Grade 11',
+    );
+  }
 
   Future<bool> login({required String email, required String password}) async {
     state = const AsyncLoading();
