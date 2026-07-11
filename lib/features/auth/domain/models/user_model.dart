@@ -29,6 +29,7 @@ class UserModel {
         _readString(user['email']) ?? _readString(json['email']) ?? '';
     final username =
         _readString(user['username']) ??
+        _readString(user['fullName']) ??
         _readString(user['name']) ??
         (email.contains('@') ? email.split('@').first : 'User');
 

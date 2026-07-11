@@ -11,10 +11,10 @@ abstract interface class AuthRepository {
   Future<UserModel> login({required String email, required String password});
 
   Future<UserModel> register({
-    required String username,
+    required String fullName,
     required String email,
     required String password,
-    required String grade,
+    required int gradeId,
   });
 }
 
@@ -34,17 +34,17 @@ class ApiAuthRepository implements AuthRepository {
 
   @override
   Future<UserModel> register({
-    required String username,
+    required String fullName,
     required String email,
     required String password,
-    required String grade,
+    required int gradeId,
   }) async {
-    await Future<void>.delayed(const Duration(milliseconds: 900));
-    return UserModel(
-      id: 'mock-user',
+    final response = await _apiService.register(
+      fullName: fullName,
       email: email,
-      username: username,
-      grade: grade,
+      password: password,
+      gradeId: gradeId,
     );
+    return UserModel.fromLoginResponse(response);
   }
 }

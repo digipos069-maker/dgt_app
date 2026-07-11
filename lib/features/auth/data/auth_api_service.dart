@@ -37,6 +37,42 @@ class AuthApiService {
     return jsonBody;
   }
 
+  Future<Map<String, dynamic>> register({
+    required String fullName,
+    required String email,
+    required String password,
+    required int gradeId,
+  }) async {
+    final uri = Uri.parse(
+      '${ApiConstants.baseUrl}${ApiConstants.registerPath}',
+    );
+    final response = await _client
+        .post(
+          uri,
+          headers: const {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'email': email,
+            'fullName': fullName,
+            'gradeId': gradeId,
+            'password': password,
+          }),
+        )
+        .timeout(const Duration(seconds: 15));
+    final jsonBody = _decodeBody(response.body);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw AppException(_readMessage(jsonBody) ?? 'Register failed');
+    }
+    if (jsonBody['success'] == false) {
+      throw AppException(_readMessage(jsonBody) ?? 'Register failed');
+    }
+
+    return jsonBody;
+  }
+
   Map<String, dynamic> _decodeBody(String body) {
     if (body.trim().isEmpty) return <String, dynamic>{};
 

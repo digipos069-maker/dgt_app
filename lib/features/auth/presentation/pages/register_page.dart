@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/utils/app_exception.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../application/auth_controller.dart';
+import '../../application/grade_controller.dart';
+import '../../domain/models/grade_model.dart';
 import '../widgets/auth_error_text.dart';
 import '../widgets/auth_scaffold.dart';
 import '../widgets/auth_text_field.dart';
@@ -25,24 +28,15 @@ class RegisterPage extends ConsumerStatefulWidget {
 
 class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
+  final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  String? _grade;
+  GradeModel? _grade;
   bool _isPasswordVisible = false;
-
-  static const _grades = [
-    'Grade 7',
-    'Grade 8',
-    'Grade 9',
-    'Grade 10',
-    'Grade 11',
-    'Grade 12',
-  ];
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _fullNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -54,10 +48,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     final success = await ref
         .read(authControllerProvider.notifier)
         .register(
-          username: _usernameController.text,
+          fullName: _fullNameController.text,
           email: _emailController.text,
           password: _passwordController.text,
-          grade: _grade!,
+          gradeId: _grade!.id,
         );
 
     if (success && mounted) {
@@ -69,7 +63,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final authState = ref.watch(authControllerProvider);
+    final gradesState = ref.watch(gradesProvider);
     final isLoading = authState.isLoading;
+    final canSubmit = !isLoading && gradesState.hasValue;
 
     return AuthScaffold(
       title: l10n.text('createAccount'),
@@ -80,14 +76,16 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             AuthErrorText(
-              message: authState.hasError ? l10n.text('authFailed') : null,
+              message: authState.hasError
+                  ? _readErrorMessage(authState.error, l10n.text('authFailed'))
+                  : null,
             ),
             AuthTextField(
-              controller: _usernameController,
-              labelText: l10n.text('username'),
+              controller: _fullNameController,
+              labelText: l10n.text('fullName'),
               textInputAction: TextInputAction.next,
               validator: (value) =>
-                  Validators.required(value, l10n.text('usernameRequired')),
+                  Validators.required(value, l10n.text('fullNameRequired')),
             ),
             const SizedBox(height: AppSizes.spacing16),
             AuthTextField(
@@ -120,23 +118,42 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               ),
             ),
             const SizedBox(height: AppSizes.spacing16),
-            DropdownButtonFormField<String>(
+            DropdownButtonFormField<GradeModel>(
               initialValue: _grade,
               decoration: InputDecoration(labelText: l10n.text('grade')),
-              items: _grades
-                  .map((grade) {
-                    return DropdownMenuItem(value: grade, child: Text(grade));
-                  })
-                  .toList(growable: false),
-              onChanged: isLoading
-                  ? null
-                  : (value) => setState(() => _grade = value),
+              items: gradesState.maybeWhen(
+                data: (grades) => grades
+                    .map(
+                      (grade) => DropdownMenuItem(
+                        value: grade,
+                        child: Text(grade.name),
+                      ),
+                    )
+                    .toList(growable: false),
+                orElse: () => const [],
+              ),
+              hint: gradesState.when(
+                data: (_) => null,
+                error: (_, _) => Text(l10n.text('gradesLoadFailed')),
+                loading: () => const Text('Loading grades...'),
+              ),
+              onChanged: canSubmit
+                  ? (value) => setState(() => _grade = value)
+                  : null,
               validator: (value) =>
-                  Validators.required(value, l10n.text('gradeRequired')),
+                  value == null ? l10n.text('gradeRequired') : null,
             ),
+            if (gradesState.hasError) ...[
+              const SizedBox(height: AppSizes.spacing8),
+              TextButton.icon(
+                onPressed: () => ref.invalidate(gradesProvider),
+                icon: const Icon(Icons.refresh),
+                label: Text(l10n.text('gradesLoadFailed')),
+              ),
+            ],
             const SizedBox(height: AppSizes.spacing24),
             ElevatedButton(
-              onPressed: isLoading ? null : _submit,
+              onPressed: canSubmit ? _submit : null,
               child: isLoading
                   ? const SizedBox.square(
                       dimension: 22,
@@ -155,5 +172,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         ),
       ),
     );
+  }
+
+  String _readErrorMessage(Object? error, String fallback) {
+    if (error is AppException) return error.message;
+    return fallback;
   }
 }

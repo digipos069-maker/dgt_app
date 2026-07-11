@@ -21,20 +21,20 @@ class AuthController extends AsyncNotifier<UserModel?> {
   }
 
   Future<bool> register({
-    required String username,
+    required String fullName,
     required String email,
     required String password,
-    required String grade,
+    required int gradeId,
   }) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() {
       return ref
           .read(authRepositoryProvider)
           .register(
-            username: username.trim(),
+            fullName: fullName.trim(),
             email: email.trim(),
             password: password,
-            grade: grade,
+            gradeId: gradeId,
           );
     });
     return !state.hasError;
