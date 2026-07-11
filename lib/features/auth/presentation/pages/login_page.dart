@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/utils/app_exception.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../application/auth_controller.dart';
@@ -66,7 +67,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             AuthErrorText(
-              message: authState.hasError ? l10n.text('authFailed') : null,
+              message: authState.hasError
+                  ? _readErrorMessage(authState.error, l10n.text('authFailed'))
+                  : null,
             ),
             AuthTextField(
               controller: _emailController,
@@ -118,5 +121,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ),
       ),
     );
+  }
+
+  String _readErrorMessage(Object? error, String fallback) {
+    if (error is AppException) return error.message;
+    return fallback;
   }
 }

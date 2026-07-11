@@ -29,7 +29,7 @@ class HomePage extends ConsumerWidget {
         titleSpacing: AppSizes.spacing16,
         title: Row(
           children: [
-            const _StudentAvatar(),
+            _StudentAvatar(imageUrl: user?.imageUrl, name: user?.username),
             const SizedBox(width: AppSizes.spacing12),
             Flexible(
               child: Text(
@@ -64,14 +64,16 @@ class HomePage extends ConsumerWidget {
           const SizedBox(width: AppSizes.spacing8),
         ],
       ),
-      body: const SafeArea(child: _HomeDashboard()),
+      body: SafeArea(child: _HomeDashboard(username: user?.username)),
       bottomNavigationBar: const _HomeBottomNavigation(),
     );
   }
 }
 
 class _HomeDashboard extends StatelessWidget {
-  const _HomeDashboard();
+  const _HomeDashboard({this.username});
+
+  final String? username;
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +95,7 @@ class _HomeDashboard extends StatelessWidget {
             children: [
               const _SearchField(),
               const SizedBox(height: AppSizes.spacing24),
-              const _WelcomeSummary(),
+              _WelcomeSummary(username: username),
               const SizedBox(height: AppSizes.spacing24),
               if (isWide)
                 const Row(
@@ -212,7 +214,9 @@ class _SearchField extends StatelessWidget {
 }
 
 class _WelcomeSummary extends StatelessWidget {
-  const _WelcomeSummary();
+  const _WelcomeSummary({this.username});
+
+  final String? username;
 
   @override
   Widget build(BuildContext context) {
@@ -233,7 +237,7 @@ class _WelcomeSummary extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Good morning, Student',
+                  'Good morning, ${username ?? 'Student'}',
                   style: theme.textTheme.headlineSmall?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w800,
@@ -828,7 +832,10 @@ class _BottomNavButton extends StatelessWidget {
 }
 
 class _StudentAvatar extends StatelessWidget {
-  const _StudentAvatar();
+  const _StudentAvatar({this.imageUrl, this.name});
+
+  final String? imageUrl;
+  final String? name;
 
   @override
   Widget build(BuildContext context) {
@@ -843,16 +850,39 @@ class _StudentAvatar extends StatelessWidget {
         ),
       ),
       child: ClipOval(
-        child: ColoredBox(
-          color: Theme.of(context).colorScheme.primaryContainer,
-          child: Center(
-            child: Text(
-              'S',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onPrimaryContainer,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
+        child: imageUrl != null
+            ? Image.network(
+                imageUrl!,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return _AvatarInitial(name: name);
+                },
+              )
+            : _AvatarInitial(name: name),
+      ),
+    );
+  }
+}
+
+class _AvatarInitial extends StatelessWidget {
+  const _AvatarInitial({this.name});
+
+  final String? name;
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = (name == null || name!.trim().isEmpty)
+        ? 'S'
+        : name!.trim().substring(0, 1).toUpperCase();
+
+    return ColoredBox(
+      color: Theme.of(context).colorScheme.primaryContainer,
+      child: Center(
+        child: Text(
+          initial,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
+            fontWeight: FontWeight.w900,
           ),
         ),
       ),

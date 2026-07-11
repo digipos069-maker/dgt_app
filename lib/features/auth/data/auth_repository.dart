@@ -1,9 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/models/user_model.dart';
+import 'auth_api_service.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  return MockAuthRepository();
+  return ApiAuthRepository(AuthApiService());
 });
 
 abstract interface class AuthRepository {
@@ -17,18 +18,18 @@ abstract interface class AuthRepository {
   });
 }
 
-class MockAuthRepository implements AuthRepository {
+class ApiAuthRepository implements AuthRepository {
+  const ApiAuthRepository(this._apiService);
+
+  final AuthApiService _apiService;
+
   @override
   Future<UserModel> login({
     required String email,
     required String password,
   }) async {
-    await Future<void>.delayed(const Duration(milliseconds: 700));
-    return UserModel(
-      id: 'mock-user',
-      email: email,
-      username: email.split('@').first,
-    );
+    final response = await _apiService.login(email: email, password: password);
+    return UserModel.fromLoginResponse(response);
   }
 
   @override
