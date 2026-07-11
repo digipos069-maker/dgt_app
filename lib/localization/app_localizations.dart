@@ -16,7 +16,7 @@ class AppLocalizations {
 
   static const _values = <String, Map<String, String>>{
     'en': {
-      'appName': 'DGT App',
+      'appName': 'DGT',
       'welcomeBack': 'Welcome back',
       'createAccount': 'Create account',
       'loginSubtitle': 'Sign in to continue to your learning workspace.',
@@ -45,7 +45,7 @@ class AppLocalizations {
       'toggleTheme': 'Toggle theme',
     },
     'km': {
-      'appName': 'DGT App',
+      'appName': 'DGT',
       'welcomeBack': 'សូមស្វាគមន៍',
       'createAccount': 'បង្កើតគណនី',
       'loginSubtitle': 'ចូលប្រើដើម្បីបន្តទៅកាន់កន្លែងសិក្សារបស់អ្នក។',

@@ -18,7 +18,7 @@ class DgtApp extends ConsumerWidget {
     final router = ref.watch(appRouterProvider);
 
     return MaterialApp.router(
-      title: 'DGT App',
+      title: 'DGT',
       debugShowCheckedModeBanner: false,
       routerConfig: router,
       theme: AppTheme.light,

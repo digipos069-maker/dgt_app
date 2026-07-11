@@ -17,7 +17,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('EduCambodia'), findsOneWidget);
+    expect(find.text('DGT'), findsOneWidget);
     expect(find.text('Good morning, Student'), findsOneWidget);
     expect(find.text('Popular Subjects'), findsOneWidget);
   });

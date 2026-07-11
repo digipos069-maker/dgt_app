@@ -33,7 +33,7 @@ class HomePage extends ConsumerWidget {
             const SizedBox(width: AppSizes.spacing12),
             Flexible(
               child: Text(
-                'EduCambodia',
+                'DGT',
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: Theme.of(context).colorScheme.primary,
