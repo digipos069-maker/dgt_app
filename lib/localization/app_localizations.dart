@@ -43,6 +43,11 @@ class AppLocalizations {
       'english': 'English',
       'khmer': 'Khmer',
       'toggleTheme': 'Toggle theme',
+      'menuHome': 'Home',
+      'menuLearningCenter': 'Learning Center',
+      'menuMyLearning': 'My Learning',
+      'menuAiTutor': 'AI Tutor',
+      'menuResource': 'Resource',
     },
     'km': {
       'appName': 'DGT',
@@ -72,6 +77,11 @@ class AppLocalizations {
       'english': 'អង់គ្លេស',
       'khmer': 'ខ្មែរ',
       'toggleTheme': 'ប្ដូររូបរាង',
+      'menuHome': 'ទំព័រដើម',
+      'menuLearningCenter': 'មជ្ឈមណ្ឌលសិក្សា',
+      'menuMyLearning': 'ការសិក្សារបស់ខ្ញុំ',
+      'menuAiTutor': 'គ្រូ AI',
+      'menuResource': 'ធនធាន',
     },
   };
 

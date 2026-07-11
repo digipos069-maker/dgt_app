@@ -755,11 +755,11 @@ class _HomeBottomNavigation extends StatelessWidget {
   const _HomeBottomNavigation();
 
   static const _items = [
-    _BottomNavItem('Home', Icons.home),
-    _BottomNavItem('Grades', Icons.grade),
-    _BottomNavItem('Subjects', Icons.school),
-    _BottomNavItem('My Learning', Icons.menu_book),
-    _BottomNavItem('Profile', Icons.person),
+    _BottomNavItem('menuHome', Icons.home),
+    _BottomNavItem('menuLearningCenter', Icons.school),
+    _BottomNavItem('menuMyLearning', Icons.menu_book),
+    _BottomNavItem('menuAiTutor', Icons.smart_toy_outlined),
+    _BottomNavItem('menuResource', Icons.folder_copy_outlined),
   ];
 
   @override
@@ -815,7 +815,7 @@ class _BottomNavButton extends StatelessWidget {
             const SizedBox(height: AppSizes.spacing4),
             Flexible(
               child: Text(
-                item.label,
+                context.l10n.text(item.labelKey),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.labelSmall?.copyWith(
@@ -962,9 +962,9 @@ class _SubjectItem {
 }
 
 class _BottomNavItem {
-  const _BottomNavItem(this.label, this.icon);
+  const _BottomNavItem(this.labelKey, this.icon);
 
-  final String label;
+  final String labelKey;
   final IconData icon;
 }
 
