@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
 
 abstract final class AppTheme {
-  static ThemeData get light => _build(
+  static ThemeData light(Locale locale) => _build(
     colorScheme: ColorScheme.fromSeed(
       seedColor: AppColors.primary,
       brightness: Brightness.light,
@@ -11,9 +12,10 @@ abstract final class AppTheme {
       error: AppColors.error,
     ),
     scaffoldBackgroundColor: AppColors.lightBackground,
+    locale: locale,
   );
 
-  static ThemeData get dark => _build(
+  static ThemeData dark(Locale locale) => _build(
     colorScheme: ColorScheme.fromSeed(
       seedColor: AppColors.primaryDark,
       brightness: Brightness.dark,
@@ -21,20 +23,21 @@ abstract final class AppTheme {
       error: AppColors.error,
     ),
     scaffoldBackgroundColor: AppColors.darkBackground,
+    locale: locale,
   );
 
   static ThemeData _build({
     required ColorScheme colorScheme,
     required Color scaffoldBackgroundColor,
+    required Locale locale,
   }) {
+    final textTheme = _textTheme(colorScheme, locale);
+
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: scaffoldBackgroundColor,
-      textTheme: Typography.material2021().black.apply(
-        bodyColor: colorScheme.onSurface,
-        displayColor: colorScheme.onSurface,
-      ),
+      textTheme: textTheme,
       appBarTheme: AppBarTheme(
         centerTitle: false,
         elevation: 0,
@@ -65,6 +68,36 @@ abstract final class AppTheme {
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
       ),
+    );
+  }
+
+  static TextTheme _textTheme(ColorScheme colorScheme, Locale locale) {
+    final baseTheme = Typography.material2021().black.apply(
+      bodyColor: colorScheme.onSurface,
+      displayColor: colorScheme.onSurface,
+    );
+
+    if (locale.languageCode != 'km') {
+      return baseTheme;
+    }
+
+    final bodyTheme = GoogleFonts.getTextTheme('Battambang', baseTheme);
+
+    TextStyle? moul(TextStyle? style) {
+      if (style == null) return null;
+      return GoogleFonts.getFont('Moul', textStyle: style);
+    }
+
+    return bodyTheme.copyWith(
+      displayLarge: moul(bodyTheme.displayLarge),
+      displayMedium: moul(bodyTheme.displayMedium),
+      displaySmall: moul(bodyTheme.displaySmall),
+      headlineLarge: moul(bodyTheme.headlineLarge),
+      headlineMedium: moul(bodyTheme.headlineMedium),
+      headlineSmall: moul(bodyTheme.headlineSmall),
+      titleLarge: moul(bodyTheme.titleLarge),
+      titleMedium: moul(bodyTheme.titleMedium),
+      titleSmall: moul(bodyTheme.titleSmall),
     );
   }
 }
