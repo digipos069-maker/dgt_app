@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
+import '../../../home/presentation/widgets/main_bottom_navigation.dart';
 import '../../application/auth_controller.dart';
 import '../widgets/language_menu_button.dart';
 import '../widgets/theme_toggle_button.dart';
@@ -65,7 +66,7 @@ class HomePage extends ConsumerWidget {
         ],
       ),
       body: SafeArea(child: _HomeDashboard(username: user?.username)),
-      bottomNavigationBar: const _HomeBottomNavigation(),
+      bottomNavigationBar: const MainBottomNavigation(selectedIndex: 0),
     );
   }
 }
@@ -751,86 +752,6 @@ class _StatRow extends StatelessWidget {
   }
 }
 
-class _HomeBottomNavigation extends StatelessWidget {
-  const _HomeBottomNavigation();
-
-  static const _items = [
-    _BottomNavItem('menuHome', Icons.home),
-    _BottomNavItem('menuLearningCenter', Icons.school),
-    _BottomNavItem('menuMyLearning', Icons.menu_book),
-    _BottomNavItem('menuAiTutor', Icons.smart_toy_outlined),
-    _BottomNavItem('menuResource', Icons.folder_copy_outlined),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    if (MediaQuery.sizeOf(context).width >= 720) {
-      return const SizedBox.shrink();
-    }
-
-    final theme = Theme.of(context);
-
-    return Material(
-      elevation: 12,
-      color: theme.colorScheme.surface,
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 68,
-          child: Row(
-            children: [
-              for (final (index, item) in _items.indexed)
-                Expanded(
-                  child: _BottomNavButton(item: item, isSelected: index == 0),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BottomNavButton extends StatelessWidget {
-  const _BottomNavButton({required this.item, required this.isSelected});
-
-  final _BottomNavItem item;
-  final bool isSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = isSelected
-        ? theme.colorScheme.primary
-        : theme.colorScheme.onSurfaceVariant;
-
-    return InkWell(
-      onTap: () {},
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSizes.spacing8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(item.icon, color: color, size: 24),
-            const SizedBox(height: AppSizes.spacing4),
-            Flexible(
-              child: Text(
-                context.l10n.text(item.labelKey),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: color,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _StudentAvatar extends StatelessWidget {
   const _StudentAvatar({this.imageUrl, this.name});
 
@@ -959,13 +880,6 @@ class _SubjectItem {
   final String title;
   final IconData icon;
   final Color color;
-}
-
-class _BottomNavItem {
-  const _BottomNavItem(this.labelKey, this.icon);
-
-  final String labelKey;
-  final IconData icon;
 }
 
 class _LessonItem {

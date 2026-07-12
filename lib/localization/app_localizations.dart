@@ -51,6 +51,7 @@ class AppLocalizations {
       'menuMyLearning': 'My Learning',
       'menuAiTutor': 'AI Tutor',
       'menuResource': 'Resource',
+      'comingSoon': 'Coming soon',
     },
     'km': {
       'appName': 'DGT',
@@ -88,6 +89,7 @@ class AppLocalizations {
       'menuMyLearning': 'ការសិក្សារបស់ខ្ញុំ',
       'menuAiTutor': 'គ្រូ AI',
       'menuResource': 'ធនធាន',
+      'comingSoon': 'មកដល់ឆាប់ៗនេះ',
     },
   };
 
