@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
+import '../pages/lesson_list_page.dart';
 
 class LearningCenterBody extends StatefulWidget {
   const LearningCenterBody({super.key});
@@ -18,7 +20,6 @@ class _LearningCenterBodyState extends State<LearningCenterBody> {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
     final horizontalPadding = AppSizes.spacing24;
     final theme = Theme.of(context);
     final battambangTheme = GoogleFonts.battambangTextTheme(theme.textTheme);
@@ -292,6 +293,7 @@ class _CourseCardList extends StatelessWidget {
 
   static const _courses = [
     _CourseCardData(
+      courseId: 'algebra',
       subjectKey: 'subjectMath',
       titleKey: 'chapterAlgebra',
       icon: Icons.calculate,
@@ -302,6 +304,7 @@ class _CourseCardList extends StatelessWidget {
       accent: Color(0xFFA4D1B4),
     ),
     _CourseCardData(
+      courseId: 'force-motion',
       subjectKey: 'subjectPhysics',
       titleKey: 'chapterForceMotion',
       icon: Icons.science,
@@ -312,6 +315,7 @@ class _CourseCardList extends StatelessWidget {
       accent: Color(0xFFCEBDFF),
     ),
     _CourseCardData(
+      courseId: 'narrative',
       subjectKey: 'subjectLiterature',
       titleKey: 'chapterNarrative',
       icon: Icons.language,
@@ -350,7 +354,10 @@ class _CourseCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(32),
       child: InkWell(
         borderRadius: BorderRadius.circular(32),
-        onTap: () {},
+        onTap: () => context.goNamed(
+          LessonListPage.routeName,
+          pathParameters: {'courseId': course.courseId},
+        ),
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(32),
@@ -585,6 +592,7 @@ class _OpenCourseButton extends StatelessWidget {
 
 class _CourseCardData {
   const _CourseCardData({
+    required this.courseId,
     required this.subjectKey,
     required this.titleKey,
     required this.icon,
@@ -595,6 +603,7 @@ class _CourseCardData {
     required this.accent,
   });
 
+  final String courseId;
   final String subjectKey;
   final String titleKey;
   final IconData icon;
