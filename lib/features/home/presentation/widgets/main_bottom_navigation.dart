@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -46,9 +47,31 @@ class MainBottomNavigation extends StatefulWidget {
 
 class _MainBottomNavigationState extends State<MainBottomNavigation> {
   static const _switchThreshold = 46.0;
+  static int _lastSelectedIndex = 0;
 
+  late double _fromIndex;
+  late double _targetIndex;
   double _dragOffset = 0;
   bool _isPressing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fromIndex = _lastSelectedIndex.toDouble();
+    _targetIndex = widget.selectedIndex.toDouble();
+    _lastSelectedIndex = widget.selectedIndex;
+  }
+
+  @override
+  void didUpdateWidget(covariant MainBottomNavigation oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedIndex == widget.selectedIndex) {
+      return;
+    }
+    _fromIndex = oldWidget.selectedIndex.toDouble();
+    _targetIndex = widget.selectedIndex.toDouble();
+    _lastSelectedIndex = widget.selectedIndex;
+  }
 
   void _updateDrag(double offset) {
     setState(() => _dragOffset = offset.clamp(-72.0, 72.0));
@@ -152,9 +175,6 @@ class _MainBottomNavigationState extends State<MainBottomNavigation> {
                       final itemWidth =
                           constraints.maxWidth /
                           MainBottomNavigation._items.length;
-                      final selectedLeft =
-                          (widget.selectedIndex * itemWidth + _dragOffset)
-                              .clamp(0.0, constraints.maxWidth - itemWidth);
 
                       return Stack(
                         children: [
@@ -166,19 +186,47 @@ class _MainBottomNavigationState extends State<MainBottomNavigation> {
                               ),
                             ),
                           ),
-                          AnimatedPositioned(
+                          TweenAnimationBuilder<double>(
+                            tween: Tween<double>(
+                              begin: _fromIndex,
+                              end: _targetIndex,
+                            ),
                             duration: Duration(
-                              milliseconds: _isPressing ? 80 : 360,
+                              milliseconds: _isPressing ? 80 : 520,
                             ),
-                            curve: Curves.easeOutBack,
-                            left: selectedLeft + 5,
-                            top: 7,
-                            width: itemWidth - 10,
-                            height: 62,
-                            child: _LiquidSelectionBlob(
-                              isPressing: _isPressing,
-                              color: theme.colorScheme.primary,
-                            ),
+                            curve: Curves.easeOutCubic,
+                            builder: (context, animatedIndex, child) {
+                              final totalTravel = (_targetIndex - _fromIndex)
+                                  .abs();
+                              final progress = totalTravel == 0
+                                  ? 1.0
+                                  : 1 -
+                                        ((animatedIndex - _targetIndex).abs() /
+                                            totalTravel);
+                              final wave = math.sin(progress * math.pi);
+                              final morphAmount = _isPressing
+                                  ? 0.20
+                                  : wave * totalTravel.clamp(0.0, 2.0) * 0.28;
+                              final selectedLeft =
+                                  (animatedIndex * itemWidth + _dragOffset)
+                                      .clamp(
+                                        0.0,
+                                        constraints.maxWidth - itemWidth,
+                                      );
+                              final stretch = itemWidth * morphAmount;
+
+                              return Positioned(
+                                left: selectedLeft + 5 - (stretch / 2),
+                                top: 7,
+                                width: itemWidth - 10 + stretch,
+                                height: 62,
+                                child: _LiquidSelectionBlob(
+                                  isPressing: _isPressing,
+                                  morphAmount: morphAmount,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              );
+                            },
                           ),
                           Row(
                             children: [
@@ -310,26 +358,38 @@ class _BottomNavButton extends StatelessWidget {
 }
 
 class _LiquidSelectionBlob extends StatelessWidget {
-  const _LiquidSelectionBlob({required this.isPressing, required this.color});
+  const _LiquidSelectionBlob({
+    required this.isPressing,
+    required this.morphAmount,
+    required this.color,
+  });
 
   final bool isPressing;
+  final double morphAmount;
   final Color color;
 
   @override
   Widget build(BuildContext context) {
+    final squeeze = (1 - morphAmount * 0.18).clamp(0.86, 1.0);
+    final radius = (28 - morphAmount * 10).clamp(18.0, 28.0);
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
       curve: Curves.easeOutCubic,
-      transform: Matrix4.diagonal3Values(isPressing ? 1.08 : 1.0, 0.96, 1),
+      transform: Matrix4.diagonal3Values(
+        isPressing ? 1.08 : 1.0,
+        isPressing ? 0.94 : squeeze,
+        1,
+      ),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(radius),
         gradient: RadialGradient(
-          center: const Alignment(-0.55, -0.75),
-          radius: 1.45,
+          center: Alignment(-0.55 + morphAmount * 0.32, -0.75),
+          radius: 1.45 + morphAmount * 0.28,
           colors: [
             Colors.white.withValues(alpha: 0.70),
-            color.withValues(alpha: 0.28),
-            color.withValues(alpha: 0.13),
+            color.withValues(alpha: 0.30),
+            color.withValues(alpha: 0.12),
           ],
         ),
         border: Border.all(color: Colors.white.withValues(alpha: 0.58)),
