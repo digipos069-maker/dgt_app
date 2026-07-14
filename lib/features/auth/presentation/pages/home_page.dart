@@ -80,17 +80,18 @@ class _HomeDashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final isWide = width >= 920;
+    const horizontalPadding = AppSizes.spacing24;
 
     return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(
-        isWide ? 40 : AppSizes.spacing16,
-        AppSizes.spacing24,
-        isWide ? 40 : AppSizes.spacing16,
-        isWide ? AppSizes.spacing32 : 96,
+      padding: const EdgeInsets.fromLTRB(
+        horizontalPadding,
+        32,
+        horizontalPadding,
+        112,
       ),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1200),
+          constraints: const BoxConstraints(maxWidth: 1280),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -192,18 +193,24 @@ class _SearchField extends StatelessWidget {
           decoration: InputDecoration(
             hintText: 'Search lessons, subjects...',
             prefixIcon: const Icon(Icons.search),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.spacing16,
+              vertical: 14,
+            ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(999),
               borderSide: BorderSide.none,
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(999),
               borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(999),
               borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.primary,
+                color: Theme.of(
+                  context,
+                ).colorScheme.secondary.withValues(alpha: 0.5),
                 width: 2,
               ),
             ),
@@ -225,10 +232,16 @@ class _WelcomeSummary extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2563EB), Color(0xFF16A34A)],
-        ),
+        color: const Color(0xFFE6F4EA),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: const Color(0xFFC0EDD0), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(AppSizes.spacing24),
       child: Row(
@@ -240,15 +253,16 @@ class _WelcomeSummary extends StatelessWidget {
                 Text(
                   'Good morning, ${username ?? 'Student'}',
                   style: theme.textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F3925),
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
                 const SizedBox(height: AppSizes.spacing8),
                 Text(
                   'You have 3 lessons planned today. Start with Physics to keep your weekly goal on track.',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: const Color(0xFF264F39),
+                    height: 1.5,
                   ),
                 ),
               ],
@@ -259,10 +273,18 @@ class _WelcomeSummary extends StatelessWidget {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
+              color: Colors.white,
               shape: BoxShape.circle,
+              border: Border.all(color: const Color(0xFFA4D1B4), width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
-            child: const Icon(Icons.school, color: Colors.white, size: 38),
+            child: const Icon(Icons.school, color: Color(0xFF0F3925), size: 38),
           ),
         ],
       ),
@@ -275,27 +297,34 @@ class _ContinueLearningCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final isCompact = MediaQuery.sizeOf(context).width < 620;
     final image = ClipRRect(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(24),
       child: const AspectRatio(aspectRatio: 16 / 10, child: _LessonArtwork()),
     );
 
     return Material(
-      color: theme.colorScheme.surface,
-      borderRadius: BorderRadius.circular(12),
-      elevation: 3,
-      shadowColor: Colors.black.withValues(alpha: 0.12),
+      color: const Color(0xFFF3E8FF),
+      borderRadius: BorderRadius.circular(32),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(32),
         onTap: () {},
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(32),
           child: Column(
             children: [
-              Container(height: 8, color: _HomeColors.purple),
-              Padding(
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(32),
+                  border: Border.all(color: const Color(0xFFCEBDFF), width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 20,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
                 padding: const EdgeInsets.all(AppSizes.spacing24),
                 child: isCompact
                     ? Column(
@@ -450,15 +479,18 @@ class _SubjectTile extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Material(
-      color: theme.colorScheme.surface,
-      borderRadius: BorderRadius.circular(12),
+      color: subject.color.withValues(alpha: 0.12),
+      borderRadius: BorderRadius.circular(24),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(24),
         onTap: () {},
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: theme.colorScheme.outlineVariant),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: subject.color.withValues(alpha: 0.22),
+              width: 2,
+            ),
           ),
           padding: const EdgeInsets.all(AppSizes.spacing16),
           child: Column(
@@ -538,7 +570,7 @@ class _LessonListTile extends StatelessWidget {
             height: 48,
             decoration: BoxDecoration(
               color: theme.colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(
               lesson.icon,
@@ -682,12 +714,12 @@ class _DashboardPanel extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.colorScheme.outlineVariant, width: 2),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 12,
+            blurRadius: 20,
             offset: const Offset(0, 4),
           ),
         ],
