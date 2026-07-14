@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/widgets/scroll_hiding_header.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../application/lesson_controller.dart';
 import '../../domain/models/lesson_model.dart';
@@ -55,39 +56,31 @@ class _LessonDetailContentState extends State<_LessonDetailContent> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Column(
-        children: [
-          _DetailHeader(detail: widget.detail),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                10,
-                AppSizes.spacing16,
-                10,
-                128,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 896),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _VideoSection(detail: widget.detail),
-                      const SizedBox(height: AppSizes.spacing32),
-                      _QuizSection(
-                        detail: widget.detail,
-                        answers: _answers,
-                        onChanged: (questionId, optionId) {
-                          setState(() => _answers[questionId] = optionId);
-                        },
-                      ),
-                    ],
+      child: ScrollHidingHeader(
+        header: _DetailHeader(detail: widget.detail),
+        headerHeight: 56,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(10, AppSizes.spacing16, 10, 128),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 896),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _VideoSection(detail: widget.detail),
+                  const SizedBox(height: AppSizes.spacing32),
+                  _QuizSection(
+                    detail: widget.detail,
+                    answers: _answers,
+                    onChanged: (questionId, optionId) {
+                      setState(() => _answers[questionId] = optionId);
+                    },
                   ),
-                ),
+                ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -264,7 +257,6 @@ class _QuizSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.colorScheme.secondary, width: 2),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),

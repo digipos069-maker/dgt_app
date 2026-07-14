@@ -320,7 +320,7 @@ class _BottomNavButton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSizes.spacing4,
-        vertical: AppSizes.spacing8,
+        vertical: AppSizes.spacing4,
       ),
       child: Material(
         color: Colors.transparent,
@@ -344,7 +344,7 @@ class _BottomNavButton extends StatelessWidget {
                   decoration: const BoxDecoration(shape: BoxShape.circle),
                   child: Icon(item.icon, color: color, size: 22),
                 ),
-                const SizedBox(height: AppSizes.spacing4),
+                const SizedBox(height: 2),
                 Flexible(
                   child: AnimatedDefaultTextStyle(
                     duration: const Duration(milliseconds: 220),

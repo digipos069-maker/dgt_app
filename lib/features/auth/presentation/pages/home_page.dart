@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/widgets/scroll_hiding_header.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../../home/presentation/widgets/main_bottom_navigation.dart';
 import '../../application/auth_controller.dart';
@@ -26,8 +27,9 @@ class HomePage extends ConsumerWidget {
       _ => null,
     };
 
-    return Scaffold(
-      appBar: AppBar(
+    return ScrollHidingHeaderScaffold(
+      headerHeight: 64,
+      header: AppBar(
         toolbarHeight: 64,
         titleSpacing: AppSizes.spacing16,
         title: Row(
@@ -67,7 +69,7 @@ class HomePage extends ConsumerWidget {
           const SizedBox(width: AppSizes.spacing8),
         ],
       ),
-      body: SafeArea(child: _HomeDashboard(username: user?.username)),
+      body: _HomeDashboard(username: user?.username),
       bottomNavigationBar: const MainBottomNavigation(selectedIndex: 0),
     );
   }
