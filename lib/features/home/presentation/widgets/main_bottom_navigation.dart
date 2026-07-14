@@ -46,11 +46,11 @@ class MainBottomNavigation extends StatefulWidget {
 }
 
 class _MainBottomNavigationState extends State<MainBottomNavigation> {
-  static const _switchThreshold = 46.0;
   static int _lastSelectedIndex = 0;
 
   late double _fromIndex;
   late double _targetIndex;
+  double _itemWidth = 72;
   double _dragOffset = 0;
   bool _isPressing = false;
 
@@ -74,7 +74,11 @@ class _MainBottomNavigationState extends State<MainBottomNavigation> {
   }
 
   void _updateDrag(double offset) {
-    setState(() => _dragOffset = offset.clamp(-72.0, 72.0));
+    final maxLeftDrag = -widget.selectedIndex * _itemWidth;
+    final maxRightDrag =
+        (MainBottomNavigation._items.length - 1 - widget.selectedIndex) *
+        _itemWidth;
+    setState(() => _dragOffset = offset.clamp(maxLeftDrag, maxRightDrag));
   }
 
   void _navigateToIndex(BuildContext context, int targetIndex) {
@@ -86,19 +90,20 @@ class _MainBottomNavigationState extends State<MainBottomNavigation> {
   }
 
   void _endDrag(BuildContext context) {
-    final direction = _dragOffset.abs() >= _switchThreshold
-        ? _dragOffset.sign.toInt()
+    final threshold = (_itemWidth * 0.34).clamp(34.0, 58.0);
+    final targetDelta = _dragOffset.abs() >= threshold
+        ? (_dragOffset / _itemWidth).round()
         : 0;
     setState(() {
       _dragOffset = 0;
       _isPressing = false;
     });
 
-    if (direction == 0) {
+    if (targetDelta == 0) {
       return;
     }
 
-    final targetIndex = (widget.selectedIndex - direction).clamp(
+    final targetIndex = (widget.selectedIndex + targetDelta).clamp(
       0,
       MainBottomNavigation._items.length - 1,
     );
@@ -183,6 +188,7 @@ class _MainBottomNavigationState extends State<MainBottomNavigation> {
                       final itemWidth =
                           constraints.maxWidth /
                           MainBottomNavigation._items.length;
+                      _itemWidth = itemWidth;
 
                       return Stack(
                         children: [
