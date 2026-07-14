@@ -7,6 +7,7 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../application/lesson_controller.dart';
 import '../../domain/models/lesson_model.dart';
+import '../pages/lesson_detail_page.dart';
 import '../pages/learning_center_page.dart';
 
 class LessonListBody extends ConsumerWidget {
@@ -220,7 +221,15 @@ class _LessonTile extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: isLocked ? null : () {},
+        onTap: isLocked
+            ? null
+            : () => context.goNamed(
+                LessonDetailPage.routeName,
+                pathParameters: {
+                  'courseId': lesson.courseId,
+                  'lessonId': lesson.id,
+                },
+              ),
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),

@@ -86,6 +86,57 @@ class AppLocalizations {
       'lessonTypeReading': 'Reading',
       'lessonTypeLocked': 'Locked',
       'minutesShort': 'min',
+      'lessonDetailSubjectMath': 'Mathematics 101',
+      'lessonDetailModuleOne': 'Module 1',
+      'lessonLinearEquationsDescription':
+          'Learn how to solve basic linear equations using addition, subtraction, multiplication, and division. This foundation is important for understanding algebra.',
+      'lessonQuadraticFormulaDescription':
+          'Learn when and how to apply the quadratic formula to solve second-degree equations clearly and confidently.',
+      'lessonNewtonsLawsDescription':
+          "Explore Newton's laws of motion and how force, mass, and acceleration connect in real situations.",
+      'lessonForceDiagramsDescription':
+          'Practice drawing and reading force diagrams to understand balanced and unbalanced forces.',
+      'lessonStoryElementsDescription':
+          'Study the essential parts of a story, including characters, setting, conflict, and resolution.',
+      'lessonPlotStructureDescription':
+          'Learn how events are arranged in a narrative from introduction to climax and conclusion.',
+      'lessonQuizTitle': 'Lesson quiz',
+      'lessonQuizSubtitleLinear':
+          'Test your understanding of linear equations.',
+      'lessonQuizSubtitleQuadratic':
+          'Check your understanding of quadratic equations.',
+      'lessonQuizSubtitlePhysics':
+          'Check your understanding of force and motion.',
+      'lessonQuizSubtitleNarrative':
+          'Check your understanding of narrative structure.',
+      'questionPrefix': 'Question ',
+      'submitQuiz': 'Submit quiz',
+      'quizLinearQuestionOne': 'What is x in 2x + 5 = 15?',
+      'quizLinearQ1A': 'A) 5',
+      'quizLinearQ1B': 'B) 10',
+      'quizLinearQ1C': 'C) 20',
+      'quizLinearQ1D': 'D) 15',
+      'quizLinearQuestionTwo': 'Find y in 3y - 9 = 0.',
+      'quizLinearQ2A': 'A) 1',
+      'quizLinearQ2B': 'B) 2',
+      'quizLinearQ2C': 'C) 3',
+      'quizLinearQ2D': 'D) 0',
+      'quizQuadraticQuestionOne':
+          'Which formula is used to solve ax² + bx + c = 0?',
+      'quizQuadraticQ1A': 'A) x = -b / 2a',
+      'quizQuadraticQ1B': 'B) Quadratic formula',
+      'quizQuadraticQ1C': 'C) Slope formula',
+      'quizQuadraticQ1D': 'D) Area formula',
+      'quizPhysicsQuestionOne': 'What unit is commonly used for force?',
+      'quizPhysicsQ1A': 'A) Newton',
+      'quizPhysicsQ1B': 'B) Meter',
+      'quizPhysicsQ1C': 'C) Second',
+      'quizPhysicsQ1D': 'D) Liter',
+      'quizNarrativeQuestionOne': 'Which part usually introduces characters?',
+      'quizNarrativeQ1A': 'A) Introduction',
+      'quizNarrativeQ1B': 'B) Climax',
+      'quizNarrativeQ1C': 'C) Resolution',
+      'quizNarrativeQ1D': 'D) Footnote',
     },
     'km': {
       'appName': 'DGT',
@@ -158,6 +209,56 @@ class AppLocalizations {
       'lessonTypeReading': 'ការអាន',
       'lessonTypeLocked': 'ចាក់សោ',
       'minutesShort': 'នាទី',
+      'lessonDetailSubjectMath': 'គណិតវិទ្យា 101',
+      'lessonDetailModuleOne': 'ម៉ូឌុល 1',
+      'lessonLinearEquationsDescription':
+          'រៀនពីរបៀបដោះស្រាយសមីការលីនេអ៊ែរជាមូលដ្ឋានដោយប្រើការបូក ដក គុណ និងចែក។ គំនិតជាមូលដ្ឋាននេះមានសារៈសំខាន់សម្រាប់ការយល់ដឹងពីពិជគណិត។',
+      'lessonQuadraticFormulaDescription':
+          'រៀនពេលណា និងរបៀបប្រើរូបមន្តសមីការដឺក្រេទីពីរ ដើម្បីដោះស្រាយសមីការដឺក្រេទីពីរយ៉ាងច្បាស់។',
+      'lessonNewtonsLawsDescription':
+          'ស្វែងយល់ពីច្បាប់ចលនារបស់ញូតុន និងទំនាក់ទំនងរវាងកម្លាំង ម៉ាស និងសំទុះ។',
+      'lessonForceDiagramsDescription':
+          'អនុវត្តការគូរ និងអានគំនូសតាងកម្លាំង ដើម្បីយល់ពីកម្លាំងសមតុល្យ និងមិនសមតុល្យ។',
+      'lessonStoryElementsDescription':
+          'សិក្សាផ្នែកសំខាន់ៗនៃរឿង រួមមានតួអង្គ ទីកន្លែង ជម្លោះ និងសេចក្ដីបញ្ចប់។',
+      'lessonPlotStructureDescription':
+          'រៀនពីរបៀបរៀបចំព្រឹត្តិការណ៍ក្នុងនិទានកថាចាប់ពីការណែនាំ ដល់ចំណុចកំពូល និងសេចក្ដីបញ្ចប់។',
+      'lessonQuizTitle': 'កម្រងសំណួរមេរៀន',
+      'lessonQuizSubtitleLinear': 'សាកល្បងចំណេះដឹងរបស់អ្នកលើសមីការលីនេអ៊ែរ។',
+      'lessonQuizSubtitleQuadratic':
+          'សាកល្បងចំណេះដឹងរបស់អ្នកលើសមីការដឺក្រេទីពីរ។',
+      'lessonQuizSubtitlePhysics':
+          'សាកល្បងចំណេះដឹងរបស់អ្នកអំពីកម្លាំង និងចលនា។',
+      'lessonQuizSubtitleNarrative':
+          'សាកល្បងចំណេះដឹងរបស់អ្នកអំពីរចនាសម្ព័ន្ធនិទានកថា។',
+      'questionPrefix': 'សំណួរទី',
+      'submitQuiz': 'បញ្ជូនកម្រងសំណួរ',
+      'quizLinearQuestionOne': 'តើ x មានតម្លៃប៉ុន្មានក្នុង 2x + 5 = 15?',
+      'quizLinearQ1A': 'ក) 5',
+      'quizLinearQ1B': 'ខ) 10',
+      'quizLinearQ1C': 'គ) 20',
+      'quizLinearQ1D': 'ឃ) 15',
+      'quizLinearQuestionTwo': 'រកតម្លៃ y ក្នុង 3y - 9 = 0។',
+      'quizLinearQ2A': 'ក) 1',
+      'quizLinearQ2B': 'ខ) 2',
+      'quizLinearQ2C': 'គ) 3',
+      'quizLinearQ2D': 'ឃ) 0',
+      'quizQuadraticQuestionOne':
+          'តើរូបមន្តណាត្រូវប្រើដើម្បីដោះស្រាយ ax² + bx + c = 0?',
+      'quizQuadraticQ1A': 'ក) x = -b / 2a',
+      'quizQuadraticQ1B': 'ខ) រូបមន្តសមីការដឺក្រេទីពីរ',
+      'quizQuadraticQ1C': 'គ) រូបមន្តជម្រាល',
+      'quizQuadraticQ1D': 'ឃ) រូបមន្តក្រឡាផ្ទៃ',
+      'quizPhysicsQuestionOne': 'តើឯកតាណាដែលប្រើសម្រាប់កម្លាំង?',
+      'quizPhysicsQ1A': 'ក) ញូតុន',
+      'quizPhysicsQ1B': 'ខ) ម៉ែត្រ',
+      'quizPhysicsQ1C': 'គ) វិនាទី',
+      'quizPhysicsQ1D': 'ឃ) លីត្រ',
+      'quizNarrativeQuestionOne': 'តើផ្នែកណាដែលជាទូទៅណែនាំតួអង្គ?',
+      'quizNarrativeQ1A': 'ក) សេចក្ដីណែនាំ',
+      'quizNarrativeQ1B': 'ខ) ចំណុចកំពូល',
+      'quizNarrativeQ1C': 'គ) សេចក្ដីបញ្ចប់',
+      'quizNarrativeQ1D': 'ឃ) កំណត់ចំណាំ',
     },
   };
 

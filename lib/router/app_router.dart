@@ -6,6 +6,7 @@ import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/register_page.dart';
 import '../features/home/presentation/pages/ai_tutor_page.dart';
 import '../features/home/presentation/pages/learning_center_page.dart';
+import '../features/home/presentation/pages/lesson_detail_page.dart';
 import '../features/home/presentation/pages/lesson_list_page.dart';
 import '../features/home/presentation/pages/my_learning_page.dart';
 import '../features/home/presentation/pages/resource_page.dart';
@@ -40,6 +41,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           return LessonListPage(
             courseId: state.pathParameters['courseId'] ?? 'algebra',
+          );
+        },
+      ),
+      GoRoute(
+        path: LessonDetailPage.routePath,
+        name: LessonDetailPage.routeName,
+        builder: (context, state) {
+          return LessonDetailPage(
+            courseId: state.pathParameters['courseId'] ?? 'algebra',
+            lessonId: state.pathParameters['lessonId'] ?? 'linear-equations',
           );
         },
       ),
