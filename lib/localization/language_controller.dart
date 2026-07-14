@@ -12,7 +12,7 @@ class LanguageController extends Notifier<Locale> {
   @override
   Locale build() {
     final storage = ref.watch(localStorageServiceProvider);
-    return Locale(storage.readString(StorageKeys.languageCode) ?? 'en');
+    return Locale(storage.readString(StorageKeys.languageCode) ?? 'km');
   }
 
   Future<void> setLocale(Locale locale) async {

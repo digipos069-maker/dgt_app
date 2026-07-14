@@ -192,7 +192,7 @@ class _MainBottomNavigationState extends State<MainBottomNavigation> {
                   ],
                 ),
                 child: SizedBox(
-                  height: 76,
+                  height: 68,
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       final itemWidth =
@@ -238,7 +238,7 @@ class _MainBottomNavigationState extends State<MainBottomNavigation> {
                                   ? 0.20
                                   : wave * totalTravel.clamp(0.0, 2.0) * 0.28;
                               final stretch = itemWidth * morphAmount;
-                              final blobWidth = itemWidth - 10 + stretch;
+                              final blobWidth = itemWidth - 4 + stretch;
                               final centerX =
                                   (animatedIndex * itemWidth) +
                                   (itemWidth / 2) +
@@ -249,19 +249,18 @@ class _MainBottomNavigationState extends State<MainBottomNavigation> {
                               );
                               final left = (clampedCenter - (blobWidth / 2))
                                   .clamp(
-                                    5.0,
-                                    constraints.maxWidth - blobWidth - 5,
+                                    2.0,
+                                    constraints.maxWidth - blobWidth - 2,
                                   );
 
                               return Positioned(
                                 left: left,
-                                top: 7,
+                                top: 2,
                                 width: blobWidth,
-                                height: 62,
+                                height: 64,
                                 child: _LiquidSelectionBlob(
                                   isPressing: _isPressing,
                                   morphAmount: morphAmount,
-                                  color: theme.colorScheme.primary,
                                 ),
                               );
                             },
@@ -314,7 +313,7 @@ class _BottomNavButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final color = isSelected
-        ? Colors.white
+        ? theme.colorScheme.primary
         : theme.colorScheme.onSurfaceVariant;
 
     return Padding(
@@ -387,17 +386,15 @@ class _LiquidSelectionBlob extends StatelessWidget {
   const _LiquidSelectionBlob({
     required this.isPressing,
     required this.morphAmount,
-    required this.color,
   });
 
   final bool isPressing;
   final double morphAmount;
-  final Color color;
 
   @override
   Widget build(BuildContext context) {
     final squeeze = (1 - morphAmount * 0.18).clamp(0.86, 1.0);
-    final radius = (28 - morphAmount * 10).clamp(18.0, 28.0);
+    final radius = 28.0;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
@@ -409,19 +406,11 @@ class _LiquidSelectionBlob extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(radius),
-        gradient: RadialGradient(
-          center: Alignment(-0.55 + morphAmount * 0.32, -0.75),
-          radius: 1.45 + morphAmount * 0.28,
-          colors: [
-            Colors.white.withValues(alpha: 0.70),
-            color.withValues(alpha: 0.30),
-            color.withValues(alpha: 0.12),
-          ],
-        ),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.58)),
+        color: Colors.white.withValues(alpha: 0.68),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.82)),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.24),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),

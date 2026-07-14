@@ -17,20 +17,21 @@ class ScrollHidingHeader extends StatefulWidget {
 }
 
 class _ScrollHidingHeaderState extends State<ScrollHidingHeader> {
+  static const _topRevealOffset = 2.0;
+  static const _hideDelta = 4.0;
+
   bool _isHeaderVisible = true;
 
   bool _handleScroll(ScrollNotification notification) {
-    if (notification.metrics.pixels <= 0) {
+    if (notification.metrics.pixels <= _topRevealOffset) {
       _setHeaderVisible(true);
       return false;
     }
 
     if (notification is ScrollUpdateNotification) {
       final delta = notification.scrollDelta ?? 0;
-      if (delta > 4) {
+      if (delta > _hideDelta) {
         _setHeaderVisible(false);
-      } else if (delta < -4) {
-        _setHeaderVisible(true);
       }
     }
 
