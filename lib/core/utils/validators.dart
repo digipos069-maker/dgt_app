@@ -21,6 +21,23 @@ abstract final class Validators {
     return null;
   }
 
+  static String? emailOrPhone(
+    String? value,
+    String requiredMessage,
+    String invalidMessage,
+  ) {
+    final requiredError = required(value, requiredMessage);
+    if (requiredError != null) return requiredError;
+
+    final trimmed = value!.trim();
+    final emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    final phonePattern = RegExp(r'^\+?[0-9\s\-()]{7,20}$');
+    if (!emailPattern.hasMatch(trimmed) && !phonePattern.hasMatch(trimmed)) {
+      return invalidMessage;
+    }
+    return null;
+  }
+
   static String? password(
     String? value,
     String requiredMessage,

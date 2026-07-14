@@ -134,7 +134,7 @@ class _LearningColumn extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Continue Learning',
+          context.l10n.text('homeContinueLearning'),
           style: Theme.of(
             context,
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
@@ -143,7 +143,7 @@ class _LearningColumn extends StatelessWidget {
         const _ContinueLearningCard(),
         const SizedBox(height: AppSizes.spacing32),
         Text(
-          'Popular Subjects',
+          context.l10n.text('homePopularSubjects'),
           style: Theme.of(
             context,
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
@@ -152,7 +152,7 @@ class _LearningColumn extends StatelessWidget {
         const _SubjectGrid(),
         const SizedBox(height: AppSizes.spacing32),
         Text(
-          'Recommended Lessons',
+          context.l10n.text('homeRecommendedLessons'),
           style: Theme.of(
             context,
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
@@ -191,7 +191,7 @@ class _SearchField extends StatelessWidget {
         child: TextField(
           textInputAction: TextInputAction.search,
           decoration: InputDecoration(
-            hintText: 'Search lessons, subjects...',
+            hintText: context.l10n.text('homeSearchHint'),
             prefixIcon: const Icon(Icons.search),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: AppSizes.spacing16,
@@ -251,7 +251,7 @@ class _WelcomeSummary extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Good morning, ${username ?? 'Student'}',
+                  '${context.l10n.text('homeGreeting')} ${username ?? context.l10n.text('homeStudentDefault')}',
                   style: theme.textTheme.headlineSmall?.copyWith(
                     color: const Color(0xFF0F3925),
                     fontWeight: FontWeight.w900,
@@ -259,7 +259,7 @@ class _WelcomeSummary extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSizes.spacing8),
                 Text(
-                  'You have 3 lessons planned today. Start with Physics to keep your weekly goal on track.',
+                  context.l10n.text('homeTodayPlan'),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: const Color(0xFF264F39),
                     height: 1.5,
@@ -364,7 +364,7 @@ class _ContinueLearningContent extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'Physics - Grade 11',
+          context.l10n.text('homeContinueSubject'),
           style: theme.textTheme.labelMedium?.copyWith(
             color: _HomeColors.purple,
             fontWeight: FontWeight.w800,
@@ -373,14 +373,14 @@ class _ContinueLearningContent extends StatelessWidget {
         ),
         const SizedBox(height: AppSizes.spacing8),
         Text(
-          'Kinematics',
+          context.l10n.text('homeContinueTitle'),
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w800,
           ),
         ),
         const SizedBox(height: AppSizes.spacing8),
         Text(
-          'Master motion, velocity, and acceleration with interactive simulations.',
+          context.l10n.text('homeContinueDescription'),
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -408,7 +408,7 @@ class _LinearProgressSummary extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Progress',
+              context.l10n.text('homeProgress'),
               style: theme.textTheme.labelMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -441,12 +441,12 @@ class _SubjectGrid extends StatelessWidget {
   const _SubjectGrid();
 
   static const _subjects = [
-    _SubjectItem('Math', Icons.calculate, Color(0xFF2563EB)),
-    _SubjectItem('Chemistry', Icons.science, Color(0xFF8B5CF6)),
-    _SubjectItem('Biology', Icons.biotech, Color(0xFF16A34A)),
-    _SubjectItem('History', Icons.history_edu, Color(0xFFF97316)),
-    _SubjectItem('Physics', Icons.rocket_launch, Color(0xFFEF4444)),
-    _SubjectItem('Khmer', Icons.menu_book, Color(0xFF0EA5E9)),
+    _SubjectItem('homeSubjectMath', Icons.calculate, Color(0xFF2563EB)),
+    _SubjectItem('homeSubjectChemistry', Icons.science, Color(0xFF8B5CF6)),
+    _SubjectItem('homeSubjectBiology', Icons.biotech, Color(0xFF16A34A)),
+    _SubjectItem('homeSubjectHistory', Icons.history_edu, Color(0xFFF97316)),
+    _SubjectItem('homeSubjectPhysics', Icons.rocket_launch, Color(0xFFEF4444)),
+    _SubjectItem('homeSubjectKhmer', Icons.menu_book, Color(0xFF0EA5E9)),
   ];
 
   @override
@@ -507,7 +507,7 @@ class _SubjectTile extends StatelessWidget {
               ),
               const SizedBox(height: AppSizes.spacing12),
               Text(
-                subject.title,
+                context.l10n.text(subject.titleKey),
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -527,14 +527,24 @@ class _RecommendedLessons extends StatelessWidget {
   const _RecommendedLessons();
 
   static const _lessons = [
-    _LessonItem('Algebra Basics', 'Math - Grade 10', '18 min', Icons.calculate),
     _LessonItem(
-      'Chemical Bonds',
-      'Chemistry - Grade 11',
-      '24 min',
+      'homeLessonAlgebra',
+      'homeLessonAlgebraSubject',
+      'homeDuration18',
+      Icons.calculate,
+    ),
+    _LessonItem(
+      'homeLessonChemicalBonds',
+      'homeLessonChemistrySubject',
+      'homeDuration24',
       Icons.science,
     ),
-    _LessonItem('Cell Structure', 'Biology - Grade 9', '16 min', Icons.biotech),
+    _LessonItem(
+      'homeLessonCellStructure',
+      'homeLessonBiologySubject',
+      'homeDuration16',
+      Icons.biotech,
+    ),
   ];
 
   @override
@@ -583,14 +593,14 @@ class _LessonListTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  lesson.title,
+                  context.l10n.text(lesson.titleKey),
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
                 ),
                 const SizedBox(height: AppSizes.spacing4),
                 Text(
-                  lesson.subject,
+                  context.l10n.text(lesson.subjectKey),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -599,7 +609,7 @@ class _LessonListTile extends StatelessWidget {
             ),
           ),
           Text(
-            lesson.duration,
+            context.l10n.text(lesson.durationKey),
             style: theme.textTheme.labelMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w700,
@@ -621,7 +631,7 @@ class _ProgressStatsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Your Progress',
+            context.l10n.text('homeYourProgress'),
             style: Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
@@ -630,14 +640,14 @@ class _ProgressStatsCard extends StatelessWidget {
           const _StatRow(
             icon: Icons.schedule,
             color: Color(0xFF2563EB),
-            label: 'Total Study Time',
+            labelKey: 'homeTotalStudyTime',
             value: '24h 15m',
           ),
           const SizedBox(height: AppSizes.spacing24),
           const _StatRow(
             icon: Icons.task_alt,
             color: Color(0xFF16A34A),
-            label: 'Lessons Completed',
+            labelKey: 'homeLessonsCompleted',
             value: '42',
           ),
         ],
@@ -657,14 +667,14 @@ class _DailyGoalCard extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'Daily Goal',
+            context.l10n.text('homeDailyGoal'),
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: AppSizes.spacing8),
           Text(
-            'Almost there! Keep going.',
+            context.l10n.text('homeDailyGoalMessage'),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -734,13 +744,13 @@ class _StatRow extends StatelessWidget {
   const _StatRow({
     required this.icon,
     required this.color,
-    required this.label,
+    required this.labelKey,
     required this.value,
   });
 
   final IconData icon;
   final Color color;
-  final String label;
+  final String labelKey;
   final String value;
 
   @override
@@ -764,7 +774,7 @@ class _StatRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                label,
+                context.l10n.text(labelKey),
                 style: theme.textTheme.labelMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -907,19 +917,24 @@ class _ArtworkCircle extends StatelessWidget {
 }
 
 class _SubjectItem {
-  const _SubjectItem(this.title, this.icon, this.color);
+  const _SubjectItem(this.titleKey, this.icon, this.color);
 
-  final String title;
+  final String titleKey;
   final IconData icon;
   final Color color;
 }
 
 class _LessonItem {
-  const _LessonItem(this.title, this.subject, this.duration, this.icon);
+  const _LessonItem(
+    this.titleKey,
+    this.subjectKey,
+    this.durationKey,
+    this.icon,
+  );
 
-  final String title;
-  final String subject;
-  final String duration;
+  final String titleKey;
+  final String subjectKey;
+  final String durationKey;
   final IconData icon;
 }
 

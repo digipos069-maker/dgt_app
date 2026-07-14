@@ -18,7 +18,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Welcome back'), findsOneWidget);
-    expect(find.text('Email'), findsOneWidget);
+    expect(find.text('Email or phone'), findsOneWidget);
     expect(find.text('Password'), findsOneWidget);
   });
 }

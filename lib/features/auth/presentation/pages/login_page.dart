@@ -76,7 +76,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               labelText: l10n.text('email'),
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.next,
-              validator: (value) => Validators.email(
+              validator: (value) => Validators.emailOrPhone(
                 value,
                 l10n.text('emailRequired'),
                 l10n.text('emailInvalid'),

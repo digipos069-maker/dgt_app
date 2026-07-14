@@ -81,11 +81,17 @@ class _MainBottomNavigationState extends State<MainBottomNavigation> {
     setState(() => _dragOffset = offset.clamp(maxLeftDrag, maxRightDrag));
   }
 
-  void _navigateToIndex(BuildContext context, int targetIndex) {
+  void _navigateToIndex(
+    BuildContext context,
+    int targetIndex, {
+    bool keepDroppedPosition = false,
+  }) {
     if (targetIndex == widget.selectedIndex) {
       return;
     }
-    _lastSelectedIndex = widget.selectedIndex;
+    _lastSelectedIndex = keepDroppedPosition
+        ? targetIndex
+        : widget.selectedIndex;
     context.goNamed(MainBottomNavigation._items[targetIndex].routeName);
   }
 
@@ -94,12 +100,11 @@ class _MainBottomNavigationState extends State<MainBottomNavigation> {
     final targetDelta = _dragOffset.abs() >= threshold
         ? (_dragOffset / _itemWidth).round()
         : 0;
-    setState(() {
-      _dragOffset = 0;
-      _isPressing = false;
-    });
-
     if (targetDelta == 0) {
+      setState(() {
+        _dragOffset = 0;
+        _isPressing = false;
+      });
       return;
     }
 
@@ -108,10 +113,15 @@ class _MainBottomNavigationState extends State<MainBottomNavigation> {
       MainBottomNavigation._items.length - 1,
     );
     if (targetIndex == widget.selectedIndex) {
+      setState(() {
+        _dragOffset = 0;
+        _isPressing = false;
+      });
       return;
     }
 
-    _navigateToIndex(context, targetIndex);
+    _isPressing = false;
+    _navigateToIndex(context, targetIndex, keepDroppedPosition: true);
   }
 
   @override
