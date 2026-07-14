@@ -70,18 +70,8 @@ class _LearningHeader extends StatelessWidget {
     final theme = Theme.of(context);
     final isWide = MediaQuery.sizeOf(context).width >= 720;
 
-    final title = Text(
-      context.l10n.text('learningCenterHero'),
-      style: theme.textTheme.headlineMedium?.copyWith(
-        color: theme.colorScheme.primary,
-        fontSize: isWide ? 32 : 28,
-        height: isWide ? 1.25 : 1.28,
-        fontWeight: FontWeight.w900,
-      ),
-    );
-
     final search = ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 380),
+      constraints: BoxConstraints(maxWidth: isWide ? 380 : double.infinity),
       child: TextField(
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
@@ -111,23 +101,12 @@ class _LearningHeader extends StatelessWidget {
     );
 
     if (!isWide) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          title,
-          const SizedBox(height: AppSizes.spacing16),
-          search,
-        ],
-      );
+      return search;
     }
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Expanded(child: title),
-        const SizedBox(width: AppSizes.spacing24),
-        search,
-      ],
+      children: [const Spacer(), search],
     );
   }
 }

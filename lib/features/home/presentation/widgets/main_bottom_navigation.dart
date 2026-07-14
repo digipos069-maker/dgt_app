@@ -77,6 +77,14 @@ class _MainBottomNavigationState extends State<MainBottomNavigation> {
     setState(() => _dragOffset = offset.clamp(-72.0, 72.0));
   }
 
+  void _navigateToIndex(BuildContext context, int targetIndex) {
+    if (targetIndex == widget.selectedIndex) {
+      return;
+    }
+    _lastSelectedIndex = widget.selectedIndex;
+    context.goNamed(MainBottomNavigation._items[targetIndex].routeName);
+  }
+
   void _endDrag(BuildContext context) {
     final direction = _dragOffset.abs() >= _switchThreshold
         ? _dragOffset.sign.toInt()
@@ -98,7 +106,7 @@ class _MainBottomNavigationState extends State<MainBottomNavigation> {
       return;
     }
 
-    context.goNamed(MainBottomNavigation._items[targetIndex].routeName);
+    _navigateToIndex(context, targetIndex);
   }
 
   @override
@@ -195,6 +203,12 @@ class _MainBottomNavigationState extends State<MainBottomNavigation> {
                               milliseconds: _isPressing ? 80 : 520,
                             ),
                             curve: Curves.easeOutCubic,
+                            onEnd: () {
+                              if (!mounted || _fromIndex == _targetIndex) {
+                                return;
+                              }
+                              setState(() => _fromIndex = _targetIndex);
+                            },
                             builder: (context, animatedIndex, child) {
                               final totalTravel = (_targetIndex - _fromIndex)
                                   .abs();
@@ -207,18 +221,26 @@ class _MainBottomNavigationState extends State<MainBottomNavigation> {
                               final morphAmount = _isPressing
                                   ? 0.20
                                   : wave * totalTravel.clamp(0.0, 2.0) * 0.28;
-                              final selectedLeft =
-                                  (animatedIndex * itemWidth + _dragOffset)
-                                      .clamp(
-                                        0.0,
-                                        constraints.maxWidth - itemWidth,
-                                      );
                               final stretch = itemWidth * morphAmount;
+                              final blobWidth = itemWidth - 10 + stretch;
+                              final centerX =
+                                  (animatedIndex * itemWidth) +
+                                  (itemWidth / 2) +
+                                  _dragOffset;
+                              final clampedCenter = centerX.clamp(
+                                itemWidth / 2,
+                                constraints.maxWidth - (itemWidth / 2),
+                              );
+                              final left = (clampedCenter - (blobWidth / 2))
+                                  .clamp(
+                                    5.0,
+                                    constraints.maxWidth - blobWidth - 5,
+                                  );
 
                               return Positioned(
-                                left: selectedLeft + 5 - (stretch / 2),
+                                left: left,
                                 top: 7,
-                                width: itemWidth - 10 + stretch,
+                                width: blobWidth,
                                 height: 62,
                                 child: _LiquidSelectionBlob(
                                   isPressing: _isPressing,
@@ -239,6 +261,8 @@ class _MainBottomNavigationState extends State<MainBottomNavigation> {
                                     isPressed:
                                         _isPressing &&
                                         index == widget.selectedIndex,
+                                    onTap: () =>
+                                        _navigateToIndex(context, index),
                                   ),
                                 ),
                             ],
@@ -262,17 +286,19 @@ class _BottomNavButton extends StatelessWidget {
     required this.item,
     required this.isSelected,
     required this.isPressed,
+    required this.onTap,
   });
 
   final _BottomNavItem item;
   final bool isSelected;
   final bool isPressed;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final color = isSelected
-        ? theme.colorScheme.primary
+        ? Colors.white
         : theme.colorScheme.onSurfaceVariant;
 
     return Padding(
@@ -285,7 +311,7 @@ class _BottomNavButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(26),
         child: InkWell(
           borderRadius: BorderRadius.circular(26),
-          onTap: isSelected ? null : () => context.goNamed(item.routeName),
+          onTap: isSelected ? null : onTap,
           child: AnimatedScale(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
@@ -299,23 +325,7 @@ class _BottomNavButton extends StatelessWidget {
                   curve: Curves.easeOutCubic,
                   width: isSelected ? 33 : 28,
                   height: isSelected ? 33 : 28,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isSelected
-                        ? Colors.white.withValues(alpha: 0.46)
-                        : Colors.transparent,
-                    boxShadow: isSelected
-                        ? [
-                            BoxShadow(
-                              color: theme.colorScheme.primary.withValues(
-                                alpha: 0.18,
-                              ),
-                              blurRadius: 14,
-                              offset: const Offset(0, 5),
-                            ),
-                          ]
-                        : null,
-                  ),
+                  decoration: const BoxDecoration(shape: BoxShape.circle),
                   child: Icon(item.icon, color: color, size: 22),
                 ),
                 const SizedBox(height: AppSizes.spacing4),
