@@ -7,6 +7,7 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../application/lesson_controller.dart';
 import '../../domain/models/lesson_model.dart';
+import '../pages/learning_center_page.dart';
 
 class LessonListBody extends ConsumerWidget {
   const LessonListBody({required this.courseId, super.key});
@@ -99,7 +100,7 @@ class _LessonHeader extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            onPressed: () => context.pop(),
+            onPressed: () => context.goNamed(LearningCenterPage.routeName),
             icon: const Icon(Icons.arrow_back),
             color: theme.colorScheme.primary,
           ),
