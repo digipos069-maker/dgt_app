@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
@@ -73,6 +74,23 @@ class HomePage extends ConsumerWidget {
 
 class _HomeDashboard extends StatelessWidget {
   const _HomeDashboard({this.username});
+
+  final String? username;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final battambangTheme = GoogleFonts.battambangTextTheme(theme.textTheme);
+
+    return Theme(
+      data: theme.copyWith(textTheme: battambangTheme),
+      child: _HomeDashboardContent(username: username),
+    );
+  }
+}
+
+class _HomeDashboardContent extends StatelessWidget {
+  const _HomeDashboardContent({this.username});
 
   final String? username;
 
