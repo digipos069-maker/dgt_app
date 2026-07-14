@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -37,24 +39,46 @@ class MainBottomNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    return Material(
-      elevation: 12,
-      color: theme.colorScheme.surface,
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 68,
-          child: Row(
-            children: [
-              for (final (index, item) in _items.indexed)
-                Expanded(
-                  child: _BottomNavButton(
-                    item: item,
-                    isSelected: index == selectedIndex,
-                  ),
+    return SafeArea(
+      top: false,
+      minimum: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface.withValues(
+                alpha: isDark ? 0.58 : 0.72,
+              ),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: isDark ? 0.14 : 0.55),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.32 : 0.12),
+                  blurRadius: 30,
+                  offset: const Offset(0, 14),
                 ),
-            ],
+              ],
+            ),
+            child: SizedBox(
+              height: 72,
+              child: Row(
+                children: [
+                  for (final (index, item) in _items.indexed)
+                    Expanded(
+                      child: _BottomNavButton(
+                        item: item,
+                        isSelected: index == selectedIndex,
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -75,27 +99,55 @@ class _BottomNavButton extends StatelessWidget {
         ? theme.colorScheme.primary
         : theme.colorScheme.onSurfaceVariant;
 
-    return InkWell(
-      onTap: isSelected ? null : () => context.goNamed(item.routeName),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSizes.spacing8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(item.icon, color: color, size: 24),
-            const SizedBox(height: AppSizes.spacing4),
-            Flexible(
-              child: Text(
-                context.l10n.text(item.labelKey),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: color,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.spacing4,
+        vertical: AppSizes.spacing8,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(22),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(22),
+          onTap: isSelected ? null : () => context.goNamed(item.routeName),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              color: isSelected
+                  ? theme.colorScheme.primary.withValues(alpha: 0.16)
+                  : Colors.transparent,
+              border: Border.all(
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.48)
+                    : Colors.transparent,
               ),
             ),
-          ],
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(item.icon, color: color, size: 23),
+                const SizedBox(height: AppSizes.spacing4),
+                Flexible(
+                  child: Text(
+                    context.l10n.text(item.labelKey),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: color,
+                      fontSize: 10,
+                      fontWeight: isSelected
+                          ? FontWeight.w800
+                          : FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
