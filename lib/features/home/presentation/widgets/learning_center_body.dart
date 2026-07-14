@@ -20,7 +20,7 @@ class _LearningCenterBodyState extends State<LearningCenterBody> {
 
   @override
   Widget build(BuildContext context) {
-    final horizontalPadding = AppSizes.spacing24;
+    const horizontalPadding = 10.0;
     final theme = Theme.of(context);
     final battambangTheme = GoogleFonts.battambangTextTheme(theme.textTheme);
 

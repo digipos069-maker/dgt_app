@@ -33,7 +33,10 @@ class ComingSoonScaffold extends StatelessWidget {
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(AppSizes.spacing24),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: AppSizes.spacing24,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [

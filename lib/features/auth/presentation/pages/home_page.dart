@@ -20,6 +20,7 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final theme = Theme.of(context);
     final user = switch (ref.watch(authControllerProvider)) {
       AsyncData(:final value) => value,
       _ => null,
@@ -37,8 +38,8 @@ class HomePage extends ConsumerWidget {
               child: Text(
                 'DGT',
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: theme.colorScheme.primary,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -98,7 +99,7 @@ class _HomeDashboardContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final isWide = width >= 920;
-    const horizontalPadding = AppSizes.spacing24;
+    const horizontalPadding = 10.0;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(

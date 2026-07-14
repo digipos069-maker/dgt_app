@@ -46,9 +46,9 @@ class _LessonListContent extends StatelessWidget {
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(
-                AppSizes.spacing24,
+                10,
                 AppSizes.spacing32,
-                AppSizes.spacing24,
+                10,
                 112,
               ),
               child: Center(

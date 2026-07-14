@@ -61,9 +61,9 @@ class _LessonDetailContentState extends State<_LessonDetailContent> {
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(
-                AppSizes.spacing24,
+                10,
                 AppSizes.spacing16,
-                AppSizes.spacing24,
+                10,
                 128,
               ),
               child: Center(

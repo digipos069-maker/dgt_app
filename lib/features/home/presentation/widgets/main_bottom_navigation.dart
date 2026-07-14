@@ -131,7 +131,7 @@ class _MainBottomNavigationState extends State<MainBottomNavigation> {
 
     return SafeArea(
       top: false,
-      minimum: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+      minimum: const EdgeInsets.fromLTRB(8, 0, 8, 6),
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onHorizontalDragStart: (_) => setState(() => _isPressing = true),

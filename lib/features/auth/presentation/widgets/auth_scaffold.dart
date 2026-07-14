@@ -34,12 +34,7 @@ class AuthScaffold extends StatelessWidget {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(
-              AppSizes.spacing24,
-              32,
-              AppSizes.spacing24,
-              112,
-            ),
+            padding: const EdgeInsets.fromLTRB(10, 32, 10, 112),
             child: ConstrainedBox(
               constraints: const BoxConstraints(
                 maxWidth: AppSizes.maxFormWidth,
