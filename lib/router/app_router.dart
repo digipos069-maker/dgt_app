@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -28,47 +29,58 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: HomePage.routePath,
         name: HomePage.routeName,
-        builder: (context, state) => const HomePage(),
+        pageBuilder: (context, state) =>
+            _noTransitionPage(state, const HomePage()),
       ),
       GoRoute(
         path: LearningCenterPage.routePath,
         name: LearningCenterPage.routeName,
-        builder: (context, state) => const LearningCenterPage(),
+        pageBuilder: (context, state) =>
+            _noTransitionPage(state, const LearningCenterPage()),
       ),
       GoRoute(
         path: LessonListPage.routePath,
         name: LessonListPage.routeName,
-        builder: (context, state) {
-          return LessonListPage(
+        pageBuilder: (context, state) => _noTransitionPage(
+          state,
+          LessonListPage(
             courseId: state.pathParameters['courseId'] ?? 'algebra',
-          );
-        },
+          ),
+        ),
       ),
       GoRoute(
         path: LessonDetailPage.routePath,
         name: LessonDetailPage.routeName,
-        builder: (context, state) {
-          return LessonDetailPage(
+        pageBuilder: (context, state) => _noTransitionPage(
+          state,
+          LessonDetailPage(
             courseId: state.pathParameters['courseId'] ?? 'algebra',
             lessonId: state.pathParameters['lessonId'] ?? 'linear-equations',
-          );
-        },
+          ),
+        ),
       ),
       GoRoute(
         path: MyLearningPage.routePath,
         name: MyLearningPage.routeName,
-        builder: (context, state) => const MyLearningPage(),
+        pageBuilder: (context, state) =>
+            _noTransitionPage(state, const MyLearningPage()),
       ),
       GoRoute(
         path: AiTutorPage.routePath,
         name: AiTutorPage.routeName,
-        builder: (context, state) => const AiTutorPage(),
+        pageBuilder: (context, state) =>
+            _noTransitionPage(state, const AiTutorPage()),
       ),
       GoRoute(
         path: ResourcePage.routePath,
         name: ResourcePage.routeName,
-        builder: (context, state) => const ResourcePage(),
+        pageBuilder: (context, state) =>
+            _noTransitionPage(state, const ResourcePage()),
       ),
     ],
   );
 });
+
+Page<void> _noTransitionPage(GoRouterState state, Widget child) {
+  return NoTransitionPage<void>(key: state.pageKey, child: child);
+}
