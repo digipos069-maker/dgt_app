@@ -489,7 +489,7 @@ class _VideoArtwork extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFE8EDFA), Color(0xFFFFF4CC)],
+          colors: [Color(0xFFE8EDFA), Color(0xFFE0F2FE)],
         ),
       ),
       child: Stack(

@@ -993,9 +993,9 @@ abstract final class _HomeColors {
       primary: primary,
       onPrimary: secondary,
       primaryContainer: isDark
-          ? const Color(0xFF4A3E17)
-          : const Color(0xFFFFF4CC),
-      onPrimaryContainer: isDark ? const Color(0xFFFFE79A) : secondary,
+          ? const Color(0xFF0C4A6E)
+          : const Color(0xFFE0F2FE),
+      onPrimaryContainer: isDark ? const Color(0xFFBAE6FD) : secondary,
       secondary: secondary,
       onSecondary: Colors.white,
       secondaryContainer: isDark

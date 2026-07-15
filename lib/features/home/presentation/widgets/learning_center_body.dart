@@ -184,9 +184,9 @@ class _SubjectCategoryStrip extends StatelessWidget {
     _SubjectCategoryData(
       labelKey: 'subjectMath',
       icon: Icons.calculate,
-      background: Color(0xFFFFF4CC),
+      background: Color(0xFFE0F2FE),
       foreground: AppColors.secondary,
-      border: Color(0xFFE8D486),
+      border: Color(0xFF7DD3FC),
     ),
     _SubjectCategoryData(
       labelKey: 'subjectPhysics',
@@ -198,9 +198,9 @@ class _SubjectCategoryStrip extends StatelessWidget {
     _SubjectCategoryData(
       labelKey: 'subjectChemistry',
       icon: Icons.biotech,
-      background: Color(0xFFFFF4CC),
+      background: Color(0xFFE0F2FE),
       foreground: AppColors.secondary,
-      border: Color(0xFFE8D486),
+      border: Color(0xFF7DD3FC),
     ),
     _SubjectCategoryData(
       labelKey: 'subjectBiology',
@@ -281,7 +281,7 @@ class _CourseCardList extends StatelessWidget {
       icon: Icons.calculate,
       rating: '4.8',
       learners: '12+',
-      background: Color(0xFFFFF4CC),
+      background: Color(0xFFE0F2FE),
       foreground: AppColors.secondary,
       accent: AppColors.primary,
     ),
@@ -303,7 +303,7 @@ class _CourseCardList extends StatelessWidget {
       icon: Icons.language,
       rating: '4.9',
       learners: '20+',
-      background: Color(0xFFFFF4CC),
+      background: Color(0xFFE0F2FE),
       foreground: AppColors.secondary,
       accent: AppColors.primary,
     ),

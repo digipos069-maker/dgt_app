@@ -131,7 +131,7 @@ class _LessonSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const background = Color(0xFFFFF4CC);
+    const background = Color(0xFFE0F2FE);
     const foreground = AppColors.secondary;
     final theme = Theme.of(context);
 
