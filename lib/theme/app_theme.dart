@@ -5,26 +5,45 @@ import 'app_colors.dart';
 
 abstract final class AppTheme {
   static ThemeData light(Locale locale) => _build(
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: AppColors.primary,
-      brightness: Brightness.light,
-      surface: AppColors.lightSurface,
-      error: AppColors.error,
-    ),
+    colorScheme: _colorScheme(Brightness.light),
     scaffoldBackgroundColor: AppColors.lightBackground,
     locale: locale,
   );
 
   static ThemeData dark(Locale locale) => _build(
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: AppColors.primaryDark,
-      brightness: Brightness.dark,
-      surface: AppColors.darkSurface,
-      error: AppColors.error,
-    ),
+    colorScheme: _colorScheme(Brightness.dark),
     scaffoldBackgroundColor: AppColors.darkBackground,
     locale: locale,
   );
+
+  static ColorScheme _colorScheme(Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
+    final base = ColorScheme.fromSeed(
+      seedColor: isDark ? AppColors.primaryDark : AppColors.primary,
+      brightness: brightness,
+      surface: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+      error: AppColors.error,
+    );
+
+    return base.copyWith(
+      primary: isDark ? AppColors.primaryDark : AppColors.primary,
+      onPrimary: AppColors.secondary,
+      primaryContainer: isDark
+          ? const Color(0xFF4A3E17)
+          : const Color(0xFFFFF4CC),
+      onPrimaryContainer: isDark
+          ? const Color(0xFFFFE79A)
+          : AppColors.secondary,
+      secondary: AppColors.secondary,
+      onSecondary: Colors.white,
+      secondaryContainer: isDark
+          ? const Color(0xFF1A2D5E)
+          : const Color(0xFFE8EDFA),
+      onSecondaryContainer: isDark
+          ? const Color(0xFFDCE5FF)
+          : AppColors.secondary,
+    );
+  }
 
   static ThemeData _build({
     required ColorScheme colorScheme,

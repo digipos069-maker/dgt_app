@@ -7,6 +7,7 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/scroll_hiding_header.dart';
 import '../../../../localization/app_localizations.dart';
+import '../../../../theme/app_colors.dart';
 import '../../../home/presentation/widgets/main_bottom_navigation.dart';
 import '../../application/auth_controller.dart';
 import '../widgets/language_menu_button.dart';
@@ -21,49 +22,58 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final l10n = context.l10n;
     final user = switch (ref.watch(authControllerProvider)) {
       AsyncData(:final value) => value,
       _ => null,
     };
 
-    return ScrollHidingHeaderScaffold(
-      headerHeight: 64,
-      header: AppBar(
-        toolbarHeight: 64,
-        titleSpacing: AppSizes.spacing16,
-        title: Image.asset(AppAssets.logo, height: 40, fit: BoxFit.contain),
-        actions: [
-          const LanguageMenuButton(),
-          const ThemeToggleButton(),
-          PopupMenuButton<String>(
-            tooltip: 'Profile',
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.spacing8,
-              ),
-              child: _StudentAvatar(
-                imageUrl: user?.imageUrl,
-                name: user?.username,
-              ),
-            ),
-            onSelected: (value) {
-              if (value == 'logout') {
-                ref.read(authControllerProvider.notifier).logout();
-                context.goNamed(LoginPage.routeName);
-              }
-            },
-            itemBuilder: (context) => [
-              if (user != null)
-                PopupMenuItem(enabled: false, child: Text(user.email)),
-              PopupMenuItem(value: 'logout', child: Text(l10n.text('logout'))),
-            ],
-          ),
-          const SizedBox(width: AppSizes.spacing8),
-        ],
+    return Theme(
+      data: theme.copyWith(
+        colorScheme: _HomeColors.colorScheme(theme.colorScheme),
       ),
-      body: _HomeDashboard(username: user?.username),
-      bottomNavigationBar: const MainBottomNavigation(selectedIndex: 0),
+      child: ScrollHidingHeaderScaffold(
+        headerHeight: 64,
+        header: AppBar(
+          toolbarHeight: 64,
+          titleSpacing: AppSizes.spacing16,
+          title: Image.asset(AppAssets.logo, height: 40, fit: BoxFit.contain),
+          actions: [
+            const LanguageMenuButton(),
+            const ThemeToggleButton(),
+            PopupMenuButton<String>(
+              tooltip: 'Profile',
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.spacing8,
+                ),
+                child: _StudentAvatar(
+                  imageUrl: user?.imageUrl,
+                  name: user?.username,
+                ),
+              ),
+              onSelected: (value) {
+                if (value == 'logout') {
+                  ref.read(authControllerProvider.notifier).logout();
+                  context.goNamed(LoginPage.routeName);
+                }
+              },
+              itemBuilder: (context) => [
+                if (user != null)
+                  PopupMenuItem(enabled: false, child: Text(user.email)),
+                PopupMenuItem(
+                  value: 'logout',
+                  child: Text(l10n.text('logout')),
+                ),
+              ],
+            ),
+            const SizedBox(width: AppSizes.spacing8),
+          ],
+        ),
+        body: _HomeDashboard(username: user?.username),
+        bottomNavigationBar: const MainBottomNavigation(selectedIndex: 0),
+      ),
     );
   }
 }
@@ -245,12 +255,16 @@ class _WelcomeSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFE6F4EA),
+        color: colors.primaryContainer,
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: const Color(0xFFC0EDD0), width: 2),
+        border: Border.all(
+          color: colors.primary.withValues(alpha: 0.48),
+          width: 2,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -269,7 +283,7 @@ class _WelcomeSummary extends StatelessWidget {
                 Text(
                   '${context.l10n.text('homeGreeting')} ${username ?? context.l10n.text('homeStudentDefault')}',
                   style: theme.textTheme.headlineSmall?.copyWith(
-                    color: const Color(0xFF0F3925),
+                    color: colors.onPrimaryContainer,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -277,7 +291,7 @@ class _WelcomeSummary extends StatelessWidget {
                 Text(
                   context.l10n.text('homeTodayPlan'),
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: const Color(0xFF264F39),
+                    color: colors.onPrimaryContainer.withValues(alpha: 0.82),
                     height: 1.5,
                   ),
                 ),
@@ -289,9 +303,12 @@ class _WelcomeSummary extends StatelessWidget {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: colors.surface,
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFA4D1B4), width: 2),
+              border: Border.all(
+                color: colors.primary.withValues(alpha: 0.65),
+                width: 2,
+              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.05),
@@ -300,7 +317,7 @@ class _WelcomeSummary extends StatelessWidget {
                 ),
               ],
             ),
-            child: const Icon(Icons.school, color: Color(0xFF0F3925), size: 38),
+            child: Icon(Icons.school, color: colors.secondary, size: 38),
           ),
         ],
       ),
@@ -313,6 +330,7 @@ class _ContinueLearningCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     final isCompact = MediaQuery.sizeOf(context).width < 620;
     final image = ClipRRect(
       borderRadius: BorderRadius.circular(24),
@@ -320,7 +338,7 @@ class _ContinueLearningCard extends StatelessWidget {
     );
 
     return Material(
-      color: const Color(0xFFF3E8FF),
+      color: colors.secondaryContainer,
       borderRadius: BorderRadius.circular(32),
       child: InkWell(
         borderRadius: BorderRadius.circular(32),
@@ -332,7 +350,10 @@ class _ContinueLearningCard extends StatelessWidget {
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(32),
-                  border: Border.all(color: const Color(0xFFCEBDFF), width: 2),
+                  border: Border.all(
+                    color: colors.secondary.withValues(alpha: 0.32),
+                    width: 2,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.05),
@@ -382,7 +403,7 @@ class _ContinueLearningContent extends StatelessWidget {
         Text(
           context.l10n.text('homeContinueSubject'),
           style: theme.textTheme.labelMedium?.copyWith(
-            color: _HomeColors.purple,
+            color: theme.colorScheme.secondary,
             fontWeight: FontWeight.w800,
             letterSpacing: 0.6,
           ),
@@ -445,7 +466,7 @@ class _LinearProgressSummary extends StatelessWidget {
             minHeight: 12,
             value: progress,
             backgroundColor: theme.colorScheme.surfaceContainerHighest,
-            color: _HomeColors.purple,
+            color: theme.colorScheme.primary,
           ),
         ),
       ],
@@ -457,12 +478,16 @@ class _SubjectGrid extends StatelessWidget {
   const _SubjectGrid();
 
   static const _subjects = [
-    _SubjectItem('homeSubjectMath', Icons.calculate, Color(0xFF2563EB)),
-    _SubjectItem('homeSubjectChemistry', Icons.science, Color(0xFF8B5CF6)),
-    _SubjectItem('homeSubjectBiology', Icons.biotech, Color(0xFF16A34A)),
-    _SubjectItem('homeSubjectHistory', Icons.history_edu, Color(0xFFF97316)),
-    _SubjectItem('homeSubjectPhysics', Icons.rocket_launch, Color(0xFFEF4444)),
-    _SubjectItem('homeSubjectKhmer', Icons.menu_book, Color(0xFF0EA5E9)),
+    _SubjectItem('homeSubjectMath', Icons.calculate, _HomeColors.secondary),
+    _SubjectItem('homeSubjectChemistry', Icons.science, _HomeColors.primary),
+    _SubjectItem('homeSubjectBiology', Icons.biotech, _HomeColors.secondary),
+    _SubjectItem('homeSubjectHistory', Icons.history_edu, _HomeColors.primary),
+    _SubjectItem(
+      'homeSubjectPhysics',
+      Icons.rocket_launch,
+      _HomeColors.secondary,
+    ),
+    _SubjectItem('homeSubjectKhmer', Icons.menu_book, _HomeColors.primary),
   ];
 
   @override
@@ -655,7 +680,7 @@ class _ProgressStatsCard extends StatelessWidget {
           const SizedBox(height: AppSizes.spacing24),
           const _StatRow(
             icon: Icons.schedule,
-            color: Color(0xFF2563EB),
+            color: _HomeColors.secondary,
             labelKey: 'homeTotalStudyTime',
             value: '24h 15m',
           ),
@@ -707,7 +732,7 @@ class _DailyGoalCard extends StatelessWidget {
                   strokeWidth: 12,
                   strokeCap: StrokeCap.round,
                   backgroundColor: Color(0xFFE1E2ED),
-                  color: Color(0xFFFBBF24),
+                  color: _HomeColors.primary,
                 ),
                 Center(
                   child: Text(
@@ -741,7 +766,10 @@ class _DashboardPanel extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.colorScheme.outlineVariant, width: 2),
+        border: Border.all(
+          color: theme.colorScheme.secondary.withValues(alpha: 0.22),
+          width: 2,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -879,7 +907,7 @@ class _LessonArtwork extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF8B5CF6), Color(0xFFF97316)],
+          colors: [_HomeColors.secondary, _HomeColors.primary],
         ),
       ),
       child: Stack(
@@ -955,5 +983,25 @@ class _LessonItem {
 }
 
 abstract final class _HomeColors {
-  static const purple = Color(0xFF8B5CF6);
+  static const primary = AppColors.primary;
+  static const secondary = AppColors.secondary;
+
+  static ColorScheme colorScheme(ColorScheme base) {
+    final isDark = base.brightness == Brightness.dark;
+
+    return base.copyWith(
+      primary: primary,
+      onPrimary: secondary,
+      primaryContainer: isDark
+          ? const Color(0xFF4A3E17)
+          : const Color(0xFFFFF4CC),
+      onPrimaryContainer: isDark ? const Color(0xFFFFE79A) : secondary,
+      secondary: secondary,
+      onSecondary: Colors.white,
+      secondaryContainer: isDark
+          ? const Color(0xFF1A2D5E)
+          : const Color(0xFFE8EDFA),
+      onSecondaryContainer: isDark ? const Color(0xFFDCE5FF) : secondary,
+    );
+  }
 }

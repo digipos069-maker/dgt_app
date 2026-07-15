@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
+import '../../../../theme/app_colors.dart';
 import '../pages/lesson_list_page.dart';
 
 class LearningCenterBody extends StatefulWidget {
@@ -161,11 +162,13 @@ class _GradeChip extends StatelessWidget {
       onPressed: onTap,
       label: Text('${context.l10n.text('gradePrefix')} $grade'),
       labelStyle: theme.textTheme.titleMedium?.copyWith(
-        color: isSelected ? Colors.white : theme.colorScheme.onSurfaceVariant,
+        color: isSelected
+            ? theme.colorScheme.onPrimary
+            : theme.colorScheme.onSurfaceVariant,
         fontWeight: FontWeight.w800,
       ),
       backgroundColor: isSelected
-          ? const Color(0xFFAB8FFE)
+          ? theme.colorScheme.primary
           : theme.colorScheme.surfaceContainer,
       shape: const StadiumBorder(),
       side: BorderSide.none,
@@ -181,30 +184,30 @@ class _SubjectCategoryStrip extends StatelessWidget {
     _SubjectCategoryData(
       labelKey: 'subjectMath',
       icon: Icons.calculate,
-      background: Color(0xFFE6F4EA),
-      foreground: Color(0xFF0F3925),
-      border: Color(0xFFC0EDD0),
+      background: Color(0xFFFFF4CC),
+      foreground: AppColors.secondary,
+      border: Color(0xFFE8D486),
     ),
     _SubjectCategoryData(
       labelKey: 'subjectPhysics',
       icon: Icons.science,
-      background: Color(0xFFF3E8FF),
-      foreground: Color(0xFF3F1E8C),
-      border: Color(0xFFE8DDFF),
+      background: Color(0xFFE8EDFA),
+      foreground: AppColors.secondary,
+      border: Color(0xFFB8C5E5),
     ),
     _SubjectCategoryData(
       labelKey: 'subjectChemistry',
       icon: Icons.biotech,
-      background: Color(0xFFE0F2FE),
-      foreground: Color(0xFF2D3142),
-      border: Color(0xFFDEE1F8),
+      background: Color(0xFFFFF4CC),
+      foreground: AppColors.secondary,
+      border: Color(0xFFE8D486),
     ),
     _SubjectCategoryData(
       labelKey: 'subjectBiology',
       icon: Icons.eco,
-      background: Color(0xFFE6F4EA),
-      foreground: Color(0xFF0F3925),
-      border: Color(0xFFC0EDD0),
+      background: Color(0xFFE8EDFA),
+      foreground: AppColors.secondary,
+      border: Color(0xFFB8C5E5),
     ),
   ];
 
@@ -278,9 +281,9 @@ class _CourseCardList extends StatelessWidget {
       icon: Icons.calculate,
       rating: '4.8',
       learners: '12+',
-      background: Color(0xFFE6F4EA),
-      foreground: Color(0xFF0F3925),
-      accent: Color(0xFFA4D1B4),
+      background: Color(0xFFFFF4CC),
+      foreground: AppColors.secondary,
+      accent: AppColors.primary,
     ),
     _CourseCardData(
       courseId: 'force-motion',
@@ -289,9 +292,9 @@ class _CourseCardList extends StatelessWidget {
       icon: Icons.science,
       rating: '4.5',
       learners: '8+',
-      background: Color(0xFFF3E8FF),
-      foreground: Color(0xFF3F1E8C),
-      accent: Color(0xFFCEBDFF),
+      background: Color(0xFFE8EDFA),
+      foreground: AppColors.secondary,
+      accent: AppColors.secondary,
     ),
     _CourseCardData(
       courseId: 'narrative',
@@ -300,9 +303,9 @@ class _CourseCardList extends StatelessWidget {
       icon: Icons.language,
       rating: '4.9',
       learners: '20+',
-      background: Color(0xFFE0F2FE),
-      foreground: Color(0xFF2D3142),
-      accent: Color(0xFFC2C5DB),
+      background: Color(0xFFFFF4CC),
+      foreground: AppColors.secondary,
+      accent: AppColors.primary,
     ),
   ];
 
@@ -340,7 +343,10 @@ class _CourseCard extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(32),
-            border: Border.all(color: course.background, width: 2),
+            border: Border.all(
+              color: course.accent.withValues(alpha: 0.48),
+              width: 2,
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.05),

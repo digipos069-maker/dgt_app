@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/scroll_hiding_header.dart';
 import '../../../../localization/app_localizations.dart';
+import '../../../../theme/app_colors.dart';
 import '../../application/lesson_controller.dart';
 import '../../domain/models/lesson_model.dart';
 import '../pages/lesson_detail_page.dart';
@@ -59,7 +60,7 @@ class _LessonListContent extends StatelessWidget {
                   Text(
                     context.l10n.text('lessonsTitle'),
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
+                      color: Theme.of(context).colorScheme.secondary,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -98,7 +99,7 @@ class _LessonHeader extends StatelessWidget {
           IconButton(
             onPressed: () => context.goNamed(LearningCenterPage.routeName),
             icon: const Icon(Icons.arrow_back),
-            color: theme.colorScheme.primary,
+            color: theme.colorScheme.secondary,
           ),
           Expanded(
             child: Text(
@@ -107,7 +108,7 @@ class _LessonHeader extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.primary,
+                color: theme.colorScheme.secondary,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -115,7 +116,7 @@ class _LessonHeader extends StatelessWidget {
           IconButton(
             onPressed: () {},
             icon: const Icon(Icons.bookmark_border),
-            color: theme.colorScheme.primary,
+            color: theme.colorScheme.secondary,
           ),
         ],
       ),
@@ -130,15 +131,15 @@ class _LessonSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const background = Color(0xFFC0EDD0);
-    const foreground = Color(0xFF002112);
+    const background = Color(0xFFFFF4CC);
+    const foreground = AppColors.secondary;
     final theme = Theme.of(context);
 
     return Container(
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: const Color(0xFFA4D1B4), width: 2),
+        border: Border.all(color: AppColors.primary, width: 2),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -172,7 +173,7 @@ class _LessonSummaryCard extends StatelessWidget {
                     color: Colors.white,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.school, color: Color(0xFF0F3925)),
+                  child: const Icon(Icons.school, color: AppColors.secondary),
                 ),
                 const SizedBox(height: AppSizes.spacing24),
                 Text(
@@ -186,7 +187,7 @@ class _LessonSummaryCard extends StatelessWidget {
                 Text(
                   context.l10n.text(bundle.descriptionKey),
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: const Color(0xFF264F39),
+                    color: AppColors.secondary.withValues(alpha: 0.82),
                     height: 1.5,
                   ),
                 ),
@@ -299,8 +300,14 @@ class _LessonIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = switch (lesson.type) {
-      LessonType.video => (const Color(0xFFAB8FFE), const Color(0xFF3F1E8C)),
-      LessonType.reading => (const Color(0xFFE8DDFF), const Color(0xFF21005E)),
+      LessonType.video => (
+        Theme.of(context).colorScheme.primaryContainer,
+        Theme.of(context).colorScheme.onPrimaryContainer,
+      ),
+      LessonType.reading => (
+        Theme.of(context).colorScheme.secondaryContainer,
+        Theme.of(context).colorScheme.onSecondaryContainer,
+      ),
       LessonType.locked => (
         Theme.of(context).colorScheme.surfaceContainerHighest,
         Theme.of(context).colorScheme.onSurfaceVariant,

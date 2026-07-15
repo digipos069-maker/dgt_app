@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/scroll_hiding_header.dart';
 import '../../../../localization/app_localizations.dart';
+import '../../../../theme/app_colors.dart';
 import '../../application/lesson_controller.dart';
 import '../../domain/models/lesson_model.dart';
 import '../pages/lesson_list_page.dart';
@@ -126,7 +127,7 @@ class _DetailHeader extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.primary,
+                color: theme.colorScheme.secondary,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -199,13 +200,13 @@ class _VideoSection extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFFC0EDD0),
+                color: theme.colorScheme.primaryContainer,
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
                 context.l10n.text(detail.subjectKey),
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: const Color(0xFF264F39),
+                  color: theme.colorScheme.onPrimaryContainer,
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -223,7 +224,7 @@ class _VideoSection extends StatelessWidget {
         Text(
           context.l10n.text(detail.titleKey),
           style: theme.textTheme.titleLarge?.copyWith(
-            color: theme.colorScheme.primary,
+            color: theme.colorScheme.secondary,
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -276,11 +277,11 @@ class _QuizSection extends StatelessWidget {
               Container(
                 width: 40,
                 height: 40,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE8DDFF),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.quiz, color: Color(0xFF21005E)),
+                child: Icon(Icons.quiz, color: theme.colorScheme.secondary),
               ),
               const SizedBox(width: AppSizes.spacing12),
               Expanded(
@@ -290,7 +291,7 @@ class _QuizSection extends StatelessWidget {
                     Text(
                       context.l10n.text(detail.quizTitleKey),
                       style: theme.textTheme.titleLarge?.copyWith(
-                        color: theme.colorScheme.primary,
+                        color: theme.colorScheme.secondary,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
@@ -416,12 +417,12 @@ class _QuizOption extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFFE8DDFF)
+              ? theme.colorScheme.primaryContainer
               : theme.colorScheme.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected
-                ? theme.colorScheme.secondary
+                ? theme.colorScheme.primary
                 : theme.colorScheme.outlineVariant,
           ),
         ),
@@ -452,7 +453,7 @@ class _SelectionIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.secondary;
+    final color = Theme.of(context).colorScheme.primary;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 160),
@@ -488,7 +489,7 @@ class _VideoArtwork extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFF3E8FF), Color(0xFFE0F2FE)],
+          colors: [Color(0xFFE8EDFA), Color(0xFFFFF4CC)],
         ),
       ),
       child: Stack(
@@ -497,7 +498,7 @@ class _VideoArtwork extends StatelessWidget {
             child: Text(
               '2x + 5 = 15',
               style: TextStyle(
-                color: Color(0xFF2D3142),
+                color: AppColors.secondary,
                 fontSize: 37,
                 fontWeight: FontWeight.w900,
               ),
@@ -506,7 +507,7 @@ class _VideoArtwork extends StatelessWidget {
           Positioned(
             left: 24,
             top: 24,
-            child: Icon(Icons.edit_note, color: Color(0xFF674BB5), size: 42),
+            child: Icon(Icons.edit_note, color: AppColors.secondary, size: 42),
           ),
         ],
       ),
@@ -554,7 +555,7 @@ class _PlayButton extends StatelessWidget {
           ),
         ],
       ),
-      child: const Icon(Icons.play_arrow, color: Color(0xFF674BB5), size: 36),
+      child: const Icon(Icons.play_arrow, color: AppColors.secondary, size: 36),
     );
   }
 }
@@ -583,7 +584,7 @@ class _MockScrubber extends StatelessWidget {
                 value: 0,
                 minHeight: 8,
                 backgroundColor: Colors.white.withValues(alpha: 0.35),
-                color: const Color(0xFF674BB5),
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
           ),
