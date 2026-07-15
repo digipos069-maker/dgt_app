@@ -21,7 +21,7 @@ class LessonListBody extends ConsumerWidget {
     final theme = Theme.of(context);
     final battambangTheme = GoogleFonts.battambangTextTheme(
       theme.textTheme,
-    ).apply(fontSizeDelta: 2);
+    ).apply(fontSizeDelta: 3);
     final lessonsState = ref.watch(lessonBundleProvider(courseId));
 
     return Theme(

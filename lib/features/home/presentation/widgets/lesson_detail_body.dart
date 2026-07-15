@@ -25,7 +25,7 @@ class LessonDetailBody extends ConsumerWidget {
     final theme = Theme.of(context);
     final battambangTheme = GoogleFonts.battambangTextTheme(
       theme.textTheme,
-    ).apply(fontSizeDelta: 2);
+    ).apply(fontSizeDelta: 3);
     final detailState = ref.watch(
       lessonDetailProvider(
         LessonDetailRequest(courseId: courseId, lessonId: lessonId),
@@ -498,7 +498,7 @@ class _VideoArtwork extends StatelessWidget {
               '2x + 5 = 15',
               style: TextStyle(
                 color: Color(0xFF2D3142),
-                fontSize: 36,
+                fontSize: 37,
                 fontWeight: FontWeight.w900,
               ),
             ),
@@ -574,7 +574,7 @@ class _MockScrubber extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Text('0:00', style: TextStyle(fontSize: 14)),
+          const Text('0:00', style: TextStyle(fontSize: 15)),
           const SizedBox(width: AppSizes.spacing12),
           Expanded(
             child: ClipRRect(
@@ -588,7 +588,7 @@ class _MockScrubber extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSizes.spacing12),
-          Text(duration, style: const TextStyle(fontSize: 14)),
+          Text(duration, style: const TextStyle(fontSize: 15)),
           const SizedBox(width: AppSizes.spacing8),
           const Icon(Icons.fullscreen, size: 18),
         ],
