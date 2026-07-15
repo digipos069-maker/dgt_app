@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/constants/app_assets.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/scroll_hiding_header.dart';
 import '../../../../localization/app_localizations.dart';
@@ -21,7 +22,6 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final theme = Theme.of(context);
     final user = switch (ref.watch(authControllerProvider)) {
       AsyncData(:final value) => value,
       _ => null,
@@ -32,28 +32,21 @@ class HomePage extends ConsumerWidget {
       header: AppBar(
         toolbarHeight: 64,
         titleSpacing: AppSizes.spacing16,
-        title: Row(
-          children: [
-            _StudentAvatar(imageUrl: user?.imageUrl, name: user?.username),
-            const SizedBox(width: AppSizes.spacing12),
-            Flexible(
-              child: Text(
-                'DGT',
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-          ],
-        ),
+        title: Image.asset(AppAssets.logo, height: 40, fit: BoxFit.contain),
         actions: [
           const LanguageMenuButton(),
           const ThemeToggleButton(),
           PopupMenuButton<String>(
             tooltip: 'Profile',
-            icon: const Icon(Icons.account_circle_outlined),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.spacing8,
+              ),
+              child: _StudentAvatar(
+                imageUrl: user?.imageUrl,
+                name: user?.username,
+              ),
+            ),
             onSelected: (value) {
               if (value == 'logout') {
                 ref.read(authControllerProvider.notifier).logout();
