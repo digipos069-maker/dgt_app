@@ -351,7 +351,7 @@ class _BottomNavButton extends StatelessWidget {
                     style:
                         theme.textTheme.labelSmall?.copyWith(
                           color: color,
-                          fontSize: isSelected ? 10.5 : 9.5,
+                          fontSize: isSelected ? 12.5 : 11.5,
                           fontWeight: isSelected
                               ? FontWeight.w900
                               : FontWeight.w600,
@@ -359,7 +359,7 @@ class _BottomNavButton extends StatelessWidget {
                         ) ??
                         TextStyle(
                           color: color,
-                          fontSize: isSelected ? 10.5 : 9.5,
+                          fontSize: isSelected ? 12.5 : 11.5,
                           fontWeight: isSelected
                               ? FontWeight.w900
                               : FontWeight.w600,

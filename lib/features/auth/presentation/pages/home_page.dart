@@ -76,7 +76,9 @@ class _HomeDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final battambangTheme = GoogleFonts.battambangTextTheme(theme.textTheme);
+    final battambangTheme = GoogleFonts.battambangTextTheme(
+      theme.textTheme,
+    ).apply(fontSizeDelta: 2);
 
     return Theme(
       data: theme.copyWith(textTheme: battambangTheme),
@@ -710,7 +712,7 @@ class _DailyGoalCard extends StatelessWidget {
                 Center(
                   child: Text(
                     '80%',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
                   ),
                 ),
               ],
@@ -900,7 +902,7 @@ class _LessonArtwork extends StatelessWidget {
               'v = u + at',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 22,
+                fontSize: 24,
                 fontWeight: FontWeight.w900,
               ),
             ),
