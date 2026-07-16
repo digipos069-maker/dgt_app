@@ -38,6 +38,17 @@ class _LearningCenterBodyState extends ConsumerState<LearningCenterBody> {
     _selectedSubjectId = widget.initialSubjectId.clamp(1, 4);
   }
 
+  Future<void> _refreshLessons() async {
+    final gradeId = widget.gradeId;
+    if (gradeId == null) return;
+
+    final request = LearningLessonsRequest(
+      gradeId: gradeId,
+      subjectId: _selectedSubjectId,
+    );
+    final _ = await ref.refresh(learningLessonsProvider(request).future);
+  }
+
   @override
   Widget build(BuildContext context) {
     const horizontalPadding = 10.0;
@@ -56,47 +67,53 @@ class _LearningCenterBodyState extends ConsumerState<LearningCenterBody> {
     return Theme(
       data: theme.copyWith(textTheme: battambangTheme),
       child: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(
-            horizontalPadding,
-            32,
-            horizontalPadding,
-            112,
-          ),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1280),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _LearningHeader(
-                    onBack: widget.onBack,
-                    onSearchChanged: (value) {
-                      setState(() => _searchQuery = value.trim().toLowerCase());
-                    },
-                  ),
-                  const SizedBox(height: AppSizes.spacing24),
-                  _SubjectCategoryStrip(
-                    selectedSubjectId: _selectedSubjectId,
-                    onSelected: (subjectId) {
-                      if (_selectedSubjectId == subjectId) return;
-                      setState(() => _selectedSubjectId = subjectId);
-                    },
-                  ),
-                  const SizedBox(height: AppSizes.spacing24),
-                  if (request == null || lessonsState == null)
-                    const _SelectGradeMessage()
-                  else
-                    _LessonResults(
-                      lessonsState: lessonsState,
-                      gradeId: widget.gradeId!,
-                      gradeNumber: widget.gradeNumber,
-                      subjectId: _selectedSubjectId,
-                      searchQuery: _searchQuery,
-                      onRetry: () =>
-                          ref.invalidate(learningLessonsProvider(request)),
+        child: RefreshIndicator(
+          onRefresh: _refreshLessons,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              32,
+              horizontalPadding,
+              112,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1280),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _LearningHeader(
+                      onBack: widget.onBack,
+                      onSearchChanged: (value) {
+                        setState(
+                          () => _searchQuery = value.trim().toLowerCase(),
+                        );
+                      },
                     ),
-                ],
+                    const SizedBox(height: AppSizes.spacing24),
+                    _SubjectCategoryStrip(
+                      selectedSubjectId: _selectedSubjectId,
+                      onSelected: (subjectId) {
+                        if (_selectedSubjectId == subjectId) return;
+                        setState(() => _selectedSubjectId = subjectId);
+                      },
+                    ),
+                    const SizedBox(height: AppSizes.spacing24),
+                    if (request == null || lessonsState == null)
+                      const _SelectGradeMessage()
+                    else
+                      _LessonResults(
+                        lessonsState: lessonsState,
+                        gradeId: widget.gradeId!,
+                        gradeNumber: widget.gradeNumber,
+                        subjectId: _selectedSubjectId,
+                        searchQuery: _searchQuery,
+                        onRetry: () =>
+                            ref.invalidate(learningLessonsProvider(request)),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
