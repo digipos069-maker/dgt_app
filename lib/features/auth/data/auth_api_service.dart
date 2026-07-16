@@ -73,6 +73,31 @@ class AuthApiService {
     return jsonBody;
   }
 
+  Future<Map<String, dynamic>> currentUser({required String token}) async {
+    final uri = Uri.parse(
+      '${ApiConstants.baseUrl}${ApiConstants.currentUserPath}',
+    );
+    final response = await _client
+        .get(
+          uri,
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        )
+        .timeout(const Duration(seconds: 15));
+    final jsonBody = _decodeBody(response.body);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw AppException(_readMessage(jsonBody) ?? 'Failed to load profile');
+    }
+    if (jsonBody['success'] == false) {
+      throw AppException(_readMessage(jsonBody) ?? 'Failed to load profile');
+    }
+
+    return jsonBody;
+  }
+
   Map<String, dynamic> _decodeBody(String body) {
     if (body.trim().isEmpty) return <String, dynamic>{};
 

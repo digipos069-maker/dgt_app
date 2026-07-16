@@ -6,11 +6,13 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../../home/presentation/widgets/main_bottom_navigation.dart';
 import '../../application/auth_controller.dart';
+import '../../application/profile_controller.dart';
 import '../widgets/language_menu_button.dart';
 import '../widgets/profile_body.dart';
 import '../widgets/theme_toggle_button.dart';
 import 'home_page.dart';
 import 'login_page.dart';
+import 'payment_history_page.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
@@ -23,6 +25,11 @@ class ProfilePage extends ConsumerWidget {
     final user = switch (ref.watch(authControllerProvider)) {
       AsyncData(:final value) => value,
       _ => null,
+    };
+    final profileState = ref.watch(profileProvider);
+    final profileUser = switch (profileState) {
+      AsyncData(:final value) => value ?? user,
+      _ => user,
     };
 
     return Scaffold(
@@ -44,7 +51,9 @@ class ProfilePage extends ConsumerWidget {
         ],
       ),
       body: ProfileBody(
-        user: user,
+        user: profileUser,
+        isProfileLoading: profileState.isLoading,
+        onPaymentHistory: () => context.goNamed(PaymentHistoryPage.routeName),
         onLogout: () {
           ref.read(authControllerProvider.notifier).logout();
           context.goNamed(LoginPage.routeName);

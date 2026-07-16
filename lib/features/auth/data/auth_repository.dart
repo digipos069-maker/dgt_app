@@ -16,6 +16,8 @@ abstract interface class AuthRepository {
     required String password,
     required int gradeId,
   });
+
+  Future<UserModel> currentUser({required String token});
 }
 
 class ApiAuthRepository implements AuthRepository {
@@ -46,5 +48,11 @@ class ApiAuthRepository implements AuthRepository {
       gradeId: gradeId,
     );
     return UserModel.fromLoginResponse(response);
+  }
+
+  @override
+  Future<UserModel> currentUser({required String token}) async {
+    final response = await _apiService.currentUser(token: token);
+    return UserModel.fromLoginResponse(response, fallbackToken: token);
   }
 }
