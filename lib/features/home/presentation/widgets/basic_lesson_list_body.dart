@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_sizes.dart';
-import '../../../../core/widgets/scroll_hiding_header.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../application/basic_course_controller.dart';
 import '../../domain/models/basic_lesson_model.dart';
@@ -50,29 +49,35 @@ class _BasicLessonListContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: ScrollHidingHeader(
-        header: _BasicLessonHeader(title: bundle.course.name),
-        headerHeight: 56,
-        child: ListView.separated(
-          padding: const EdgeInsets.fromLTRB(10, 24, 10, 112),
-          itemCount: bundle.lessons.length + 1,
-          separatorBuilder: (_, _) =>
-              const SizedBox(height: AppSizes.spacing16),
-          itemBuilder: (context, index) {
-            final Widget item;
-            if (index == 0) {
-              item = _CourseIntroduction(bundle: bundle);
-            } else {
-              item = _BasicLessonTile(lesson: bundle.lessons[index - 1]);
-            }
-            return Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 760),
-                child: item,
-              ),
-            );
-          },
-        ),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 56,
+            child: _BasicLessonHeader(title: bundle.course.name),
+          ),
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.fromLTRB(10, 24, 10, 112),
+              itemCount: bundle.lessons.length + 1,
+              separatorBuilder: (_, _) =>
+                  const SizedBox(height: AppSizes.spacing16),
+              itemBuilder: (context, index) {
+                final Widget item;
+                if (index == 0) {
+                  item = _CourseIntroduction(bundle: bundle);
+                } else {
+                  item = _BasicLessonTile(lesson: bundle.lessons[index - 1]);
+                }
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 760),
+                    child: item,
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

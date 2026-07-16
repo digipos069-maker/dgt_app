@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_sizes.dart';
-import '../../../../core/widgets/scroll_hiding_header.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../../../theme/app_colors.dart';
 import '../../application/lesson_controller.dart';
@@ -44,36 +43,49 @@ class _LessonListContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: ScrollHidingHeader(
-        header: _LessonHeader(title: context.l10n.text(bundle.appBarTitleKey)),
-        headerHeight: 56,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(10, AppSizes.spacing32, 10, 112),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _LessonSummaryCard(bundle: bundle),
-                  const SizedBox(height: AppSizes.spacing32),
-                  Text(
-                    context.l10n.text('lessonsTitle'),
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.secondary,
-                      fontWeight: FontWeight.w800,
-                    ),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 56,
+            child: _LessonHeader(
+              title: context.l10n.text(bundle.appBarTitleKey),
+            ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(
+                10,
+                AppSizes.spacing32,
+                10,
+                112,
+              ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _LessonSummaryCard(bundle: bundle),
+                      const SizedBox(height: AppSizes.spacing32),
+                      Text(
+                        context.l10n.text('lessonsTitle'),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.secondary,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: AppSizes.spacing16),
+                      for (final lesson in bundle.lessons) ...[
+                        _LessonTile(lesson: lesson),
+                        const SizedBox(height: AppSizes.spacing16),
+                      ],
+                    ],
                   ),
-                  const SizedBox(height: AppSizes.spacing16),
-                  for (final lesson in bundle.lessons) ...[
-                    _LessonTile(lesson: lesson),
-                    const SizedBox(height: AppSizes.spacing16),
-                  ],
-                ],
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
