@@ -6,6 +6,8 @@ class UserModel {
     this.grade,
     this.token,
     this.imageUrl,
+    this.phone,
+    this.address,
     this.roles = const [],
   });
 
@@ -15,6 +17,8 @@ class UserModel {
   final String? grade;
   final String? token;
   final String? imageUrl;
+  final String? phone;
+  final String? address;
   final List<String> roles;
 
   factory UserModel.fromLoginResponse(Map<String, dynamic> json) {
@@ -44,6 +48,11 @@ class UserModel {
       grade: _readString(user['grade']),
       token: token,
       imageUrl: _readString(user['image']),
+      phone:
+          _readString(user['phone']) ??
+          _readString(user['phoneNumber']) ??
+          _readString(json['phone']),
+      address: _readString(user['address']) ?? _readString(json['address']),
       roles: _readStringList(user['roles']),
     );
   }

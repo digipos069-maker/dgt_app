@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/auth/presentation/pages/home_page.dart';
 import '../features/auth/presentation/pages/login_page.dart';
+import '../features/auth/presentation/pages/profile_page.dart';
 import '../features/auth/presentation/pages/register_page.dart';
 import '../features/home/presentation/pages/ai_tutor_page.dart';
 import '../features/home/presentation/pages/basic_course_page.dart';
@@ -33,6 +34,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: HomePage.routeName,
         pageBuilder: (context, state) =>
             _noTransitionPage(state, const HomePage()),
+      ),
+      GoRoute(
+        path: ProfilePage.routePath,
+        name: ProfilePage.routeName,
+        pageBuilder: (context, state) =>
+            _noTransitionPage(state, const ProfilePage()),
       ),
       GoRoute(
         path: LearningCenterPage.routePath,

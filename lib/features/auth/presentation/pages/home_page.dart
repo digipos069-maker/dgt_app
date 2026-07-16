@@ -12,7 +12,7 @@ import '../../../home/presentation/widgets/main_bottom_navigation.dart';
 import '../../application/auth_controller.dart';
 import '../widgets/language_menu_button.dart';
 import '../widgets/theme_toggle_button.dart';
-import 'login_page.dart';
+import 'profile_page.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -42,31 +42,13 @@ class HomePage extends ConsumerWidget {
           actions: [
             const LanguageMenuButton(),
             const ThemeToggleButton(),
-            PopupMenuButton<String>(
-              tooltip: 'Profile',
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.spacing8,
-                ),
-                child: _StudentAvatar(
-                  imageUrl: user?.imageUrl,
-                  name: user?.username,
-                ),
+            IconButton(
+              tooltip: l10n.text('profileTitle'),
+              onPressed: () => context.goNamed(ProfilePage.routeName),
+              icon: _StudentAvatar(
+                imageUrl: user?.imageUrl,
+                name: user?.username,
               ),
-              onSelected: (value) {
-                if (value == 'logout') {
-                  ref.read(authControllerProvider.notifier).logout();
-                  context.goNamed(LoginPage.routeName);
-                }
-              },
-              itemBuilder: (context) => [
-                if (user != null)
-                  PopupMenuItem(enabled: false, child: Text(user.email)),
-                PopupMenuItem(
-                  value: 'logout',
-                  child: Text(l10n.text('logout')),
-                ),
-              ],
             ),
             const SizedBox(width: AppSizes.spacing8),
           ],
