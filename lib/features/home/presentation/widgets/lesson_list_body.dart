@@ -12,9 +12,16 @@ import '../pages/lesson_detail_page.dart';
 import '../pages/learning_center_page.dart';
 
 class LessonListBody extends ConsumerWidget {
-  const LessonListBody({required this.courseId, super.key});
+  const LessonListBody({
+    required this.courseId,
+    this.gradeId,
+    this.gradeNumber,
+    super.key,
+  });
 
   final String courseId;
+  final int? gradeId;
+  final int? gradeNumber;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,7 +34,11 @@ class LessonListBody extends ConsumerWidget {
     return Theme(
       data: theme.copyWith(textTheme: battambangTheme),
       child: lessonsState.when(
-        data: (bundle) => _LessonListContent(bundle: bundle),
+        data: (bundle) => _LessonListContent(
+          bundle: bundle,
+          gradeId: gradeId,
+          gradeNumber: gradeNumber,
+        ),
         error: (_, _) => const _LessonListError(),
         loading: () => const Center(child: CircularProgressIndicator()),
       ),
@@ -36,9 +47,15 @@ class LessonListBody extends ConsumerWidget {
 }
 
 class _LessonListContent extends StatelessWidget {
-  const _LessonListContent({required this.bundle});
+  const _LessonListContent({
+    required this.bundle,
+    this.gradeId,
+    this.gradeNumber,
+  });
 
   final CourseLessonBundle bundle;
+  final int? gradeId;
+  final int? gradeNumber;
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +66,14 @@ class _LessonListContent extends StatelessWidget {
             height: 56,
             child: _LessonHeader(
               title: context.l10n.text(bundle.appBarTitleKey),
+              onBack: () => context.goNamed(
+                LearningCenterPage.routeName,
+                queryParameters: {
+                  if (gradeId != null) 'gradeId': gradeId.toString(),
+                  if (gradeNumber != null)
+                    'gradeNumber': gradeNumber.toString(),
+                },
+              ),
             ),
           ),
           Expanded(
@@ -76,7 +101,11 @@ class _LessonListContent extends StatelessWidget {
                       ),
                       const SizedBox(height: AppSizes.spacing16),
                       for (final lesson in bundle.lessons) ...[
-                        _LessonTile(lesson: lesson),
+                        _LessonTile(
+                          lesson: lesson,
+                          gradeId: gradeId,
+                          gradeNumber: gradeNumber,
+                        ),
                         const SizedBox(height: AppSizes.spacing16),
                       ],
                     ],
@@ -92,9 +121,10 @@ class _LessonListContent extends StatelessWidget {
 }
 
 class _LessonHeader extends StatelessWidget {
-  const _LessonHeader({required this.title});
+  const _LessonHeader({required this.title, required this.onBack});
 
   final String title;
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +139,7 @@ class _LessonHeader extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            onPressed: () => context.goNamed(LearningCenterPage.routeName),
+            onPressed: onBack,
             icon: const Icon(Icons.arrow_back),
             color: theme.colorScheme.secondary,
           ),
@@ -213,9 +243,11 @@ class _LessonSummaryCard extends StatelessWidget {
 }
 
 class _LessonTile extends StatelessWidget {
-  const _LessonTile({required this.lesson});
+  const _LessonTile({required this.lesson, this.gradeId, this.gradeNumber});
 
   final LessonModel lesson;
+  final int? gradeId;
+  final int? gradeNumber;
 
   @override
   Widget build(BuildContext context) {
@@ -236,6 +268,11 @@ class _LessonTile extends StatelessWidget {
                 pathParameters: {
                   'courseId': lesson.courseId,
                   'lessonId': lesson.id,
+                },
+                queryParameters: {
+                  if (gradeId != null) 'gradeId': gradeId.toString(),
+                  if (gradeNumber != null)
+                    'gradeNumber': gradeNumber.toString(),
                 },
               ),
         child: Container(

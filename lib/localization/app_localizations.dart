@@ -126,6 +126,15 @@ class AppLocalizations {
       'learningCenterHero': 'Discover courses',
       'learningCenterSearchHint': 'Search chapters or subjects...',
       'gradePrefix': 'Grade',
+      'gradeListTitle': 'Grades',
+      'chooseGrade': 'Choose your grade',
+      'gradeListDescription':
+          'Select a grade to view its available lessons and learning materials.',
+      'gradeCardDescription': 'View lessons and learning materials.',
+      'gradeListEmpty': 'No grades are available yet.',
+      'gradeLessonsFoundationTitle': 'Foundation lessons',
+      'gradeLessonsFoundationDescription':
+          'Start with essential lessons selected for this grade. More API-based lessons can be added later.',
       'subjectMath': 'Mathematics',
       'subjectPhysics': 'Physics',
       'subjectChemistry': 'Chemistry',
@@ -320,6 +329,15 @@ class AppLocalizations {
       'learningCenterHero': 'រុករកវគ្គសិក្សា',
       'learningCenterSearchHint': 'ស្វែងរកជំពូក ឬប្រធានបទ...',
       'gradePrefix': 'ថ្នាក់ទី',
+      'gradeListTitle': 'បញ្ជីថ្នាក់',
+      'chooseGrade': 'ជ្រើសរើសថ្នាក់របស់អ្នក',
+      'gradeListDescription':
+          'ជ្រើសរើសថ្នាក់ ដើម្បីមើលមេរៀន និងឯកសារសិក្សាដែលមាន។',
+      'gradeCardDescription': 'មើលមេរៀន និងឯកសារសិក្សា។',
+      'gradeListEmpty': 'មិនទាន់មានបញ្ជីថ្នាក់នៅឡើយទេ។',
+      'gradeLessonsFoundationTitle': 'មេរៀនមូលដ្ឋាន',
+      'gradeLessonsFoundationDescription':
+          'ចាប់ផ្តើមជាមួយមេរៀនសំខាន់ៗសម្រាប់ថ្នាក់នេះ។ មេរៀនពី API អាចបន្ថែមនៅពេលក្រោយ។',
       'subjectMath': 'គណិតវិទ្យា',
       'subjectPhysics': 'រូបវិទ្យា',
       'subjectChemistry': 'គីមីវិទ្យា',

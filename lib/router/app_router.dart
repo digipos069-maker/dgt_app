@@ -11,6 +11,7 @@ import '../features/home/presentation/pages/ai_tutor_page.dart';
 import '../features/home/presentation/pages/basic_course_page.dart';
 import '../features/home/presentation/pages/basic_lesson_detail_page.dart';
 import '../features/home/presentation/pages/basic_lesson_list_page.dart';
+import '../features/home/presentation/pages/grade_list_page.dart';
 import '../features/home/presentation/pages/learning_center_page.dart';
 import '../features/home/presentation/pages/lesson_detail_page.dart';
 import '../features/home/presentation/pages/lesson_list_page.dart';
@@ -49,10 +50,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             _noTransitionPage(state, const PaymentHistoryPage()),
       ),
       GoRoute(
+        path: GradeListPage.routePath,
+        name: GradeListPage.routeName,
+        pageBuilder: (context, state) =>
+            _noTransitionPage(state, const GradeListPage()),
+      ),
+      GoRoute(
         path: LearningCenterPage.routePath,
         name: LearningCenterPage.routeName,
-        pageBuilder: (context, state) =>
-            _noTransitionPage(state, const LearningCenterPage()),
+        pageBuilder: (context, state) => _noTransitionPage(
+          state,
+          LearningCenterPage(
+            gradeId: _queryInt(state, 'gradeId'),
+            gradeNumber: _queryInt(state, 'gradeNumber'),
+          ),
+        ),
       ),
       GoRoute(
         path: LessonListPage.routePath,
@@ -61,6 +73,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state,
           LessonListPage(
             courseId: state.pathParameters['courseId'] ?? 'algebra',
+            gradeId: _queryInt(state, 'gradeId'),
+            gradeNumber: _queryInt(state, 'gradeNumber'),
           ),
         ),
       ),
@@ -72,6 +86,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           LessonDetailPage(
             courseId: state.pathParameters['courseId'] ?? 'algebra',
             lessonId: state.pathParameters['lessonId'] ?? 'linear-equations',
+            gradeId: _queryInt(state, 'gradeId'),
+            gradeNumber: _queryInt(state, 'gradeNumber'),
           ),
         ),
       ),
@@ -117,6 +133,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+int? _queryInt(GoRouterState state, String key) {
+  return int.tryParse(state.uri.queryParameters[key] ?? '');
+}
 
 Page<void> _noTransitionPage(GoRouterState state, Widget child) {
   return NoTransitionPage<void>(key: state.pageKey, child: child);

@@ -14,11 +14,13 @@ class LessonDetailBody extends ConsumerWidget {
   const LessonDetailBody({
     required this.courseId,
     required this.lessonId,
+    this.onBack,
     super.key,
   });
 
   final String courseId;
   final String lessonId;
+  final VoidCallback? onBack;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -35,7 +37,7 @@ class LessonDetailBody extends ConsumerWidget {
     return Theme(
       data: theme.copyWith(textTheme: battambangTheme),
       child: detailState.when(
-        data: (detail) => LessonDetailContent(detail: detail),
+        data: (detail) => LessonDetailContent(detail: detail, onBack: onBack),
         error: (_, _) => Center(child: Text(context.l10n.text('authFailed'))),
         loading: () => const Center(child: CircularProgressIndicator()),
       ),

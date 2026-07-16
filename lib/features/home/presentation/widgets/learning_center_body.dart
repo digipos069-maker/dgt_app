@@ -7,17 +7,11 @@ import '../../../../localization/app_localizations.dart';
 import '../../../../theme/app_colors.dart';
 import '../pages/lesson_list_page.dart';
 
-class LearningCenterBody extends StatefulWidget {
-  const LearningCenterBody({super.key});
+class LearningCenterBody extends StatelessWidget {
+  const LearningCenterBody({this.gradeId, this.gradeNumber, super.key});
 
-  @override
-  State<LearningCenterBody> createState() => _LearningCenterBodyState();
-}
-
-class _LearningCenterBodyState extends State<LearningCenterBody> {
-  int _selectedGrade = 7;
-
-  static const _grades = [7, 8, 9, 10, 11, 12];
+  final int? gradeId;
+  final int? gradeNumber;
 
   @override
   Widget build(BuildContext context) {
@@ -42,21 +36,55 @@ class _LearningCenterBodyState extends State<LearningCenterBody> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const _LearningHeader(),
-                  const SizedBox(height: AppSizes.spacing32),
-                  _GradeSelector(
-                    grades: _grades,
-                    selectedGrade: _selectedGrade,
-                    onChanged: (grade) =>
-                        setState(() => _selectedGrade = grade),
-                  ),
-                  const SizedBox(height: AppSizes.spacing16),
+                  if (gradeNumber != null) ...[
+                    const SizedBox(height: AppSizes.spacing24),
+                    _SelectedGradeBadge(gradeNumber: gradeNumber!),
+                  ],
+                  const SizedBox(height: AppSizes.spacing24),
                   const _SubjectCategoryStrip(),
                   const SizedBox(height: AppSizes.spacing24),
-                  const _CourseCardList(),
+                  _CourseCardList(gradeId: gradeId, gradeNumber: gradeNumber),
                 ],
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SelectedGradeBadge extends StatelessWidget {
+  const _SelectedGradeBadge({required this.gradeNumber});
+
+  final int gradeNumber;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          color: colors.primaryContainer,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colors.primary, width: 1.5),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.school_outlined, color: colors.secondary, size: 20),
+            const SizedBox(width: AppSizes.spacing8),
+            Text(
+              '${context.l10n.text('gradePrefix')} $gradeNumber',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: colors.secondary,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -108,71 +136,6 @@ class _LearningHeader extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [const Spacer(), search],
-    );
-  }
-}
-
-class _GradeSelector extends StatelessWidget {
-  const _GradeSelector({
-    required this.grades,
-    required this.selectedGrade,
-    required this.onChanged,
-  });
-
-  final List<int> grades;
-  final int selectedGrade;
-  final ValueChanged<int> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          for (final grade in grades) ...[
-            _GradeChip(
-              grade: grade,
-              isSelected: grade == selectedGrade,
-              onTap: () => onChanged(grade),
-            ),
-            const SizedBox(width: AppSizes.spacing12),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _GradeChip extends StatelessWidget {
-  const _GradeChip({
-    required this.grade,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final int grade;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return ActionChip(
-      onPressed: onTap,
-      label: Text('${context.l10n.text('gradePrefix')} $grade'),
-      labelStyle: theme.textTheme.titleMedium?.copyWith(
-        color: isSelected
-            ? theme.colorScheme.onPrimary
-            : theme.colorScheme.onSurfaceVariant,
-        fontWeight: FontWeight.w800,
-      ),
-      backgroundColor: isSelected
-          ? theme.colorScheme.primary
-          : theme.colorScheme.surfaceContainer,
-      shape: const StadiumBorder(),
-      side: BorderSide.none,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
     );
   }
 }
@@ -271,7 +234,10 @@ class _SubjectCategoryCard extends StatelessWidget {
 }
 
 class _CourseCardList extends StatelessWidget {
-  const _CourseCardList();
+  const _CourseCardList({this.gradeId, this.gradeNumber});
+
+  final int? gradeId;
+  final int? gradeNumber;
 
   static const _courses = [
     _CourseCardData(
@@ -314,7 +280,11 @@ class _CourseCardList extends StatelessWidget {
     return Column(
       children: [
         for (final course in _courses) ...[
-          _CourseCard(course: course),
+          _CourseCard(
+            course: course,
+            gradeId: gradeId,
+            gradeNumber: gradeNumber,
+          ),
           const SizedBox(height: AppSizes.spacing24),
         ],
       ],
@@ -323,9 +293,11 @@ class _CourseCardList extends StatelessWidget {
 }
 
 class _CourseCard extends StatelessWidget {
-  const _CourseCard({required this.course});
+  const _CourseCard({required this.course, this.gradeId, this.gradeNumber});
 
   final _CourseCardData course;
+  final int? gradeId;
+  final int? gradeNumber;
 
   @override
   Widget build(BuildContext context) {
@@ -339,6 +311,10 @@ class _CourseCard extends StatelessWidget {
         onTap: () => context.goNamed(
           LessonListPage.routeName,
           pathParameters: {'courseId': course.courseId},
+          queryParameters: {
+            if (gradeId != null) 'gradeId': gradeId.toString(),
+            if (gradeNumber != null) 'gradeNumber': gradeNumber.toString(),
+          },
         ),
         child: Container(
           decoration: BoxDecoration(

@@ -20,6 +20,7 @@ class LessonRepository {
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 250));
     return _mockDetails['$courseId/$lessonId'] ??
+        _mockDetails['algebra/$lessonId'] ??
         _mockDetails['algebra/linear-equations']!;
   }
 

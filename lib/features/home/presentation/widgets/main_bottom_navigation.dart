@@ -9,7 +9,7 @@ import '../../../../localization/app_localizations.dart';
 import '../../../auth/presentation/pages/home_page.dart';
 import '../pages/ai_tutor_page.dart';
 import '../pages/basic_course_page.dart';
-import '../pages/learning_center_page.dart';
+import '../pages/grade_list_page.dart';
 import '../pages/resource_page.dart';
 
 class MainBottomNavigation extends StatefulWidget {
@@ -22,7 +22,7 @@ class MainBottomNavigation extends StatefulWidget {
     _BottomNavItem(
       'menuLearningCenter',
       Icons.school_outlined,
-      LearningCenterPage.routeName,
+      GradeListPage.routeName,
     ),
     _BottomNavItem(
       'menuBasicCourse',
