@@ -45,7 +45,7 @@ class AppLocalizations {
       'homeContinueLearning': 'Continue Learning',
       'homePopularSubjects': 'Popular Subjects',
       'homeRecommendedLessons': 'Recommended Lessons',
-      'homeGreeting': 'Good morning,',
+      'homeGreeting': 'Good morning',
       'homeStudentDefault': 'Student',
       'homeTodayPlan':
           'You have 3 lessons planned today. Start with Physics to keep your weekly goal on track.',
@@ -201,7 +201,7 @@ class AppLocalizations {
       'homeContinueLearning': 'បន្តការសិក្សា',
       'homePopularSubjects': 'មុខវិជ្ជាពេញនិយម',
       'homeRecommendedLessons': 'មេរៀនណែនាំ',
-      'homeGreeting': 'អរុណសួស្តី,',
+      'homeGreeting': 'អរុណសួស្តី',
       'homeStudentDefault': 'សិស្ស',
       'homeTodayPlan':
           'ថ្ងៃនេះអ្នកមានមេរៀន 3 ដែលបានរៀបចំ។ ចាប់ផ្តើមជាមួយរូបវិទ្យា ដើម្បីរក្សាគោលដៅប្រចាំសប្តាហ៍។',
