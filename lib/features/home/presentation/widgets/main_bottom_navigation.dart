@@ -407,7 +407,10 @@ class _LiquidSelectionBlob extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(radius),
         color: Colors.white.withValues(alpha: 0.68),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.82)),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary,
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
