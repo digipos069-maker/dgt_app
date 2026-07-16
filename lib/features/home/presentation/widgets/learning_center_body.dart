@@ -75,10 +75,6 @@ class _LearningCenterBodyState extends ConsumerState<LearningCenterBody> {
                       setState(() => _searchQuery = value.trim().toLowerCase());
                     },
                   ),
-                  if (widget.gradeNumber != null) ...[
-                    const SizedBox(height: AppSizes.spacing24),
-                    _SelectedGradeBadge(gradeNumber: widget.gradeNumber!),
-                  ],
                   const SizedBox(height: AppSizes.spacing24),
                   _SubjectCategoryStrip(
                     selectedSubjectId: _selectedSubjectId,
@@ -104,43 +100,6 @@ class _LearningCenterBodyState extends ConsumerState<LearningCenterBody> {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SelectedGradeBadge extends StatelessWidget {
-  const _SelectedGradeBadge({required this.gradeNumber});
-
-  final int gradeNumber;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-        decoration: BoxDecoration(
-          color: colors.primaryContainer,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: colors.primary, width: 1.5),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.school_outlined, color: colors.secondary, size: 20),
-            const SizedBox(width: AppSizes.spacing8),
-            Text(
-              '${context.l10n.text('gradePrefix')} $gradeNumber',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: colors.secondary,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
         ),
       ),
     );
