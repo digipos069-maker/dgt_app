@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../widgets/coming_soon_scaffold.dart';
+import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/widgets/scroll_hiding_header.dart';
+import '../../../../localization/app_localizations.dart';
+import '../../../auth/presentation/widgets/language_menu_button.dart';
+import '../../../auth/presentation/widgets/theme_toggle_button.dart';
+import '../widgets/main_bottom_navigation.dart';
+import '../widgets/resource_body.dart';
 
 class ResourcePage extends StatelessWidget {
   const ResourcePage({super.key});
@@ -10,6 +16,17 @@ class ResourcePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const ComingSoonScaffold(titleKey: 'menuResource', selectedIndex: 4);
+    return ScrollHidingHeaderScaffold(
+      header: AppBar(
+        title: Text(context.l10n.text('menuResource')),
+        actions: const [
+          LanguageMenuButton(),
+          ThemeToggleButton(),
+          SizedBox(width: AppSizes.spacing8),
+        ],
+      ),
+      body: const ResourceBody(),
+      bottomNavigationBar: const MainBottomNavigation(selectedIndex: 4),
+    );
   }
 }
