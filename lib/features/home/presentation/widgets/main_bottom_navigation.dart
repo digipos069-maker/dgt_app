@@ -8,8 +8,8 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../../auth/presentation/pages/home_page.dart';
 import '../pages/ai_tutor_page.dart';
+import '../pages/basic_course_page.dart';
 import '../pages/learning_center_page.dart';
-import '../pages/my_learning_page.dart';
 import '../pages/resource_page.dart';
 
 class MainBottomNavigation extends StatefulWidget {
@@ -25,9 +25,9 @@ class MainBottomNavigation extends StatefulWidget {
       LearningCenterPage.routeName,
     ),
     _BottomNavItem(
-      'menuMyLearning',
+      'menuBasicCourse',
       Icons.menu_book_outlined,
-      MyLearningPage.routeName,
+      BasicCoursePage.routeName,
     ),
     _BottomNavItem(
       'menuAiTutor',

@@ -6,10 +6,10 @@ import '../features/auth/presentation/pages/home_page.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/register_page.dart';
 import '../features/home/presentation/pages/ai_tutor_page.dart';
+import '../features/home/presentation/pages/basic_course_page.dart';
 import '../features/home/presentation/pages/learning_center_page.dart';
 import '../features/home/presentation/pages/lesson_detail_page.dart';
 import '../features/home/presentation/pages/lesson_list_page.dart';
-import '../features/home/presentation/pages/my_learning_page.dart';
 import '../features/home/presentation/pages/resource_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -60,10 +60,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-        path: MyLearningPage.routePath,
-        name: MyLearningPage.routeName,
+        path: BasicCoursePage.routePath,
+        name: BasicCoursePage.routeName,
         pageBuilder: (context, state) =>
-            _noTransitionPage(state, const MyLearningPage()),
+            _noTransitionPage(state, const BasicCoursePage()),
       ),
       GoRoute(
         path: AiTutorPage.routePath,
