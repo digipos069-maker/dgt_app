@@ -63,6 +63,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           LearningCenterPage(
             gradeId: _queryInt(state, 'gradeId'),
             gradeNumber: _queryInt(state, 'gradeNumber'),
+            subjectId: _queryInt(state, 'subjectId') ?? 1,
           ),
         ),
       ),
@@ -75,6 +76,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             courseId: state.pathParameters['courseId'] ?? 'algebra',
             gradeId: _queryInt(state, 'gradeId'),
             gradeNumber: _queryInt(state, 'gradeNumber'),
+            subjectId: _queryInt(state, 'subjectId'),
           ),
         ),
       ),
@@ -88,6 +90,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             lessonId: state.pathParameters['lessonId'] ?? 'linear-equations',
             gradeId: _queryInt(state, 'gradeId'),
             gradeNumber: _queryInt(state, 'gradeNumber'),
+            subjectId: _queryInt(state, 'subjectId'),
           ),
         ),
       ),

@@ -11,13 +11,19 @@ import '../widgets/learning_center_body.dart';
 import '../widgets/main_bottom_navigation.dart';
 
 class LearningCenterPage extends StatelessWidget {
-  const LearningCenterPage({this.gradeId, this.gradeNumber, super.key});
+  const LearningCenterPage({
+    this.gradeId,
+    this.gradeNumber,
+    this.subjectId = 1,
+    super.key,
+  });
 
   static const routeName = 'learning-center';
   static const routePath = '/learning-center';
 
   final int? gradeId;
   final int? gradeNumber;
+  final int subjectId;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +40,7 @@ class LearningCenterPage extends StatelessWidget {
       body: LearningCenterBody(
         gradeId: gradeId,
         gradeNumber: gradeNumber,
+        initialSubjectId: subjectId,
         onBack: gradeId == null
             ? null
             : () => context.goNamed(GradeListPage.routeName),

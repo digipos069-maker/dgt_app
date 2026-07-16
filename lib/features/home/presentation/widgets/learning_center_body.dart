@@ -1,29 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../../../theme/app_colors.dart';
+import '../../application/learning_lesson_controller.dart';
+import '../../domain/models/learning_lesson_model.dart';
 import '../pages/lesson_list_page.dart';
 
-class LearningCenterBody extends StatelessWidget {
+class LearningCenterBody extends ConsumerStatefulWidget {
   const LearningCenterBody({
     this.gradeId,
     this.gradeNumber,
+    this.initialSubjectId = 1,
     this.onBack,
     super.key,
   });
 
   final int? gradeId;
   final int? gradeNumber;
+  final int initialSubjectId;
   final VoidCallback? onBack;
+
+  @override
+  ConsumerState<LearningCenterBody> createState() => _LearningCenterBodyState();
+}
+
+class _LearningCenterBodyState extends ConsumerState<LearningCenterBody> {
+  late int _selectedSubjectId;
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedSubjectId = widget.initialSubjectId.clamp(1, 4);
+  }
 
   @override
   Widget build(BuildContext context) {
     const horizontalPadding = 10.0;
     final theme = Theme.of(context);
     final battambangTheme = GoogleFonts.battambangTextTheme(theme.textTheme);
+    final request = widget.gradeId == null
+        ? null
+        : LearningLessonsRequest(
+            gradeId: widget.gradeId!,
+            subjectId: _selectedSubjectId,
+          );
+    final lessonsState = request == null
+        ? null
+        : ref.watch(learningLessonsProvider(request));
 
     return Theme(
       data: theme.copyWith(textTheme: battambangTheme),
@@ -41,15 +69,37 @@ class LearningCenterBody extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _LearningHeader(onBack: onBack),
-                  if (gradeNumber != null) ...[
+                  _LearningHeader(
+                    onBack: widget.onBack,
+                    onSearchChanged: (value) {
+                      setState(() => _searchQuery = value.trim().toLowerCase());
+                    },
+                  ),
+                  if (widget.gradeNumber != null) ...[
                     const SizedBox(height: AppSizes.spacing24),
-                    _SelectedGradeBadge(gradeNumber: gradeNumber!),
+                    _SelectedGradeBadge(gradeNumber: widget.gradeNumber!),
                   ],
                   const SizedBox(height: AppSizes.spacing24),
-                  const _SubjectCategoryStrip(),
+                  _SubjectCategoryStrip(
+                    selectedSubjectId: _selectedSubjectId,
+                    onSelected: (subjectId) {
+                      if (_selectedSubjectId == subjectId) return;
+                      setState(() => _selectedSubjectId = subjectId);
+                    },
+                  ),
                   const SizedBox(height: AppSizes.spacing24),
-                  _CourseCardList(gradeId: gradeId, gradeNumber: gradeNumber),
+                  if (request == null || lessonsState == null)
+                    const _SelectGradeMessage()
+                  else
+                    _LessonResults(
+                      lessonsState: lessonsState,
+                      gradeId: widget.gradeId!,
+                      gradeNumber: widget.gradeNumber,
+                      subjectId: _selectedSubjectId,
+                      searchQuery: _searchQuery,
+                      onRetry: () =>
+                          ref.invalidate(learningLessonsProvider(request)),
+                    ),
                 ],
               ),
             ),
@@ -98,9 +148,10 @@ class _SelectedGradeBadge extends StatelessWidget {
 }
 
 class _LearningHeader extends StatelessWidget {
-  const _LearningHeader({this.onBack});
+  const _LearningHeader({this.onBack, required this.onSearchChanged});
 
   final VoidCallback? onBack;
+  final ValueChanged<String> onSearchChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -110,6 +161,7 @@ class _LearningHeader extends StatelessWidget {
     final search = ConstrainedBox(
       constraints: BoxConstraints(maxWidth: isWide ? 380 : double.infinity),
       child: TextField(
+        onChanged: onSearchChanged,
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
           hintText: context.l10n.text('learningCenterSearchHint'),
@@ -171,10 +223,17 @@ class _LearningHeader extends StatelessWidget {
 }
 
 class _SubjectCategoryStrip extends StatelessWidget {
-  const _SubjectCategoryStrip();
+  const _SubjectCategoryStrip({
+    required this.selectedSubjectId,
+    required this.onSelected,
+  });
+
+  final int selectedSubjectId;
+  final ValueChanged<int> onSelected;
 
   static const _subjects = [
     _SubjectCategoryData(
+      id: 1,
       labelKey: 'subjectMath',
       icon: Icons.calculate,
       background: Color(0xFFE0F2FE),
@@ -182,6 +241,7 @@ class _SubjectCategoryStrip extends StatelessWidget {
       border: Color(0xFF7DD3FC),
     ),
     _SubjectCategoryData(
+      id: 2,
       labelKey: 'subjectPhysics',
       icon: Icons.science,
       background: Color(0xFFE8EDFA),
@@ -189,6 +249,7 @@ class _SubjectCategoryStrip extends StatelessWidget {
       border: Color(0xFFB8C5E5),
     ),
     _SubjectCategoryData(
+      id: 3,
       labelKey: 'subjectChemistry',
       icon: Icons.biotech,
       background: Color(0xFFE0F2FE),
@@ -196,6 +257,7 @@ class _SubjectCategoryStrip extends StatelessWidget {
       border: Color(0xFF7DD3FC),
     ),
     _SubjectCategoryData(
+      id: 4,
       labelKey: 'subjectBiology',
       icon: Icons.eco,
       background: Color(0xFFE8EDFA),
@@ -211,7 +273,11 @@ class _SubjectCategoryStrip extends StatelessWidget {
       child: Row(
         children: [
           for (final subject in _subjects) ...[
-            _SubjectCategoryCard(subject: subject),
+            _SubjectCategoryCard(
+              subject: subject,
+              isSelected: subject.id == selectedSubjectId,
+              onTap: () => onSelected(subject.id),
+            ),
             const SizedBox(width: AppSizes.spacing16),
           ],
         ],
@@ -221,24 +287,35 @@ class _SubjectCategoryStrip extends StatelessWidget {
 }
 
 class _SubjectCategoryCard extends StatelessWidget {
-  const _SubjectCategoryCard({required this.subject});
+  const _SubjectCategoryCard({
+    required this.subject,
+    required this.isSelected,
+    required this.onTap,
+  });
 
   final _SubjectCategoryData subject;
+  final bool isSelected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: subject.background,
+      color: isSelected
+          ? Theme.of(context).colorScheme.primaryContainer
+          : subject.background,
       borderRadius: BorderRadius.circular(24),
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
-        onTap: () {},
+        onTap: onTap,
         child: Container(
           width: 112,
           padding: const EdgeInsets.all(AppSizes.spacing16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: subject.border, width: 2),
+            border: Border.all(
+              color: isSelected ? AppColors.primary : subject.border,
+              width: isSelected ? 2.5 : 2,
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -263,57 +340,59 @@ class _SubjectCategoryCard extends StatelessWidget {
   }
 }
 
-class _CourseCardList extends StatelessWidget {
-  const _CourseCardList({this.gradeId, this.gradeNumber});
+class _LessonResults extends StatelessWidget {
+  const _LessonResults({
+    required this.lessonsState,
+    required this.gradeId,
+    required this.gradeNumber,
+    required this.subjectId,
+    required this.searchQuery,
+    required this.onRetry,
+  });
 
-  final int? gradeId;
+  final AsyncValue<List<LearningLessonModel>> lessonsState;
+  final int gradeId;
   final int? gradeNumber;
-
-  static const _courses = [
-    _CourseCardData(
-      courseId: 'algebra',
-      subjectKey: 'subjectMath',
-      titleKey: 'chapterAlgebra',
-      icon: Icons.calculate,
-      rating: '4.8',
-      learners: '12+',
-      background: Color(0xFFE0F2FE),
-      foreground: AppColors.secondary,
-      accent: AppColors.primary,
-    ),
-    _CourseCardData(
-      courseId: 'force-motion',
-      subjectKey: 'subjectPhysics',
-      titleKey: 'chapterForceMotion',
-      icon: Icons.science,
-      rating: '4.5',
-      learners: '8+',
-      background: Color(0xFFE8EDFA),
-      foreground: AppColors.secondary,
-      accent: AppColors.secondary,
-    ),
-    _CourseCardData(
-      courseId: 'narrative',
-      subjectKey: 'subjectLiterature',
-      titleKey: 'chapterNarrative',
-      icon: Icons.language,
-      rating: '4.9',
-      learners: '20+',
-      background: Color(0xFFE0F2FE),
-      foreground: AppColors.secondary,
-      accent: AppColors.primary,
-    ),
-  ];
+  final int subjectId;
+  final String searchQuery;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
+    return lessonsState.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 48),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, _) => _LessonsError(onRetry: onRetry),
+      data: (lessons) {
+        if (lessons.isEmpty) return const _EmptyLessons();
+        return _buildFilteredLessonCards(lessons);
+      },
+    );
+  }
+
+  Widget _buildFilteredLessonCards(List<LearningLessonModel> lessons) {
+    final filtered = searchQuery.isEmpty
+        ? lessons
+        : lessons
+              .where(
+                (lesson) =>
+                    lesson.title.toLowerCase().contains(searchQuery) ||
+                    lesson.description.toLowerCase().contains(searchQuery),
+              )
+              .toList(growable: false);
+
+    if (filtered.isEmpty) return const _EmptyLessons();
+
     return Column(
       children: [
-        for (final course in _courses) ...[
-          _CourseCard(
-            course: course,
+        for (final lesson in filtered) ...[
+          _LessonCard(
+            lesson: lesson,
             gradeId: gradeId,
             gradeNumber: gradeNumber,
+            subjectId: subjectId,
           ),
           const SizedBox(height: AppSizes.spacing24),
         ],
@@ -322,37 +401,57 @@ class _CourseCardList extends StatelessWidget {
   }
 }
 
-class _CourseCard extends StatelessWidget {
-  const _CourseCard({required this.course, this.gradeId, this.gradeNumber});
+class _LessonCard extends StatelessWidget {
+  const _LessonCard({
+    required this.lesson,
+    required this.gradeId,
+    required this.gradeNumber,
+    required this.subjectId,
+  });
 
-  final _CourseCardData course;
-  final int? gradeId;
+  final LearningLessonModel lesson;
+  final int gradeId;
   final int? gradeNumber;
+  final int subjectId;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final background = subjectId.isOdd
+        ? const Color(0xFFE0F2FE)
+        : const Color(0xFFE8EDFA);
+    final accent = subjectId.isOdd ? AppColors.primary : AppColors.secondary;
+    final title = lesson.title.isEmpty
+        ? '${context.l10n.text(_subjectLabelKey(subjectId))} - ${context.l10n.text('lessonsTitle')}'
+        : lesson.title;
+    final description = lesson.description.isEmpty
+        ? context.l10n.text('gradeCardDescription')
+        : lesson.description;
+    final courseId = lesson.id.isEmpty
+        ? _fallbackCourseId(subjectId)
+        : lesson.id;
 
     return Material(
-      color: course.background,
+      color: background,
       borderRadius: BorderRadius.circular(32),
       child: InkWell(
         borderRadius: BorderRadius.circular(32),
-        onTap: () => context.goNamed(
-          LessonListPage.routeName,
-          pathParameters: {'courseId': course.courseId},
-          queryParameters: {
-            if (gradeId != null) 'gradeId': gradeId.toString(),
-            if (gradeNumber != null) 'gradeNumber': gradeNumber.toString(),
-          },
-        ),
+        onTap: lesson.isLocked
+            ? null
+            : () => context.goNamed(
+                LessonListPage.routeName,
+                pathParameters: {'courseId': courseId},
+                queryParameters: {
+                  'gradeId': gradeId.toString(),
+                  if (gradeNumber != null)
+                    'gradeNumber': gradeNumber.toString(),
+                  'subjectId': subjectId.toString(),
+                },
+              ),
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(32),
-            border: Border.all(
-              color: course.accent.withValues(alpha: 0.48),
-              width: 2,
-            ),
+            border: Border.all(color: accent.withValues(alpha: 0.48), width: 2),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.05),
@@ -390,16 +489,18 @@ class _CourseCard extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _CourseIcon(course: course),
+                        _LessonIcon(subjectId: subjectId),
                         const Spacer(),
-                        _RatingBadge(rating: course.rating),
+                        _RatingBadge(
+                          rating: lesson.rating > 0 ? lesson.rating : 4.8,
+                        ),
                       ],
                     ),
                     const SizedBox(height: AppSizes.spacing20),
                     Text(
-                      context.l10n.text(course.subjectKey),
+                      context.l10n.text(_subjectLabelKey(subjectId)),
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: course.foreground.withValues(alpha: 0.72),
+                        color: AppColors.secondary.withValues(alpha: 0.72),
                         fontSize: 14,
                         height: 1.42,
                         fontWeight: FontWeight.w500,
@@ -409,22 +510,35 @@ class _CourseCard extends StatelessWidget {
                     ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 360),
                       child: Text(
-                        context.l10n.text(course.titleKey),
+                        title,
                         style: theme.textTheme.titleLarge?.copyWith(
-                          color: course.foreground,
+                          color: AppColors.secondary,
                           fontSize: 20,
                           height: 1.4,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
+                    const SizedBox(height: AppSizes.spacing8),
+                    Text(
+                      description,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.secondary.withValues(alpha: 0.78),
+                        height: 1.5,
+                      ),
+                    ),
                     const SizedBox(height: AppSizes.spacing24),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        _LearnerStack(course: course),
+                        _LessonMeta(lesson: lesson),
                         const Spacer(),
-                        _OpenCourseButton(course: course),
+                        _OpenLessonButton(
+                          accent: accent,
+                          isLocked: lesson.isLocked,
+                        ),
                       ],
                     ),
                   ],
@@ -438,10 +552,10 @@ class _CourseCard extends StatelessWidget {
   }
 }
 
-class _CourseIcon extends StatelessWidget {
-  const _CourseIcon({required this.course});
+class _LessonIcon extends StatelessWidget {
+  const _LessonIcon({required this.subjectId});
 
-  final _CourseCardData course;
+  final int subjectId;
 
   @override
   Widget build(BuildContext context) {
@@ -459,7 +573,11 @@ class _CourseIcon extends StatelessWidget {
           ),
         ],
       ),
-      child: Icon(course.icon, color: course.foreground, size: 28),
+      child: Icon(
+        _subjectIcon(subjectId),
+        color: AppColors.secondary,
+        size: 28,
+      ),
     );
   }
 }
@@ -467,7 +585,7 @@ class _CourseIcon extends StatelessWidget {
 class _RatingBadge extends StatelessWidget {
   const _RatingBadge({required this.rating});
 
-  final String rating;
+  final double rating;
 
   @override
   Widget build(BuildContext context) {
@@ -482,36 +600,9 @@ class _RatingBadge extends StatelessWidget {
         children: [
           const Icon(Icons.star, size: 16),
           const SizedBox(width: 4),
-          Text(rating, style: const TextStyle(fontWeight: FontWeight.w900)),
-        ],
-      ),
-    );
-  }
-}
-
-class _LearnerStack extends StatelessWidget {
-  const _LearnerStack({required this.course});
-
-  final _CourseCardData course;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 92,
-      height: 42,
-      child: Stack(
-        children: [
-          _LearnerAvatar(
-            left: 0,
-            borderColor: course.background,
-            color: Colors.white,
-            label: 'A',
-          ),
-          _LearnerAvatar(
-            left: 28,
-            borderColor: course.background,
-            color: course.accent.withValues(alpha: 0.72),
-            label: course.learners,
+          Text(
+            rating.toStringAsFixed(1),
+            style: const TextStyle(fontWeight: FontWeight.w900),
           ),
         ],
       ),
@@ -519,45 +610,40 @@ class _LearnerStack extends StatelessWidget {
   }
 }
 
-class _LearnerAvatar extends StatelessWidget {
-  const _LearnerAvatar({
-    required this.left,
-    required this.borderColor,
-    required this.color,
-    required this.label,
-  });
+class _LessonMeta extends StatelessWidget {
+  const _LessonMeta({required this.lesson});
 
-  final double left;
-  final Color borderColor;
-  final Color color;
-  final String label;
+  final LearningLessonModel lesson;
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      left: left,
-      child: Container(
-        width: 42,
-        height: 42,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-          border: Border.all(color: borderColor, width: 2),
+    final parts = <String>[
+      '${lesson.durationMinutes > 0 ? lesson.durationMinutes : 12} min',
+      '${lesson.learnerCount > 0 ? lesson.learnerCount : 12} learners',
+    ];
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.schedule_outlined, size: 18),
+        const SizedBox(width: AppSizes.spacing4),
+        Text(
+          parts.isEmpty ? context.l10n.text('lessonsTitle') : parts.join(' · '),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppColors.secondary,
+            fontWeight: FontWeight.w700,
+          ),
         ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
-        ),
-      ),
+      ],
     );
   }
 }
 
-class _OpenCourseButton extends StatelessWidget {
-  const _OpenCourseButton({required this.course});
+class _OpenLessonButton extends StatelessWidget {
+  const _OpenLessonButton({required this.accent, required this.isLocked});
 
-  final _CourseCardData course;
+  final Color accent;
+  final bool isLocked;
 
   @override
   Widget build(BuildContext context) {
@@ -567,7 +653,7 @@ class _OpenCourseButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         shape: BoxShape.circle,
-        border: Border.all(color: course.accent, width: 2),
+        border: Border.all(color: accent, width: 2),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.10),
@@ -576,37 +662,88 @@ class _OpenCourseButton extends StatelessWidget {
           ),
         ],
       ),
-      child: Icon(Icons.arrow_forward, color: course.foreground),
+      child: Icon(
+        isLocked ? Icons.lock_outline : Icons.arrow_forward,
+        color: AppColors.secondary,
+      ),
     );
   }
 }
 
-class _CourseCardData {
-  const _CourseCardData({
-    required this.courseId,
-    required this.subjectKey,
-    required this.titleKey,
-    required this.icon,
-    required this.rating,
-    required this.learners,
-    required this.background,
-    required this.foreground,
-    required this.accent,
-  });
+class _LessonsError extends StatelessWidget {
+  const _LessonsError({required this.onRetry});
 
-  final String courseId;
-  final String subjectKey;
-  final String titleKey;
-  final IconData icon;
-  final String rating;
-  final String learners;
-  final Color background;
-  final Color foreground;
-  final Color accent;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 40),
+      child: Column(
+        children: [
+          const Icon(Icons.cloud_off_outlined, size: 40),
+          const SizedBox(height: AppSizes.spacing12),
+          Text(context.l10n.text('learningLessonsLoadFailed')),
+          const SizedBox(height: AppSizes.spacing16),
+          FilledButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh),
+            label: Text(context.l10n.text('retry')),
+          ),
+        ],
+      ),
+    );
+  }
 }
+
+class _EmptyLessons extends StatelessWidget {
+  const _EmptyLessons();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 48),
+      child: Center(child: Text(context.l10n.text('learningLessonsEmpty'))),
+    );
+  }
+}
+
+class _SelectGradeMessage extends StatelessWidget {
+  const _SelectGradeMessage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 48),
+      child: Center(child: Text(context.l10n.text('selectGradeFirst'))),
+    );
+  }
+}
+
+String _subjectLabelKey(int subjectId) => switch (subjectId) {
+  2 => 'subjectPhysics',
+  3 => 'subjectChemistry',
+  4 => 'subjectBiology',
+  _ => 'subjectMath',
+};
+
+IconData _subjectIcon(int subjectId) => switch (subjectId) {
+  2 => Icons.science,
+  3 => Icons.biotech,
+  4 => Icons.eco,
+  _ => Icons.calculate,
+};
+
+String _fallbackCourseId(int subjectId) => switch (subjectId) {
+  2 => 'force-motion',
+  3 => 'chemistry-foundations',
+  4 => 'biology-foundations',
+  _ => 'algebra',
+};
 
 class _SubjectCategoryData {
   const _SubjectCategoryData({
+    required this.id,
     required this.labelKey,
     required this.icon,
     required this.background,
@@ -614,6 +751,7 @@ class _SubjectCategoryData {
     required this.border,
   });
 
+  final int id;
   final String labelKey;
   final IconData icon;
   final Color background;

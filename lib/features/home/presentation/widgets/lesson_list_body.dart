@@ -16,12 +16,14 @@ class LessonListBody extends ConsumerWidget {
     required this.courseId,
     this.gradeId,
     this.gradeNumber,
+    this.subjectId,
     super.key,
   });
 
   final String courseId;
   final int? gradeId;
   final int? gradeNumber;
+  final int? subjectId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -38,6 +40,7 @@ class LessonListBody extends ConsumerWidget {
           bundle: bundle,
           gradeId: gradeId,
           gradeNumber: gradeNumber,
+          subjectId: subjectId,
         ),
         error: (_, _) => const _LessonListError(),
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -51,11 +54,13 @@ class _LessonListContent extends StatelessWidget {
     required this.bundle,
     this.gradeId,
     this.gradeNumber,
+    this.subjectId,
   });
 
   final CourseLessonBundle bundle;
   final int? gradeId;
   final int? gradeNumber;
+  final int? subjectId;
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +77,7 @@ class _LessonListContent extends StatelessWidget {
                   if (gradeId != null) 'gradeId': gradeId.toString(),
                   if (gradeNumber != null)
                     'gradeNumber': gradeNumber.toString(),
+                  if (subjectId != null) 'subjectId': subjectId.toString(),
                 },
               ),
             ),
@@ -105,6 +111,7 @@ class _LessonListContent extends StatelessWidget {
                           lesson: lesson,
                           gradeId: gradeId,
                           gradeNumber: gradeNumber,
+                          subjectId: subjectId,
                         ),
                         const SizedBox(height: AppSizes.spacing16),
                       ],
@@ -243,11 +250,17 @@ class _LessonSummaryCard extends StatelessWidget {
 }
 
 class _LessonTile extends StatelessWidget {
-  const _LessonTile({required this.lesson, this.gradeId, this.gradeNumber});
+  const _LessonTile({
+    required this.lesson,
+    this.gradeId,
+    this.gradeNumber,
+    this.subjectId,
+  });
 
   final LessonModel lesson;
   final int? gradeId;
   final int? gradeNumber;
+  final int? subjectId;
 
   @override
   Widget build(BuildContext context) {
@@ -273,6 +286,7 @@ class _LessonTile extends StatelessWidget {
                   if (gradeId != null) 'gradeId': gradeId.toString(),
                   if (gradeNumber != null)
                     'gradeNumber': gradeNumber.toString(),
+                  if (subjectId != null) 'subjectId': subjectId.toString(),
                 },
               ),
         child: Container(

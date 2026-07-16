@@ -8,6 +8,7 @@ class LessonListPage extends StatelessWidget {
     required this.courseId,
     this.gradeId,
     this.gradeNumber,
+    this.subjectId,
     super.key,
   });
 
@@ -17,6 +18,7 @@ class LessonListPage extends StatelessWidget {
   final String courseId;
   final int? gradeId;
   final int? gradeNumber;
+  final int? subjectId;
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +27,7 @@ class LessonListPage extends StatelessWidget {
         courseId: courseId,
         gradeId: gradeId,
         gradeNumber: gradeNumber,
+        subjectId: subjectId,
       ),
       bottomNavigationBar: const MainBottomNavigation(selectedIndex: 1),
     );

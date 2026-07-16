@@ -11,6 +11,7 @@ class LessonDetailPage extends StatelessWidget {
     required this.lessonId,
     this.gradeId,
     this.gradeNumber,
+    this.subjectId,
     super.key,
   });
 
@@ -21,6 +22,7 @@ class LessonDetailPage extends StatelessWidget {
   final String lessonId;
   final int? gradeId;
   final int? gradeNumber;
+  final int? subjectId;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +36,7 @@ class LessonDetailPage extends StatelessWidget {
           queryParameters: {
             if (gradeId != null) 'gradeId': gradeId.toString(),
             if (gradeNumber != null) 'gradeNumber': gradeNumber.toString(),
+            if (subjectId != null) 'subjectId': subjectId.toString(),
           },
         ),
       ),
