@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_sizes.dart';
-import '../../../../localization/app_localizations.dart';
 import 'auth_logo.dart';
-import 'language_menu_button.dart';
-import 'theme_toggle_button.dart';
 
 class AuthScaffold extends StatelessWidget {
   const AuthScaffold({
@@ -23,14 +20,6 @@ class AuthScaffold extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(context.l10n.text('appName')),
-        actions: const [
-          LanguageMenuButton(),
-          ThemeToggleButton(),
-          SizedBox(width: AppSizes.spacing8),
-        ],
-      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
