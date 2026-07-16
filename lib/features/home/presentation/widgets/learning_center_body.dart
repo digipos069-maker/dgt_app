@@ -8,10 +8,16 @@ import '../../../../theme/app_colors.dart';
 import '../pages/lesson_list_page.dart';
 
 class LearningCenterBody extends StatelessWidget {
-  const LearningCenterBody({this.gradeId, this.gradeNumber, super.key});
+  const LearningCenterBody({
+    this.gradeId,
+    this.gradeNumber,
+    this.onBack,
+    super.key,
+  });
 
   final int? gradeId;
   final int? gradeNumber;
+  final VoidCallback? onBack;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +41,7 @@ class LearningCenterBody extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const _LearningHeader(),
+                  _LearningHeader(onBack: onBack),
                   if (gradeNumber != null) ...[
                     const SizedBox(height: AppSizes.spacing24),
                     _SelectedGradeBadge(gradeNumber: gradeNumber!),
@@ -92,7 +98,9 @@ class _SelectedGradeBadge extends StatelessWidget {
 }
 
 class _LearningHeader extends StatelessWidget {
-  const _LearningHeader();
+  const _LearningHeader({this.onBack});
+
+  final VoidCallback? onBack;
 
   @override
   Widget build(BuildContext context) {
@@ -129,13 +137,35 @@ class _LearningHeader extends StatelessWidget {
       ),
     );
 
+    final backButton = IconButton.outlined(
+      onPressed: onBack,
+      tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+      icon: const Icon(Icons.arrow_back),
+      color: theme.colorScheme.secondary,
+      style: IconButton.styleFrom(
+        minimumSize: const Size(48, 48),
+        side: BorderSide(
+          color: theme.colorScheme.primary.withValues(alpha: 0.72),
+          width: 1.5,
+        ),
+      ),
+    );
+
     if (!isWide) {
-      return search;
+      return Row(
+        children: [
+          if (onBack != null) ...[
+            backButton,
+            const SizedBox(width: AppSizes.spacing8),
+          ],
+          Expanded(child: search),
+        ],
+      );
     }
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
-      children: [const Spacer(), search],
+      children: [if (onBack != null) backButton, const Spacer(), search],
     );
   }
 }

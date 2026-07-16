@@ -23,13 +23,7 @@ class LearningCenterPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return ScrollHidingHeaderScaffold(
       header: AppBar(
-        leading: gradeId == null
-            ? null
-            : IconButton(
-                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-                onPressed: () => context.goNamed(GradeListPage.routeName),
-                icon: const Icon(Icons.arrow_back),
-              ),
+        automaticallyImplyLeading: false,
         title: Text(context.l10n.text('menuLearningCenter')),
         actions: const [
           LanguageMenuButton(),
@@ -37,7 +31,13 @@ class LearningCenterPage extends StatelessWidget {
           SizedBox(width: AppSizes.spacing8),
         ],
       ),
-      body: LearningCenterBody(gradeId: gradeId, gradeNumber: gradeNumber),
+      body: LearningCenterBody(
+        gradeId: gradeId,
+        gradeNumber: gradeNumber,
+        onBack: gradeId == null
+            ? null
+            : () => context.goNamed(GradeListPage.routeName),
+      ),
       bottomNavigationBar: const MainBottomNavigation(selectedIndex: 1),
     );
   }
