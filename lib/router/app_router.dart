@@ -7,6 +7,8 @@ import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/register_page.dart';
 import '../features/home/presentation/pages/ai_tutor_page.dart';
 import '../features/home/presentation/pages/basic_course_page.dart';
+import '../features/home/presentation/pages/basic_lesson_detail_page.dart';
+import '../features/home/presentation/pages/basic_lesson_list_page.dart';
 import '../features/home/presentation/pages/learning_center_page.dart';
 import '../features/home/presentation/pages/lesson_detail_page.dart';
 import '../features/home/presentation/pages/lesson_list_page.dart';
@@ -64,6 +66,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: BasicCoursePage.routeName,
         pageBuilder: (context, state) =>
             _noTransitionPage(state, const BasicCoursePage()),
+      ),
+      GoRoute(
+        path: BasicLessonListPage.routePath,
+        name: BasicLessonListPage.routeName,
+        pageBuilder: (context, state) => _noTransitionPage(
+          state,
+          BasicLessonListPage(
+            courseId: state.pathParameters['courseId'] ?? 'mathematics',
+          ),
+        ),
+      ),
+      GoRoute(
+        path: BasicLessonDetailPage.routePath,
+        name: BasicLessonDetailPage.routeName,
+        pageBuilder: (context, state) => _noTransitionPage(
+          state,
+          BasicLessonDetailPage(
+            courseId: state.pathParameters['courseId'] ?? 'mathematics',
+            lessonId: state.pathParameters['lessonId'] ?? 'numbers-operations',
+          ),
+        ),
       ),
       GoRoute(
         path: AiTutorPage.routePath,

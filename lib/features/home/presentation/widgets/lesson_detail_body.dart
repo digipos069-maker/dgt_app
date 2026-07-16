@@ -36,7 +36,7 @@ class LessonDetailBody extends ConsumerWidget {
     return Theme(
       data: theme.copyWith(textTheme: battambangTheme),
       child: detailState.when(
-        data: (detail) => _LessonDetailContent(detail: detail),
+        data: (detail) => LessonDetailContent(detail: detail),
         error: (_, _) => Center(child: Text(context.l10n.text('authFailed'))),
         loading: () => const Center(child: CircularProgressIndicator()),
       ),
@@ -44,23 +44,24 @@ class LessonDetailBody extends ConsumerWidget {
   }
 }
 
-class _LessonDetailContent extends StatefulWidget {
-  const _LessonDetailContent({required this.detail});
+class LessonDetailContent extends StatefulWidget {
+  const LessonDetailContent({required this.detail, this.onBack, super.key});
 
   final LessonDetailModel detail;
+  final VoidCallback? onBack;
 
   @override
-  State<_LessonDetailContent> createState() => _LessonDetailContentState();
+  State<LessonDetailContent> createState() => _LessonDetailContentState();
 }
 
-class _LessonDetailContentState extends State<_LessonDetailContent> {
+class _LessonDetailContentState extends State<LessonDetailContent> {
   final Map<String, String> _answers = {};
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: ScrollHidingHeader(
-        header: _DetailHeader(detail: widget.detail),
+        header: _DetailHeader(detail: widget.detail, onBack: widget.onBack),
         headerHeight: 56,
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(10, AppSizes.spacing16, 10, 128),
@@ -90,9 +91,10 @@ class _LessonDetailContentState extends State<_LessonDetailContent> {
 }
 
 class _DetailHeader extends StatelessWidget {
-  const _DetailHeader({required this.detail});
+  const _DetailHeader({required this.detail, this.onBack});
 
   final LessonDetailModel detail;
+  final VoidCallback? onBack;
 
   @override
   Widget build(BuildContext context) {
@@ -114,10 +116,12 @@ class _DetailHeader extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            onPressed: () => context.goNamed(
-              LessonListPage.routeName,
-              pathParameters: {'courseId': detail.courseId},
-            ),
+            onPressed:
+                onBack ??
+                () => context.goNamed(
+                  LessonListPage.routeName,
+                  pathParameters: {'courseId': detail.courseId},
+                ),
             icon: const Icon(Icons.arrow_back),
           ),
           Expanded(

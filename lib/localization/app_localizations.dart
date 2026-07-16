@@ -86,6 +86,8 @@ class AppLocalizations {
       'menuResource': 'Resource',
       'basicCourseLoadFailed': 'Could not load basic courses.',
       'basicCourseEmpty': 'No basic courses are available yet.',
+      'basicLessonsTitle': 'Basic lessons',
+      'basicLessonLoadFailed': 'Could not load basic lessons.',
       'retry': 'Try again',
       'comingSoon': 'Coming soon',
       'learningCenterHero': 'Discover courses',
@@ -245,6 +247,8 @@ class AppLocalizations {
       'menuResource': 'ធនធាន',
       'basicCourseLoadFailed': 'មិនអាចទាញយកមុខវិជ្ជាមូលដ្ឋានបានទេ។',
       'basicCourseEmpty': 'មិនទាន់មានមុខវិជ្ជាមូលដ្ឋាននៅឡើយទេ។',
+      'basicLessonsTitle': 'មេរៀនមូលដ្ឋាន',
+      'basicLessonLoadFailed': 'មិនអាចទាញយកមេរៀនមូលដ្ឋានបានទេ។',
       'retry': 'ព្យាយាមម្តងទៀត',
       'comingSoon': 'មកដល់ឆាប់ៗនេះ',
       'learningCenterHero': 'រុករកវគ្គសិក្សា',
@@ -335,7 +339,7 @@ class AppLocalizations {
   };
 
   String text(String key) =>
-      _values[locale.languageCode]?[key] ?? _values['en']![key]!;
+      _values[locale.languageCode]?[key] ?? _values['en']?[key] ?? key;
 }
 
 extension AppLocalizationsX on BuildContext {

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../application/basic_course_controller.dart';
 import '../../domain/models/basic_course_model.dart';
+import '../pages/basic_lesson_list_page.dart';
 
 class BasicCourseBody extends ConsumerWidget {
   const BasicCourseBody({super.key});
@@ -91,7 +93,10 @@ class _BasicCourseCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () {},
+        onTap: () => context.goNamed(
+          BasicLessonListPage.routeName,
+          pathParameters: {'courseId': course.id},
+        ),
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
