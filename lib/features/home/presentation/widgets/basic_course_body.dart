@@ -90,7 +90,7 @@ class _BasicCourseCard extends StatelessWidget {
 
     return Material(
       color: colors.surface,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppSizes.cardRadius),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => context.goNamed(
@@ -99,7 +99,7 @@ class _BasicCourseCard extends StatelessWidget {
         ),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSizes.cardRadius),
             border: Border.all(
               color: accent.withValues(alpha: 0.42),
               width: 1.5,

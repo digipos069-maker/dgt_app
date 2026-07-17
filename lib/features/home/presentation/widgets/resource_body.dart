@@ -144,7 +144,7 @@ class _ResourceCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSizes.spacing16),
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
         border: Border.all(
           color: resource.isLocked
               ? colors.outlineVariant

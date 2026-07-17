@@ -199,7 +199,7 @@ class _LessonSummaryCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(AppSizes.featureCardRadius),
         border: Border.all(color: AppColors.primary, width: 2),
         boxShadow: [
           BoxShadow(
@@ -283,9 +283,9 @@ class _LessonTile extends StatelessWidget {
       color: isLocked
           ? theme.colorScheme.surfaceContainerLow
           : theme.colorScheme.surfaceContainerLowest,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppSizes.cardRadius),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
         onTap: isLocked
             ? null
             : () => context.goNamed(
@@ -303,7 +303,7 @@ class _LessonTile extends StatelessWidget {
               ),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSizes.cardRadius),
             border: Border.all(
               color: isLocked
                   ? theme.colorScheme.outlineVariant.withValues(alpha: 0.35)

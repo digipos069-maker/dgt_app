@@ -138,7 +138,7 @@ class _GradeCard extends StatelessWidget {
 
     return Material(
       color: colors.surface,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppSizes.cardRadius),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => context.goNamed(
@@ -151,7 +151,7 @@ class _GradeCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(AppSizes.spacing16),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSizes.cardRadius),
             border: Border.all(
               color: accent.withValues(alpha: 0.48),
               width: 1.5,
