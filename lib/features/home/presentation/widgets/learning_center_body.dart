@@ -313,12 +313,13 @@ class _LessonResults extends StatelessWidget {
   Widget _buildLessonCards(List<LearningLessonModel> lessons) {
     return Column(
       children: [
-        for (final lesson in lessons) ...[
+        for (var index = 0; index < lessons.length; index++) ...[
           _LessonCard(
-            lesson: lesson,
+            lesson: lessons[index],
             gradeId: gradeId,
             gradeNumber: gradeNumber,
             subjectId: subjectId,
+            usePrimaryStyle: index.isEven,
           ),
           const SizedBox(height: AppSizes.spacing24),
         ],
@@ -333,26 +334,25 @@ class _LessonCard extends StatelessWidget {
     required this.gradeId,
     required this.gradeNumber,
     required this.subjectId,
+    required this.usePrimaryStyle,
   });
 
   final LearningLessonModel lesson;
   final int gradeId;
   final int? gradeNumber;
   final int subjectId;
+  final bool usePrimaryStyle;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final background = subjectId.isOdd
+    final background = usePrimaryStyle
         ? const Color(0xFFE0F2FE)
         : const Color(0xFFE8EDFA);
-    final accent = subjectId.isOdd ? AppColors.primary : AppColors.secondary;
+    final accent = usePrimaryStyle ? AppColors.primary : AppColors.secondary;
     final title = lesson.title.isEmpty
         ? '${context.l10n.text(_subjectLabelKey(subjectId))} - ${context.l10n.text('lessonsTitle')}'
         : lesson.title;
-    final description = lesson.description.isEmpty
-        ? context.l10n.text('gradeCardDescription')
-        : lesson.description;
     final courseId = lesson.id.isEmpty
         ? _fallbackCourseId(subjectId)
         : lesson.id;
@@ -443,16 +443,6 @@ class _LessonCard extends StatelessWidget {
                           height: 1.4,
                           fontWeight: FontWeight.w700,
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSizes.spacing8),
-                    Text(
-                      description,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.secondary.withValues(alpha: 0.78),
-                        height: 1.5,
                       ),
                     ),
                     const SizedBox(height: AppSizes.spacing24),

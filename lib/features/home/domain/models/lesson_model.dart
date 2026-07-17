@@ -10,6 +10,11 @@ class LessonModel {
     required this.type,
     required this.durationMinutes,
     required this.isCompleted,
+    this.title,
+    this.description = '',
+    this.mainVideoUrl = '',
+    this.videoThumbnail = '',
+    this.orderId = 0,
   });
 
   final String courseId;
@@ -18,6 +23,11 @@ class LessonModel {
   final LessonType type;
   final int durationMinutes;
   final bool isCompleted;
+  final String? title;
+  final String description;
+  final String mainVideoUrl;
+  final String videoThumbnail;
+  final int orderId;
 
   IconData get icon {
     return switch (type) {

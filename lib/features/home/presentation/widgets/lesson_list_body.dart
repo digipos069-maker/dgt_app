@@ -7,6 +7,7 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../../../theme/app_colors.dart';
 import '../../application/lesson_controller.dart';
+import '../../application/tutorial_controller.dart';
 import '../../domain/models/lesson_model.dart';
 import '../pages/lesson_detail_page.dart';
 import '../pages/learning_center_page.dart';
@@ -31,7 +32,18 @@ class LessonListBody extends ConsumerWidget {
     final battambangTheme = GoogleFonts.battambangTextTheme(
       theme.textTheme,
     ).apply(fontSizeDelta: 3);
-    final lessonsState = ref.watch(lessonBundleProvider(courseId));
+    final lessonId = int.tryParse(courseId);
+    final tutorialRequest =
+        gradeId == null || subjectId == null || lessonId == null
+        ? null
+        : TutorialRequest(
+            subjectId: subjectId!,
+            gradeId: gradeId!,
+            lessonId: lessonId,
+          );
+    final lessonsState = tutorialRequest == null
+        ? ref.watch(lessonBundleProvider(courseId))
+        : ref.watch(tutorialBundleProvider(tutorialRequest));
 
     return Theme(
       data: theme.copyWith(textTheme: battambangTheme),
@@ -318,7 +330,9 @@ class _LessonTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      context.l10n.text(lesson.titleKey),
+                      lesson.title?.isNotEmpty == true
+                          ? lesson.title!
+                          : context.l10n.text(lesson.titleKey),
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: theme.colorScheme.onSurface,
                         fontWeight: FontWeight.w700,
