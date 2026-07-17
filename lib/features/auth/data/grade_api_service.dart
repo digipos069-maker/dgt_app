@@ -11,7 +11,9 @@ class GradeApiService {
   final http.Client _client;
 
   Future<List<Object?>> fetchGrades() async {
-    final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.gradesPath}');
+    final uri = Uri.parse(
+      '${ApiConstants.baseUrl}${ApiConstants.gradesPath}',
+    ).replace(queryParameters: const {'order': 'desc'});
     final response = await _client
         .get(uri, headers: const {'Accept': 'application/json'})
         .timeout(const Duration(seconds: 15));
