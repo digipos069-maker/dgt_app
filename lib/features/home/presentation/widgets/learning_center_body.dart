@@ -15,14 +15,14 @@ class LearningCenterBody extends ConsumerStatefulWidget {
     this.gradeId,
     this.gradeNumber,
     this.initialSubjectId = 1,
-    this.onBack,
+    required this.onBack,
     super.key,
   });
 
   final int? gradeId;
   final int? gradeNumber;
   final int initialSubjectId;
-  final VoidCallback? onBack;
+  final VoidCallback onBack;
 
   @override
   ConsumerState<LearningCenterBody> createState() => _LearningCenterBodyState();
@@ -30,7 +30,6 @@ class LearningCenterBody extends ConsumerStatefulWidget {
 
 class _LearningCenterBodyState extends ConsumerState<LearningCenterBody> {
   late int _selectedSubjectId;
-  String _searchQuery = '';
 
   @override
   void initState() {
@@ -67,56 +66,54 @@ class _LearningCenterBodyState extends ConsumerState<LearningCenterBody> {
     return Theme(
       data: theme.copyWith(textTheme: battambangTheme),
       child: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _refreshLessons,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.fromLTRB(
-              horizontalPadding,
-              32,
-              horizontalPadding,
-              112,
-            ),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1280),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _LearningHeader(
-                      onBack: widget.onBack,
-                      onSearchChanged: (value) {
-                        setState(
-                          () => _searchQuery = value.trim().toLowerCase(),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: AppSizes.spacing24),
-                    _SubjectCategoryStrip(
-                      selectedSubjectId: _selectedSubjectId,
-                      onSelected: (subjectId) {
-                        if (_selectedSubjectId == subjectId) return;
-                        setState(() => _selectedSubjectId = subjectId);
-                      },
-                    ),
-                    const SizedBox(height: AppSizes.spacing24),
-                    if (request == null || lessonsState == null)
-                      const _SelectGradeMessage()
-                    else
-                      _LessonResults(
-                        lessonsState: lessonsState,
-                        gradeId: widget.gradeId!,
-                        gradeNumber: widget.gradeNumber,
-                        subjectId: _selectedSubjectId,
-                        searchQuery: _searchQuery,
-                        onRetry: () =>
-                            ref.invalidate(learningLessonsProvider(request)),
+        child: Column(
+          children: [
+            SizedBox(height: 56, child: _LearningHeader(onBack: widget.onBack)),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _refreshLessons,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    32,
+                    horizontalPadding,
+                    112,
+                  ),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1280),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _SubjectCategoryStrip(
+                            selectedSubjectId: _selectedSubjectId,
+                            onSelected: (subjectId) {
+                              if (_selectedSubjectId == subjectId) return;
+                              setState(() => _selectedSubjectId = subjectId);
+                            },
+                          ),
+                          const SizedBox(height: AppSizes.spacing24),
+                          if (request == null || lessonsState == null)
+                            const _SelectGradeMessage()
+                          else
+                            _LessonResults(
+                              lessonsState: lessonsState,
+                              gradeId: widget.gradeId!,
+                              gradeNumber: widget.gradeNumber,
+                              subjectId: _selectedSubjectId,
+                              onRetry: () => ref.invalidate(
+                                learningLessonsProvider(request),
+                              ),
+                            ),
+                        ],
                       ),
-                  ],
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -124,76 +121,43 @@ class _LearningCenterBodyState extends ConsumerState<LearningCenterBody> {
 }
 
 class _LearningHeader extends StatelessWidget {
-  const _LearningHeader({this.onBack, required this.onSearchChanged});
+  const _LearningHeader({required this.onBack});
 
-  final VoidCallback? onBack;
-  final ValueChanged<String> onSearchChanged;
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isWide = MediaQuery.sizeOf(context).width >= 720;
 
-    final search = ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: isWide ? 380 : double.infinity),
-      child: TextField(
-        onChanged: onSearchChanged,
-        textInputAction: TextInputAction.search,
-        decoration: InputDecoration(
-          hintText: context.l10n.text('learningCenterSearchHint'),
-          prefixIcon: const Icon(Icons.search),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.spacing16,
-            vertical: 14,
+    return Container(
+      color: theme.colorScheme.surface.withValues(alpha: 0.92),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.spacing16,
+        vertical: AppSizes.spacing8,
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: onBack,
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            icon: const Icon(Icons.arrow_back),
+            color: theme.colorScheme.secondary,
           ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(999),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(999),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(999),
-            borderSide: BorderSide(
-              color: theme.colorScheme.secondary.withValues(alpha: 0.5),
-              width: 2,
+          Expanded(
+            child: Text(
+              context.l10n.text('menuLearningCenter'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.secondary,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
-        ),
-      ),
-    );
-
-    final backButton = IconButton.outlined(
-      onPressed: onBack,
-      tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-      icon: const Icon(Icons.arrow_back),
-      color: theme.colorScheme.secondary,
-      style: IconButton.styleFrom(
-        minimumSize: const Size(48, 48),
-        side: BorderSide(
-          color: theme.colorScheme.primary.withValues(alpha: 0.72),
-          width: 1.5,
-        ),
-      ),
-    );
-
-    if (!isWide) {
-      return Row(
-        children: [
-          if (onBack != null) ...[
-            backButton,
-            const SizedBox(width: AppSizes.spacing8),
-          ],
-          Expanded(child: search),
+          const SizedBox(width: 48),
         ],
-      );
-    }
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [if (onBack != null) backButton, const Spacer(), search],
+      ),
     );
   }
 }
@@ -322,7 +286,6 @@ class _LessonResults extends StatelessWidget {
     required this.gradeId,
     required this.gradeNumber,
     required this.subjectId,
-    required this.searchQuery,
     required this.onRetry,
   });
 
@@ -330,7 +293,6 @@ class _LessonResults extends StatelessWidget {
   final int gradeId;
   final int? gradeNumber;
   final int subjectId;
-  final String searchQuery;
   final VoidCallback onRetry;
 
   @override
@@ -343,27 +305,15 @@ class _LessonResults extends StatelessWidget {
       error: (_, _) => _LessonsError(onRetry: onRetry),
       data: (lessons) {
         if (lessons.isEmpty) return const _EmptyLessons();
-        return _buildFilteredLessonCards(lessons);
+        return _buildLessonCards(lessons);
       },
     );
   }
 
-  Widget _buildFilteredLessonCards(List<LearningLessonModel> lessons) {
-    final filtered = searchQuery.isEmpty
-        ? lessons
-        : lessons
-              .where(
-                (lesson) =>
-                    lesson.title.toLowerCase().contains(searchQuery) ||
-                    lesson.description.toLowerCase().contains(searchQuery),
-              )
-              .toList(growable: false);
-
-    if (filtered.isEmpty) return const _EmptyLessons();
-
+  Widget _buildLessonCards(List<LearningLessonModel> lessons) {
     return Column(
       children: [
-        for (final lesson in filtered) ...[
+        for (final lesson in lessons) ...[
           _LessonCard(
             lesson: lesson,
             gradeId: gradeId,
