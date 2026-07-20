@@ -27,6 +27,22 @@ class UserModel {
   final List<SubscriptionModel> subscriptions;
   final List<PaymentHistoryModel> paymentHistory;
 
+  Map<String, dynamic> toStoredSessionJson() {
+    return {
+      'accessToken': token,
+      'user': {
+        'id': id,
+        'email': email,
+        'name': username,
+        'grade': grade,
+        'image': imageUrl,
+        'phone': phone,
+        'address': address,
+        'roles': roles,
+      },
+    };
+  }
+
   factory UserModel.fromLoginResponse(
     Map<String, dynamic> json, {
     String? fallbackToken,

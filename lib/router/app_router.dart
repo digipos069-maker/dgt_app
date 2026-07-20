@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/auth/presentation/pages/home_page.dart';
+import '../features/auth/application/auth_controller.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/payment_history_page.dart';
 import '../features/auth/presentation/pages/profile_page.dart';
@@ -18,8 +19,17 @@ import '../features/home/presentation/pages/lesson_list_page.dart';
 import '../features/home/presentation/pages/resource_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final isAuthenticated = ref.watch(
+    authControllerProvider.select(
+      (authState) => switch (authState) {
+        AsyncData(:final value) => value != null,
+        _ => false,
+      },
+    ),
+  );
+
   return GoRouter(
-    initialLocation: LoginPage.routePath,
+    initialLocation: isAuthenticated ? HomePage.routePath : LoginPage.routePath,
     routes: [
       GoRoute(
         path: LoginPage.routePath,

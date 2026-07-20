@@ -89,7 +89,10 @@ class AuthApiService {
     final jsonBody = _decodeBody(response.body);
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw AppException(_readMessage(jsonBody) ?? 'Failed to load profile');
+      throw AppException(
+        _readMessage(jsonBody) ?? 'Failed to load profile',
+        statusCode: response.statusCode,
+      );
     }
     if (jsonBody['success'] == false) {
       throw AppException(_readMessage(jsonBody) ?? 'Failed to load profile');
