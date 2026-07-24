@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/widgets/mixed_latex_text.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../../../theme/app_colors.dart';
 import '../../application/lesson_controller.dart';
@@ -476,18 +477,12 @@ class _QuizQuestion extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text.rich(
-          TextSpan(
-            children: [
-              TextSpan(
-                text: '${context.l10n.text('questionPrefix')}$number. ',
-                style: TextStyle(
-                  color: theme.colorScheme.secondary,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              TextSpan(text: context.l10n.text(question.questionKey)),
-            ],
+        MixedLatexText(
+          text: context.l10n.text(question.questionKey),
+          prefix: '${context.l10n.text('questionPrefix')}$number. ',
+          prefixStyle: TextStyle(
+            color: theme.colorScheme.secondary,
+            fontWeight: FontWeight.w900,
           ),
           style: theme.textTheme.bodyLarge?.copyWith(
             color: theme.colorScheme.onSurface,
@@ -557,8 +552,8 @@ class _QuizOption extends StatelessWidget {
             _SelectionIndicator(isSelected: isSelected),
             const SizedBox(width: AppSizes.spacing8),
             Expanded(
-              child: Text(
-                context.l10n.text(option.labelKey),
+              child: MixedLatexText(
+                text: context.l10n.text(option.labelKey),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurface,
                 ),
