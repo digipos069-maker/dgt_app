@@ -7,4 +7,5 @@ abstract final class ApiConstants {
   static const lessonsPath = '/api/lessons';
   static const tutorialsPath = '/api/tutorials';
   static const tutorialBySlugPath = '$tutorialsPath/slug';
+  static const quizSubmitPath = '/api/quiz/submit';
 }

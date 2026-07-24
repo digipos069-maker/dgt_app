@@ -5,12 +5,15 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/utils/app_exception.dart';
 import '../../../../core/widgets/mixed_latex_text.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../../../theme/app_colors.dart';
 import '../../application/lesson_controller.dart';
+import '../../application/quiz_controller.dart';
 import '../../application/tutorial_controller.dart';
 import '../../domain/models/lesson_model.dart';
+import '../../domain/models/quiz_submission_result.dart';
 import '../pages/lesson_list_page.dart';
 
 class LessonDetailBody extends ConsumerWidget {
@@ -57,18 +60,119 @@ class LessonDetailBody extends ConsumerWidget {
   }
 }
 
-class LessonDetailContent extends StatefulWidget {
+class LessonDetailContent extends ConsumerStatefulWidget {
   const LessonDetailContent({required this.detail, this.onBack, super.key});
 
   final LessonDetailModel detail;
   final VoidCallback? onBack;
 
   @override
-  State<LessonDetailContent> createState() => _LessonDetailContentState();
+  ConsumerState<LessonDetailContent> createState() =>
+      _LessonDetailContentState();
 }
 
-class _LessonDetailContentState extends State<LessonDetailContent> {
+class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
   final Map<String, String> _answers = {};
+  final Set<String> _submittingQuestions = {};
+  final Set<String> _submittedQuestions = {};
+
+  Future<void> _submitQuestion(QuizQuestionModel question) async {
+    final selectedOptionId = _answers[question.id];
+    if (selectedOptionId == null) {
+      await _showQuizDialog(
+        icon: Icons.touch_app_outlined,
+        color: Theme.of(context).colorScheme.primary,
+        title: context.l10n.text('submitQuiz'),
+        message: context.l10n.text('quizSelectAnswer'),
+      );
+      return;
+    }
+
+    final quizId = int.tryParse(question.id);
+    if (quizId == null) {
+      await _showQuizDialog(
+        icon: Icons.info_outline,
+        color: Theme.of(context).colorScheme.secondary,
+        title: context.l10n.text('quizSubmitFailed'),
+        message: context.l10n.text('quizSubmissionUnavailable'),
+      );
+      return;
+    }
+
+    final selectedOption = question.options.firstWhere(
+      (option) => option.id == selectedOptionId,
+    );
+    final genericFailureMessage = context.l10n.text('quizSubmitFailedMessage');
+    setState(() => _submittingQuestions.add(question.id));
+
+    QuizSubmissionResult? result;
+    String? errorMessage;
+    try {
+      result = await ref
+          .read(quizSubmissionControllerProvider)
+          .submitAnswer(
+            quizId: quizId,
+            selectedAnswer: selectedOption.labelKey,
+          );
+    } on AppException catch (error) {
+      errorMessage = error.message;
+    } on Object {
+      errorMessage = genericFailureMessage;
+    } finally {
+      if (mounted) {
+        setState(() => _submittingQuestions.remove(question.id));
+      }
+    }
+
+    if (!mounted) return;
+    if (result == null) {
+      await _showQuizDialog(
+        icon: Icons.error_outline,
+        color: Theme.of(context).colorScheme.error,
+        title: context.l10n.text('quizSubmitFailed'),
+        message: errorMessage?.isNotEmpty == true
+            ? errorMessage!
+            : context.l10n.text('quizSubmitFailedMessage'),
+      );
+      return;
+    }
+
+    final isIncorrect = result.isCorrect == false;
+    if (!isIncorrect) {
+      setState(() => _submittedQuestions.add(question.id));
+    }
+    await _showQuizDialog(
+      icon: isIncorrect ? Icons.refresh : Icons.check_circle_outline,
+      color: isIncorrect ? Colors.orange.shade700 : AppColors.success,
+      title: context.l10n.text(isIncorrect ? 'quizTryAgain' : 'quizSubmitted'),
+      message: result.message.isNotEmpty
+          ? result.message
+          : context.l10n.text(isIncorrect ? 'quizIncorrect' : 'quizCorrect'),
+    );
+  }
+
+  Future<void> _showQuizDialog({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String message,
+  }) {
+    return showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: Icon(icon, color: color, size: 44),
+        title: Text(title, textAlign: TextAlign.center),
+        content: Text(message, textAlign: TextAlign.center),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(context.l10n.text('close')),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,8 +203,14 @@ class _LessonDetailContentState extends State<LessonDetailContent> {
                         detail: widget.detail,
                         answers: _answers,
                         onChanged: (questionId, optionId) {
-                          setState(() => _answers[questionId] = optionId);
+                          setState(() {
+                            _answers[questionId] = optionId;
+                            _submittedQuestions.remove(questionId);
+                          });
                         },
+                        submittingQuestions: _submittingQuestions,
+                        submittedQuestions: _submittedQuestions,
+                        onSubmit: _submitQuestion,
                       ),
                     ],
                   ),
@@ -372,11 +482,17 @@ class _QuizSection extends StatelessWidget {
     required this.detail,
     required this.answers,
     required this.onChanged,
+    required this.submittingQuestions,
+    required this.submittedQuestions,
+    required this.onSubmit,
   });
 
   final LessonDetailModel detail;
   final Map<String, String> answers;
   final void Function(String questionId, String optionId) onChanged;
+  final Set<String> submittingQuestions;
+  final Set<String> submittedQuestions;
+  final ValueChanged<QuizQuestionModel> onSubmit;
 
   @override
   Widget build(BuildContext context) {
@@ -440,17 +556,12 @@ class _QuizSection extends StatelessWidget {
               question: question,
               selectedOption: answers[question.id],
               onChanged: (optionId) => onChanged(question.id, optionId),
+              isSubmitting: submittingQuestions.contains(question.id),
+              isSubmitted: submittedQuestions.contains(question.id),
+              onSubmit: () => onSubmit(question),
             ),
             const SizedBox(height: AppSizes.spacing24),
           ],
-          Align(
-            alignment: Alignment.centerRight,
-            child: FilledButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.arrow_forward),
-              label: Text(context.l10n.text('submitQuiz')),
-            ),
-          ),
         ],
       ),
     );
@@ -463,12 +574,18 @@ class _QuizQuestion extends StatelessWidget {
     required this.question,
     required this.selectedOption,
     required this.onChanged,
+    required this.isSubmitting,
+    required this.isSubmitted,
+    required this.onSubmit,
   });
 
   final int number;
   final QuizQuestionModel question;
   final String? selectedOption;
   final ValueChanged<String> onChanged;
+  final bool isSubmitting;
+  final bool isSubmitted;
+  final VoidCallback onSubmit;
 
   @override
   Widget build(BuildContext context) {
@@ -510,6 +627,26 @@ class _QuizQuestion extends StatelessWidget {
               ],
             );
           },
+        ),
+        const SizedBox(height: AppSizes.spacing16),
+        Align(
+          alignment: Alignment.centerRight,
+          child: FilledButton.icon(
+            onPressed: isSubmitting ? null : onSubmit,
+            icon: isSubmitting
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(
+                    isSubmitted
+                        ? Icons.check_circle_outline
+                        : Icons.send_outlined,
+                  ),
+            label: Text(
+              context.l10n.text(isSubmitted ? 'quizSubmitted' : 'submitQuiz'),
+            ),
+          ),
         ),
       ],
     );
