@@ -11,6 +11,7 @@ import '../../application/tutorial_controller.dart';
 import '../../domain/models/lesson_model.dart';
 import '../pages/lesson_detail_page.dart';
 import '../pages/learning_center_page.dart';
+import 'lesson_list_skeleton.dart';
 
 class LessonListBody extends ConsumerWidget {
   const LessonListBody({
@@ -47,17 +48,63 @@ class LessonListBody extends ConsumerWidget {
 
     return Theme(
       data: theme.copyWith(textTheme: battambangTheme),
-      child: lessonsState.when(
-        data: (bundle) => _LessonListContent(
-          bundle: bundle,
-          gradeId: gradeId,
-          gradeNumber: gradeNumber,
-          subjectId: subjectId,
+      child: RefreshIndicator(
+        edgeOffset: 56,
+        displacement: 72,
+        color: theme.colorScheme.primary,
+        backgroundColor: theme.colorScheme.surface,
+        onRefresh: () => _refreshLessons(ref, tutorialRequest: tutorialRequest),
+        child: SafeArea(
+          child: Column(
+            children: [
+              SizedBox(
+                height: 56,
+                child: _LessonHeader(
+                  title: context.l10n.text('lessonsTitle'),
+                  onBack: () => context.goNamed(
+                    LearningCenterPage.routeName,
+                    queryParameters: {
+                      if (gradeId != null) 'gradeId': gradeId.toString(),
+                      if (gradeNumber != null)
+                        'gradeNumber': gradeNumber.toString(),
+                      if (subjectId != null) 'subjectId': subjectId.toString(),
+                    },
+                  ),
+                ),
+              ),
+              Expanded(
+                child: lessonsState.when(
+                  skipLoadingOnRefresh: false,
+                  data: (bundle) => _LessonListContent(
+                    bundle: bundle,
+                    gradeId: gradeId,
+                    gradeNumber: gradeNumber,
+                    subjectId: subjectId,
+                  ),
+                  error: (_, _) => const _LessonListError(),
+                  loading: () => const LessonListSkeleton(),
+                ),
+              ),
+            ],
+          ),
         ),
-        error: (_, _) => const _LessonListError(),
-        loading: () => const Center(child: CircularProgressIndicator()),
       ),
     );
+  }
+
+  Future<void> _refreshLessons(
+    WidgetRef ref, {
+    required TutorialRequest? tutorialRequest,
+  }) async {
+    if (tutorialRequest != null) {
+      final provider = tutorialBundleProvider(tutorialRequest);
+      ref.invalidate(provider);
+      await ref.read(provider.future);
+      return;
+    }
+    final provider = lessonBundleProvider(courseId);
+    ref.invalidate(provider);
+    await ref.read(provider.future);
   }
 }
 
@@ -76,64 +123,37 @@ class _LessonListContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Column(
-        children: [
-          SizedBox(
-            height: 56,
-            child: _LessonHeader(
-              title: context.l10n.text(bundle.appBarTitleKey),
-              onBack: () => context.goNamed(
-                LearningCenterPage.routeName,
-                queryParameters: {
-                  if (gradeId != null) 'gradeId': gradeId.toString(),
-                  if (gradeNumber != null)
-                    'gradeNumber': gradeNumber.toString(),
-                  if (subjectId != null) 'subjectId': subjectId.toString(),
-                },
-              ),
-            ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                10,
-                AppSizes.spacing32,
-                10,
-                112,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 520),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _LessonSummaryCard(bundle: bundle),
-                      const SizedBox(height: AppSizes.spacing32),
-                      Text(
-                        context.l10n.text('lessonsTitle'),
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.secondary,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: AppSizes.spacing16),
-                      for (final lesson in bundle.lessons) ...[
-                        _LessonTile(
-                          lesson: lesson,
-                          gradeId: gradeId,
-                          gradeNumber: gradeNumber,
-                          subjectId: subjectId,
-                        ),
-                        const SizedBox(height: AppSizes.spacing16),
-                      ],
-                    ],
-                  ),
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(10, AppSizes.spacing32, 10, 112),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _LessonSummaryCard(bundle: bundle),
+              const SizedBox(height: AppSizes.spacing32),
+              Text(
+                context.l10n.text('lessonsTitle'),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.secondary,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
-            ),
+              const SizedBox(height: AppSizes.spacing16),
+              for (final lesson in bundle.lessons) ...[
+                _LessonTile(
+                  lesson: lesson,
+                  gradeId: gradeId,
+                  gradeNumber: gradeNumber,
+                  subjectId: subjectId,
+                ),
+                const SizedBox(height: AppSizes.spacing16),
+              ],
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -442,6 +462,14 @@ class _LessonListError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(child: Text(context.l10n.text('authFailed')));
+    return CustomScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(child: Text(context.l10n.text('authFailed'))),
+        ),
+      ],
+    );
   }
 }

@@ -81,22 +81,15 @@ class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
   Future<void> _submitQuestion(QuizQuestionModel question) async {
     final selectedOptionId = _answers[question.id];
     if (selectedOptionId == null) {
-      await _showQuizDialog(
-        icon: Icons.touch_app_outlined,
-        color: Theme.of(context).colorScheme.primary,
-        title: context.l10n.text('submitQuiz'),
-        message: context.l10n.text('quizSelectAnswer'),
-      );
+      _showQuizSnackBar(context.l10n.text('quizSelectAnswer'));
       return;
     }
 
     final quizId = int.tryParse(question.id);
     if (quizId == null) {
-      await _showQuizDialog(
-        icon: Icons.info_outline,
-        color: Theme.of(context).colorScheme.secondary,
-        title: context.l10n.text('quizSubmitFailed'),
-        message: context.l10n.text('quizSubmissionUnavailable'),
+      _showQuizSnackBar(
+        context.l10n.text('quizSubmissionUnavailable'),
+        isError: true,
       );
       return;
     }
@@ -128,13 +121,11 @@ class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
 
     if (!mounted) return;
     if (result == null) {
-      await _showQuizDialog(
-        icon: Icons.error_outline,
-        color: Theme.of(context).colorScheme.error,
-        title: context.l10n.text('quizSubmitFailed'),
-        message: errorMessage?.isNotEmpty == true
+      _showQuizSnackBar(
+        errorMessage?.isNotEmpty == true
             ? errorMessage!
             : context.l10n.text('quizSubmitFailedMessage'),
+        isError: true,
       );
       return;
     }
@@ -157,14 +148,6 @@ class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
         );
       }
     });
-    await _showQuizDialog(
-      icon: isIncorrect ? Icons.refresh : Icons.check_circle_outline,
-      color: isIncorrect ? Colors.orange.shade700 : AppColors.success,
-      title: context.l10n.text(isIncorrect ? 'quizTryAgain' : 'quizSubmitted'),
-      message: result.message.isNotEmpty
-          ? result.message
-          : context.l10n.text(isIncorrect ? 'quizIncorrect' : 'quizCorrect'),
-    );
   }
 
   String? _findCorrectOptionId(
@@ -185,27 +168,17 @@ class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
     return answer.trim().replaceAll(RegExp(r'\s+'), '');
   }
 
-  Future<void> _showQuizDialog({
-    required IconData icon,
-    required Color color,
-    required String title,
-    required String message,
-  }) {
-    return showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        icon: Icon(icon, color: color, size: 44),
-        title: Text(title, textAlign: TextAlign.center),
-        content: Text(message, textAlign: TextAlign.center),
-        actionsAlignment: MainAxisAlignment.center,
-        actions: [
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(context.l10n.text('close')),
-          ),
-        ],
-      ),
-    );
+  void _showQuizSnackBar(String message, {bool isError = false}) {
+    final theme = Theme.of(context);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: isError ? theme.colorScheme.error : null,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
   }
 
   @override
