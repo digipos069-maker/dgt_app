@@ -75,6 +75,7 @@ class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
   final Map<String, String> _answers = {};
   final Set<String> _submittingQuestions = {};
   final Set<String> _submittedQuestions = {};
+  final Map<String, _QuizAnswerFeedback> _answerFeedback = {};
 
   Future<void> _submitQuestion(QuizQuestionModel question) async {
     final selectedOptionId = _answers[question.id];
@@ -137,10 +138,24 @@ class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
       return;
     }
 
-    final isIncorrect = result.isCorrect == false;
-    if (!isIncorrect) {
-      setState(() => _submittedQuestions.add(question.id));
-    }
+    final isCorrect = result.isCorrect;
+    final isIncorrect = isCorrect == false;
+    final correctOptionId = _findCorrectOptionId(
+      question,
+      result.correctAnswer,
+    );
+    setState(() {
+      if (!isIncorrect) {
+        _submittedQuestions.add(question.id);
+      }
+      if (isCorrect != null) {
+        _answerFeedback[question.id] = _QuizAnswerFeedback(
+          isCorrect: isCorrect,
+          selectedOptionId: selectedOptionId,
+          correctOptionId: isCorrect ? selectedOptionId : correctOptionId,
+        );
+      }
+    });
     await _showQuizDialog(
       icon: isIncorrect ? Icons.refresh : Icons.check_circle_outline,
       color: isIncorrect ? Colors.orange.shade700 : AppColors.success,
@@ -149,6 +164,24 @@ class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
           ? result.message
           : context.l10n.text(isIncorrect ? 'quizIncorrect' : 'quizCorrect'),
     );
+  }
+
+  String? _findCorrectOptionId(
+    QuizQuestionModel question,
+    String correctAnswer,
+  ) {
+    if (correctAnswer.isEmpty) return null;
+    final normalizedCorrectAnswer = _normalizeAnswer(correctAnswer);
+    for (final option in question.options) {
+      if (_normalizeAnswer(option.labelKey) == normalizedCorrectAnswer) {
+        return option.id;
+      }
+    }
+    return null;
+  }
+
+  String _normalizeAnswer(String answer) {
+    return answer.trim().replaceAll(RegExp(r'\s+'), '');
   }
 
   Future<void> _showQuizDialog({
@@ -206,10 +239,12 @@ class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
                           setState(() {
                             _answers[questionId] = optionId;
                             _submittedQuestions.remove(questionId);
+                            _answerFeedback.remove(questionId);
                           });
                         },
                         submittingQuestions: _submittingQuestions,
                         submittedQuestions: _submittedQuestions,
+                        answerFeedback: _answerFeedback,
                         onSubmit: _submitQuestion,
                       ),
                     ],
@@ -484,6 +519,7 @@ class _QuizSection extends StatelessWidget {
     required this.onChanged,
     required this.submittingQuestions,
     required this.submittedQuestions,
+    required this.answerFeedback,
     required this.onSubmit,
   });
 
@@ -492,6 +528,7 @@ class _QuizSection extends StatelessWidget {
   final void Function(String questionId, String optionId) onChanged;
   final Set<String> submittingQuestions;
   final Set<String> submittedQuestions;
+  final Map<String, _QuizAnswerFeedback> answerFeedback;
   final ValueChanged<QuizQuestionModel> onSubmit;
 
   @override
@@ -558,6 +595,7 @@ class _QuizSection extends StatelessWidget {
               onChanged: (optionId) => onChanged(question.id, optionId),
               isSubmitting: submittingQuestions.contains(question.id),
               isSubmitted: submittedQuestions.contains(question.id),
+              feedback: answerFeedback[question.id],
               onSubmit: () => onSubmit(question),
             ),
             const SizedBox(height: AppSizes.spacing24),
@@ -576,6 +614,7 @@ class _QuizQuestion extends StatelessWidget {
     required this.onChanged,
     required this.isSubmitting,
     required this.isSubmitted,
+    required this.feedback,
     required this.onSubmit,
   });
 
@@ -585,6 +624,7 @@ class _QuizQuestion extends StatelessWidget {
   final ValueChanged<String> onChanged;
   final bool isSubmitting;
   final bool isSubmitted;
+  final _QuizAnswerFeedback? feedback;
   final VoidCallback onSubmit;
 
   @override
@@ -614,7 +654,7 @@ class _QuizQuestion extends StatelessWidget {
               crossAxisCount: isWide ? 2 : 1,
               crossAxisSpacing: AppSizes.spacing12,
               mainAxisSpacing: AppSizes.spacing12,
-              childAspectRatio: isWide ? 5.8 : 5.2,
+              mainAxisExtent: 88,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               children: [
@@ -622,6 +662,7 @@ class _QuizQuestion extends StatelessWidget {
                   _QuizOption(
                     option: option,
                     isSelected: selectedOption == option.id,
+                    status: _statusForOption(option.id),
                     onTap: () => onChanged(option.id),
                   ),
               ],
@@ -651,49 +692,100 @@ class _QuizQuestion extends StatelessWidget {
       ],
     );
   }
+
+  _QuizOptionStatus _statusForOption(String optionId) {
+    final currentFeedback = feedback;
+    if (currentFeedback == null) return _QuizOptionStatus.neutral;
+    if (currentFeedback.correctOptionId == optionId ||
+        (currentFeedback.isCorrect &&
+            currentFeedback.selectedOptionId == optionId)) {
+      return _QuizOptionStatus.correct;
+    }
+    if (!currentFeedback.isCorrect &&
+        currentFeedback.selectedOptionId == optionId) {
+      return _QuizOptionStatus.incorrect;
+    }
+    return _QuizOptionStatus.neutral;
+  }
 }
 
 class _QuizOption extends StatelessWidget {
   const _QuizOption({
     required this.option,
     required this.isSelected,
+    required this.status,
     required this.onTap,
   });
 
   final QuizOptionModel option;
   final bool isSelected;
+  final _QuizOptionStatus status;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final statusColor = switch (status) {
+      _QuizOptionStatus.correct => AppColors.success,
+      _QuizOptionStatus.incorrect => AppColors.error,
+      _QuizOptionStatus.neutral => null,
+    };
+    final backgroundColor = switch (status) {
+      _QuizOptionStatus.correct => AppColors.success.withValues(alpha: 0.08),
+      _QuizOptionStatus.incorrect => AppColors.error.withValues(alpha: 0.08),
+      _QuizOptionStatus.neutral =>
+        isSelected
+            ? theme.colorScheme.primaryContainer
+            : theme.colorScheme.surfaceContainerLowest,
+    };
 
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
         decoration: BoxDecoration(
-          color: isSelected
-              ? theme.colorScheme.primaryContainer
-              : theme.colorScheme.surfaceContainerLowest,
+          color: backgroundColor,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected
-                ? theme.colorScheme.primary
-                : theme.colorScheme.outlineVariant,
+            color:
+                statusColor ??
+                (isSelected
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.outlineVariant),
+            width: status == _QuizOptionStatus.neutral ? 1 : 2,
           ),
         ),
         padding: const EdgeInsets.all(AppSizes.spacing16),
         child: Row(
           children: [
-            _SelectionIndicator(isSelected: isSelected),
+            _SelectionIndicator(isSelected: isSelected, status: status),
             const SizedBox(width: AppSizes.spacing8),
             Expanded(
-              child: MixedLatexText(
-                text: context.l10n.text(option.labelKey),
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface,
-                ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  MixedLatexText(
+                    text: context.l10n.text(option.labelKey),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  if (status != _QuizOptionStatus.neutral) ...[
+                    const SizedBox(height: AppSizes.spacing4),
+                    Text(
+                      context.l10n.text(
+                        status == _QuizOptionStatus.correct
+                            ? 'quizAnswerCorrect'
+                            : 'quizAnswerIncorrect',
+                      ),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: statusColor,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ],
@@ -704,13 +796,18 @@ class _QuizOption extends StatelessWidget {
 }
 
 class _SelectionIndicator extends StatelessWidget {
-  const _SelectionIndicator({required this.isSelected});
+  const _SelectionIndicator({required this.isSelected, required this.status});
 
   final bool isSelected;
+  final _QuizOptionStatus status;
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.primary;
+    final color = switch (status) {
+      _QuizOptionStatus.correct => AppColors.success,
+      _QuizOptionStatus.incorrect => AppColors.error,
+      _QuizOptionStatus.neutral => Theme.of(context).colorScheme.primary,
+    };
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 160),
@@ -723,7 +820,9 @@ class _SelectionIndicator extends StatelessWidget {
           width: 2,
         ),
       ),
-      child: isSelected
+      child: status == _QuizOptionStatus.correct
+          ? Icon(Icons.check, color: color, size: 15)
+          : isSelected
           ? Center(
               child: Container(
                 width: 10,
@@ -734,6 +833,20 @@ class _SelectionIndicator extends StatelessWidget {
           : null,
     );
   }
+}
+
+enum _QuizOptionStatus { neutral, correct, incorrect }
+
+class _QuizAnswerFeedback {
+  const _QuizAnswerFeedback({
+    required this.isCorrect,
+    required this.selectedOptionId,
+    required this.correctOptionId,
+  });
+
+  final bool isCorrect;
+  final String selectedOptionId;
+  final String? correctOptionId;
 }
 
 class _VideoArtwork extends StatelessWidget {

@@ -198,6 +198,8 @@ class AppLocalizations {
       'quizSubmitted': 'Quiz submitted',
       'quizCorrect': 'Correct answer! Great work.',
       'quizIncorrect': 'That answer is not correct yet. Please try again.',
+      'quizAnswerCorrect': 'Correct',
+      'quizAnswerIncorrect': 'Incorrect answer',
       'quizTryAgain': 'Try again',
       'quizSubmitFailed': 'Could not submit this answer',
       'quizSubmitFailedMessage': 'Please check your connection and try again.',
@@ -408,11 +410,13 @@ class AppLocalizations {
       'lessonQuizSubtitleNarrative':
           'សាកល្បងចំណេះដឹងរបស់អ្នកអំពីរចនាសម្ព័ន្ធនិទានកថា។',
       'questionPrefix': 'សំណួរទី',
-      'submitQuiz': 'បញ្ជូនកម្រងសំណួរ',
+      'submitQuiz': 'បញ្ចូន',
       'quizSelectAnswer': 'សូមជ្រើសរើសចម្លើយមុនពេលបញ្ជូន។',
       'quizSubmitted': 'បានបញ្ជូនចម្លើយ',
       'quizCorrect': 'ចម្លើយត្រឹមត្រូវ! ធ្វើបានល្អ។',
       'quizIncorrect': 'ចម្លើយនេះមិនទាន់ត្រឹមត្រូវទេ។ សូមព្យាយាមម្តងទៀត។',
+      'quizAnswerCorrect': 'ត្រឹមត្រូវ',
+      'quizAnswerIncorrect': 'ចម្លើយខុស',
       'quizTryAgain': 'ព្យាយាមម្តងទៀត',
       'quizSubmitFailed': 'មិនអាចបញ្ជូនចម្លើយនេះបានទេ',
       'quizSubmitFailedMessage':

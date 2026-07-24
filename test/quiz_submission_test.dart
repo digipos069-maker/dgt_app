@@ -43,6 +43,7 @@ void main() {
     expect(body['quizId'], 4);
     expect(body['answer'], r'$$3i$$');
     expect(result.isCorrect, isTrue);
+    expect(result.correctAnswer, r'$$3i$$');
     expect(result.message, isEmpty);
   });
 
@@ -58,6 +59,7 @@ void main() {
     );
 
     expect(result.isCorrect, isNull);
+    expect(result.correctAnswer, isEmpty);
     expect(result.message, isEmpty);
   });
 
