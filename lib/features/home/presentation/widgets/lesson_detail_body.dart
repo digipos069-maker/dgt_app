@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:video_player/video_player.dart';
 
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../../../theme/app_colors.dart';
 import '../../application/lesson_controller.dart';
+import '../../application/tutorial_controller.dart';
 import '../../domain/models/lesson_model.dart';
 import '../pages/lesson_list_page.dart';
 
@@ -14,12 +16,14 @@ class LessonDetailBody extends ConsumerWidget {
   const LessonDetailBody({
     required this.courseId,
     required this.lessonId,
+    this.slug,
     this.onBack,
     super.key,
   });
 
   final String courseId;
   final String lessonId;
+  final String? slug;
   final VoidCallback? onBack;
 
   @override
@@ -28,11 +32,18 @@ class LessonDetailBody extends ConsumerWidget {
     final battambangTheme = GoogleFonts.battambangTextTheme(
       theme.textTheme,
     ).apply(fontSizeDelta: 3);
-    final detailState = ref.watch(
-      lessonDetailProvider(
-        LessonDetailRequest(courseId: courseId, lessonId: lessonId),
-      ),
-    );
+    final tutorialSlug = slug?.trim() ?? '';
+    final detailState = tutorialSlug.isNotEmpty
+        ? ref.watch(
+            tutorialDetailProvider(
+              TutorialDetailRequest(courseId: courseId, slug: tutorialSlug),
+            ),
+          )
+        : ref.watch(
+            lessonDetailProvider(
+              LessonDetailRequest(courseId: courseId, lessonId: lessonId),
+            ),
+          );
 
     return Theme(
       data: theme.copyWith(textTheme: battambangTheme),
@@ -155,14 +166,77 @@ class _DetailHeader extends StatelessWidget {
   }
 }
 
-class _VideoSection extends StatelessWidget {
+class _VideoSection extends StatefulWidget {
   const _VideoSection({required this.detail});
 
   final LessonDetailModel detail;
 
   @override
+  State<_VideoSection> createState() => _VideoSectionState();
+}
+
+class _VideoSectionState extends State<_VideoSection> {
+  VideoPlayerController? _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeVideo();
+  }
+
+  @override
+  void didUpdateWidget(covariant _VideoSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.detail.mainVideoUrl != widget.detail.mainVideoUrl) {
+      _initializeVideo();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initializeVideo() async {
+    final previousController = _controller;
+    _controller = null;
+    await previousController?.dispose();
+
+    final videoUrl = widget.detail.mainVideoUrl.trim();
+    final uri = Uri.tryParse(videoUrl);
+    if (uri == null || !uri.hasScheme) {
+      if (mounted) setState(() {});
+      return;
+    }
+
+    final controller = VideoPlayerController.networkUrl(uri);
+    _controller = controller;
+    try {
+      await controller.initialize();
+    } on Object {
+      await controller.dispose();
+      if (identical(_controller, controller)) {
+        _controller = null;
+      }
+    }
+    if (mounted) setState(() {});
+  }
+
+  void _togglePlayback() {
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) return;
+    if (controller.value.isPlaying) {
+      controller.pause();
+    } else {
+      controller.play();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final detail = widget.detail;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -186,24 +260,48 @@ class _VideoSection extends StatelessWidget {
               ],
             ),
             clipBehavior: Clip.antiAlias,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                const _VideoArtwork(),
-                Container(color: Colors.black.withValues(alpha: 0.20)),
-                Positioned(
-                  top: AppSizes.spacing16,
-                  right: AppSizes.spacing16,
-                  child: _DurationBadge(duration: detail.durationLabel),
-                ),
-                const Center(child: _PlayButton()),
-                Positioned(
-                  left: AppSizes.spacing16,
-                  right: AppSizes.spacing16,
-                  bottom: AppSizes.spacing16,
-                  child: _MockScrubber(duration: detail.durationLabel),
-                ),
-              ],
+            child: ValueListenableBuilder<VideoPlayerValue>(
+              valueListenable: _controller ?? _emptyVideoValue,
+              builder: (context, value, _) {
+                final isReady =
+                    _controller != null &&
+                    value.isInitialized &&
+                    !value.hasError;
+                final duration = isReady
+                    ? _formatDuration(value.duration)
+                    : detail.durationLabel;
+
+                return Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (isReady)
+                      VideoPlayer(_controller!)
+                    else
+                      _VideoArtwork(thumbnailUrl: detail.videoThumbnail),
+                    Container(color: Colors.black.withValues(alpha: 0.20)),
+                    Positioned(
+                      top: AppSizes.spacing16,
+                      right: AppSizes.spacing16,
+                      child: _DurationBadge(duration: duration),
+                    ),
+                    Center(
+                      child: _PlayButton(
+                        isPlaying: isReady && value.isPlaying,
+                        onPressed: isReady ? _togglePlayback : null,
+                      ),
+                    ),
+                    Positioned(
+                      left: AppSizes.spacing16,
+                      right: AppSizes.spacing16,
+                      bottom: AppSizes.spacing16,
+                      child: _VideoScrubber(
+                        controller: isReady ? _controller : null,
+                        duration: duration,
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -254,6 +352,17 @@ class _VideoSection extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  static final _emptyVideoValue = ValueNotifier<VideoPlayerValue>(
+    VideoPlayerValue(duration: Duration.zero),
+  );
+
+  String _formatDuration(Duration duration) {
+    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    if (duration.inHours == 0) return '$minutes:$seconds';
+    return '${duration.inHours}:$minutes:$seconds';
   }
 }
 
@@ -496,11 +605,13 @@ class _SelectionIndicator extends StatelessWidget {
 }
 
 class _VideoArtwork extends StatelessWidget {
-  const _VideoArtwork();
+  const _VideoArtwork({required this.thumbnailUrl});
+
+  final String thumbnailUrl;
 
   @override
   Widget build(BuildContext context) {
-    return const DecoratedBox(
+    final fallback = const DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -528,6 +639,12 @@ class _VideoArtwork extends StatelessWidget {
         ],
       ),
     );
+    if (thumbnailUrl.isEmpty) return fallback;
+    return Image.network(
+      thumbnailUrl,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => fallback,
+    );
   }
 }
 
@@ -553,32 +670,40 @@ class _DurationBadge extends StatelessWidget {
 }
 
 class _PlayButton extends StatelessWidget {
-  const _PlayButton();
+  const _PlayButton({required this.isPlaying, required this.onPressed});
+
+  final bool isPlaying;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 64,
-      height: 64,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.18),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
+    return Material(
+      color: Colors.white.withValues(alpha: 0.92),
+      shape: const CircleBorder(),
+      elevation: 6,
+      child: InkWell(
+        onTap: onPressed,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: 64,
+          height: 64,
+          child: Icon(
+            isPlaying ? Icons.pause : Icons.play_arrow,
+            color: onPressed == null
+                ? AppColors.secondary.withValues(alpha: 0.55)
+                : AppColors.secondary,
+            size: 36,
           ),
-        ],
+        ),
       ),
-      child: const Icon(Icons.play_arrow, color: AppColors.secondary, size: 36),
     );
   }
 }
 
-class _MockScrubber extends StatelessWidget {
-  const _MockScrubber({required this.duration});
+class _VideoScrubber extends StatelessWidget {
+  const _VideoScrubber({required this.controller, required this.duration});
 
+  final VideoPlayerController? controller;
   final String duration;
 
   @override
@@ -591,18 +716,34 @@ class _MockScrubber extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Text('0:00', style: TextStyle(fontSize: 15)),
+          Text(
+            controller == null
+                ? '0:00'
+                : _formatPosition(controller!.value.position),
+            style: const TextStyle(fontSize: 15),
+          ),
           const SizedBox(width: AppSizes.spacing12),
           Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(999),
-              child: LinearProgressIndicator(
-                value: 0,
-                minHeight: 8,
-                backgroundColor: Colors.white.withValues(alpha: 0.35),
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
+            child: controller == null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: LinearProgressIndicator(
+                      value: 0,
+                      minHeight: 8,
+                      backgroundColor: Colors.white.withValues(alpha: 0.35),
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  )
+                : VideoProgressIndicator(
+                    controller!,
+                    allowScrubbing: true,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    colors: VideoProgressColors(
+                      playedColor: Theme.of(context).colorScheme.primary,
+                      bufferedColor: Colors.white.withValues(alpha: 0.55),
+                      backgroundColor: Colors.white.withValues(alpha: 0.35),
+                    ),
+                  ),
           ),
           const SizedBox(width: AppSizes.spacing12),
           Text(duration, style: const TextStyle(fontSize: 15)),
@@ -611,5 +752,12 @@ class _MockScrubber extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _formatPosition(Duration position) {
+    final minutes = position.inMinutes.remainder(60);
+    final seconds = position.inSeconds.remainder(60).toString().padLeft(2, '0');
+    if (position.inHours == 0) return '$minutes:$seconds';
+    return '${position.inHours}:${minutes.toString().padLeft(2, '0')}:$seconds';
   }
 }

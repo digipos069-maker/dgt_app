@@ -9,6 +9,7 @@ class LessonDetailPage extends StatelessWidget {
   const LessonDetailPage({
     required this.courseId,
     required this.lessonId,
+    this.slug,
     this.gradeId,
     this.gradeNumber,
     this.subjectId,
@@ -20,6 +21,7 @@ class LessonDetailPage extends StatelessWidget {
 
   final String courseId;
   final String lessonId;
+  final String? slug;
   final int? gradeId;
   final int? gradeNumber;
   final int? subjectId;
@@ -30,6 +32,7 @@ class LessonDetailPage extends StatelessWidget {
       body: LessonDetailBody(
         courseId: courseId,
         lessonId: lessonId,
+        slug: slug,
         onBack: () => context.goNamed(
           LessonListPage.routeName,
           pathParameters: {'courseId': courseId},

@@ -14,6 +14,7 @@ class LessonModel {
     this.description = '',
     this.mainVideoUrl = '',
     this.videoThumbnail = '',
+    this.slug = '',
     this.orderId = 0,
   });
 
@@ -27,6 +28,7 @@ class LessonModel {
   final String description;
   final String mainVideoUrl;
   final String videoThumbnail;
+  final String slug;
   final int orderId;
 
   IconData get icon {
@@ -66,6 +68,8 @@ class LessonDetailModel {
     required this.quizTitleKey,
     required this.quizSubtitleKey,
     required this.questions,
+    this.mainVideoUrl = '',
+    this.videoThumbnail = '',
   });
 
   final String courseId;
@@ -78,6 +82,8 @@ class LessonDetailModel {
   final String quizTitleKey;
   final String quizSubtitleKey;
   final List<QuizQuestionModel> questions;
+  final String mainVideoUrl;
+  final String videoThumbnail;
 }
 
 class QuizQuestionModel {

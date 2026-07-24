@@ -38,6 +38,33 @@ class TutorialApiService {
     return _readList(jsonBody);
   }
 
+  Future<Object?> fetchTutorialBySlug({
+    required String slug,
+    required String token,
+  }) async {
+    final encodedSlug = Uri.encodeComponent(slug);
+    final uri = Uri.parse(
+      '${ApiConstants.baseUrl}${ApiConstants.tutorialBySlugPath}/$encodedSlug',
+    );
+    final response = await _client
+        .get(uri, headers: {'Accept': '*/*', 'Authorization': 'Bearer $token'})
+        .timeout(const Duration(seconds: 15));
+    final jsonBody = _decodeBody(response.body);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw AppException(
+        _readMessage(jsonBody) ?? 'Failed to load tutorial detail',
+      );
+    }
+
+    if (jsonBody is Map<String, dynamic>) {
+      final data = jsonBody['data'];
+      if (data is Map<String, dynamic>) return data;
+      return jsonBody;
+    }
+    throw const AppException('Invalid tutorial detail response');
+  }
+
   Object? _decodeBody(String body) {
     if (body.trim().isEmpty) return const <Object?>[];
     return jsonDecode(body);

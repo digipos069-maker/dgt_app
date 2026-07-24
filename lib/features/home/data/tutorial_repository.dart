@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/models/lesson_model.dart';
+import '../domain/models/tutorial_detail_model.dart';
 import '../domain/models/tutorial_model.dart';
 import 'tutorial_api_service.dart';
 
@@ -41,6 +42,53 @@ class TutorialRepository {
     );
   }
 
+  Future<LessonDetailModel> fetchTutorialDetail({
+    required String courseId,
+    required String slug,
+    required String token,
+  }) async {
+    final data = await _apiService.fetchTutorialBySlug(
+      slug: slug,
+      token: token,
+    );
+    final tutorial = TutorialDetailModel.fromJson(data);
+    final questions = tutorial.quizzes
+        .where((quiz) => quiz.question.isNotEmpty && quiz.options.isNotEmpty)
+        .map(
+          (quiz) => QuizQuestionModel(
+            id: quiz.id > 0 ? quiz.id.toString() : quiz.question,
+            questionKey: quiz.question,
+            options: [
+              for (final (index, option) in quiz.options.indexed)
+                QuizOptionModel(
+                  id: String.fromCharCode(65 + index),
+                  labelKey: option,
+                ),
+            ],
+          ),
+        )
+        .toList(growable: false);
+
+    return LessonDetailModel(
+      courseId: courseId,
+      lessonId: tutorial.id > 0 ? tutorial.id.toString() : slug,
+      titleKey: tutorial.title.isNotEmpty
+          ? tutorial.title
+          : 'lessonLinearEquations',
+      subjectKey: _subjectTitleKey(tutorial.subjectId),
+      moduleKey: 'lessonDetailModuleOne',
+      descriptionKey: tutorial.description.isNotEmpty
+          ? tutorial.description
+          : 'lessonLinearEquationsDescription',
+      durationLabel: '12:45',
+      quizTitleKey: 'lessonQuizTitle',
+      quizSubtitleKey: 'lessonQuizSubtitleLinear',
+      questions: questions.isNotEmpty ? questions : _fallbackQuestions,
+      mainVideoUrl: tutorial.mainVideoUrl,
+      videoThumbnail: tutorial.videoThumbnail,
+    );
+  }
+
   TutorialModel? _tryParse(Object? value) {
     try {
       return TutorialModel.fromJson(value);
@@ -61,6 +109,7 @@ class TutorialRepository {
       description: tutorial.description,
       mainVideoUrl: tutorial.mainVideoUrl,
       videoThumbnail: tutorial.videoThumbnail,
+      slug: tutorial.slug,
       orderId: tutorial.orderId,
       type: locked
           ? LessonType.locked
@@ -78,4 +127,27 @@ class TutorialRepository {
     4 => 'subjectBiology',
     _ => 'subjectMath',
   };
+
+  static const _fallbackQuestions = [
+    QuizQuestionModel(
+      id: 'q1',
+      questionKey: 'quizLinearQuestionOne',
+      options: [
+        QuizOptionModel(id: 'A', labelKey: 'quizLinearQ1A'),
+        QuizOptionModel(id: 'B', labelKey: 'quizLinearQ1B'),
+        QuizOptionModel(id: 'C', labelKey: 'quizLinearQ1C'),
+        QuizOptionModel(id: 'D', labelKey: 'quizLinearQ1D'),
+      ],
+    ),
+    QuizQuestionModel(
+      id: 'q2',
+      questionKey: 'quizLinearQuestionTwo',
+      options: [
+        QuizOptionModel(id: 'A', labelKey: 'quizLinearQ2A'),
+        QuizOptionModel(id: 'B', labelKey: 'quizLinearQ2B'),
+        QuizOptionModel(id: 'C', labelKey: 'quizLinearQ2C'),
+        QuizOptionModel(id: 'D', labelKey: 'quizLinearQ2D'),
+      ],
+    ),
+  ];
 }

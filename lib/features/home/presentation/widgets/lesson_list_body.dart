@@ -295,6 +295,7 @@ class _LessonTile extends StatelessWidget {
                   'lessonId': lesson.id,
                 },
                 queryParameters: {
+                  if (lesson.slug.isNotEmpty) 'slug': lesson.slug,
                   if (gradeId != null) 'gradeId': gradeId.toString(),
                   if (gradeNumber != null)
                     'gradeNumber': gradeNumber.toString(),

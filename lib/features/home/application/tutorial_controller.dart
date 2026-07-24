@@ -42,6 +42,27 @@ final tutorialBundleProvider = FutureProvider.autoDispose
           );
     });
 
+final tutorialDetailProvider = FutureProvider.autoDispose
+    .family<LessonDetailModel, TutorialDetailRequest>((ref, request) {
+      final authState = ref.watch(authControllerProvider);
+      final user = switch (authState) {
+        AsyncData(:final value) => value,
+        _ => null,
+      };
+      final token = user?.token;
+      if (token == null || token.isEmpty) {
+        throw const AppException('Authentication is required');
+      }
+
+      return ref
+          .watch(tutorialRepositoryProvider)
+          .fetchTutorialDetail(
+            courseId: request.courseId,
+            slug: request.slug,
+            token: token,
+          );
+    });
+
 class TutorialRequest {
   const TutorialRequest({
     required this.subjectId,
@@ -64,4 +85,22 @@ class TutorialRequest {
 
   @override
   int get hashCode => Object.hash(subjectId, gradeId, lessonId);
+}
+
+class TutorialDetailRequest {
+  const TutorialDetailRequest({required this.courseId, required this.slug});
+
+  final String courseId;
+  final String slug;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        other is TutorialDetailRequest &&
+            other.courseId == courseId &&
+            other.slug == slug;
+  }
+
+  @override
+  int get hashCode => Object.hash(courseId, slug);
 }

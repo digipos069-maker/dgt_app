@@ -98,6 +98,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           LessonDetailPage(
             courseId: state.pathParameters['courseId'] ?? 'algebra',
             lessonId: state.pathParameters['lessonId'] ?? 'linear-equations',
+            slug: state.uri.queryParameters['slug'],
             gradeId: _queryInt(state, 'gradeId'),
             gradeNumber: _queryInt(state, 'gradeNumber'),
             subjectId: _queryInt(state, 'subjectId'),
