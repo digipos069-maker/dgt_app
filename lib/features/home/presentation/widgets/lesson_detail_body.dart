@@ -15,6 +15,7 @@ import '../../application/tutorial_controller.dart';
 import '../../domain/models/lesson_model.dart';
 import '../../domain/models/quiz_submission_result.dart';
 import '../pages/lesson_list_page.dart';
+import 'lesson_detail_skeleton.dart';
 
 class LessonDetailBody extends ConsumerWidget {
   const LessonDetailBody({
@@ -54,7 +55,7 @@ class LessonDetailBody extends ConsumerWidget {
       child: detailState.when(
         data: (detail) => LessonDetailContent(detail: detail, onBack: onBack),
         error: (_, _) => Center(child: Text(context.l10n.text('authFailed'))),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const LessonDetailSkeleton(),
       ),
     );
   }
