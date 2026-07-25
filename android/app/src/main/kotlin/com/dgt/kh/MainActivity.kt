@@ -1,4 +1,4 @@
-package com.example.dgt_app
+package com.dgt.kh
 
 import io.flutter.embedding.android.FlutterActivity
 
