@@ -95,7 +95,7 @@ class _HomeDashboardContent extends StatelessWidget {
         horizontalPadding,
         32,
         horizontalPadding,
-        112,
+        AppSizes.pageBottomPadding,
       ),
       child: Center(
         child: ConstrainedBox(

@@ -27,7 +27,12 @@ class PaymentHistoryBody extends StatelessWidget {
         child: payments.isEmpty
             ? const _EmptyPaymentHistory()
             : ListView.separated(
-                padding: const EdgeInsets.fromLTRB(10, 24, 10, 112),
+                padding: const EdgeInsets.fromLTRB(
+                  10,
+                  24,
+                  10,
+                  AppSizes.pageBottomPadding,
+                ),
                 physics: const AlwaysScrollableScrollPhysics(),
                 itemCount: payments.length + 1,
                 separatorBuilder: (_, _) =>
@@ -269,7 +274,12 @@ class _EmptyPaymentHistory extends StatelessWidget {
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(AppSizes.spacing24),
+      padding: const EdgeInsets.fromLTRB(
+        AppSizes.spacing24,
+        AppSizes.spacing24,
+        AppSizes.spacing24,
+        AppSizes.pageBottomPadding,
+      ),
       children: [
         const SizedBox(height: 120),
         Icon(

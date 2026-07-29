@@ -58,7 +58,12 @@ class _CourseContent extends StatelessWidget {
           final columns = constraints.maxWidth >= 720 ? 2 : 1;
 
           return GridView.builder(
-            padding: const EdgeInsets.fromLTRB(10, 24, 10, 112),
+            padding: const EdgeInsets.fromLTRB(
+              10,
+              24,
+              10,
+              AppSizes.pageBottomPadding,
+            ),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: columns,
               crossAxisSpacing: AppSizes.spacing16,

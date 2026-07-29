@@ -58,7 +58,12 @@ class _ResourceContent extends StatelessWidget {
 
           return SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(10, 24, 10, 112),
+            padding: const EdgeInsets.fromLTRB(
+              10,
+              24,
+              10,
+              AppSizes.pageBottomPadding,
+            ),
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1100),

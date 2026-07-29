@@ -54,7 +54,12 @@ class _GradeListContent extends StatelessWidget {
           final columns = constraints.maxWidth >= 620 ? 2 : 1;
 
           return GridView.builder(
-            padding: const EdgeInsets.fromLTRB(10, 24, 10, 112),
+            padding: const EdgeInsets.fromLTRB(
+              10,
+              24,
+              10,
+              AppSizes.pageBottomPadding,
+            ),
             physics: const AlwaysScrollableScrollPhysics(),
             itemCount: grades.length + 1,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(

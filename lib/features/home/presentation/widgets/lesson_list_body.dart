@@ -125,7 +125,12 @@ class _LessonListContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(10, AppSizes.spacing32, 10, 112),
+      padding: const EdgeInsets.fromLTRB(
+        10,
+        AppSizes.spacing32,
+        10,
+        AppSizes.pageBottomPadding,
+      ),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 520),

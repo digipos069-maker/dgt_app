@@ -196,7 +196,7 @@ class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
                 10,
                 AppSizes.spacing16,
                 10,
-                128,
+                AppSizes.pageBottomPadding,
               ),
               child: Center(
                 child: ConstrainedBox(

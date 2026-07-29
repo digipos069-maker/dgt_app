@@ -57,7 +57,12 @@ class _BasicLessonListContent extends StatelessWidget {
           ),
           Expanded(
             child: ListView.separated(
-              padding: const EdgeInsets.fromLTRB(10, 24, 10, 112),
+              padding: const EdgeInsets.fromLTRB(
+                10,
+                24,
+                10,
+                AppSizes.pageBottomPadding,
+              ),
               itemCount: bundle.lessons.length + 1,
               separatorBuilder: (_, _) =>
                   const SizedBox(height: AppSizes.spacing16),

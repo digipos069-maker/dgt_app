@@ -55,7 +55,12 @@ class _ResourceYearsContent extends StatelessWidget {
           ),
           Expanded(
             child: ListView.separated(
-              padding: const EdgeInsets.fromLTRB(10, 24, 10, 30),
+              padding: const EdgeInsets.fromLTRB(
+                10,
+                24,
+                10,
+                AppSizes.pageBottomPadding,
+              ),
               itemCount: bundle.years.length + 1,
               separatorBuilder: (_, _) =>
                   const SizedBox(height: AppSizes.spacing16),
