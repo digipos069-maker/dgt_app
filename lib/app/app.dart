@@ -8,6 +8,7 @@ import '../router/app_router.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_controller.dart';
 import '../features/auth/application/auth_controller.dart';
+import '../core/widgets/app_splash_screen.dart';
 
 class DgtApp extends ConsumerStatefulWidget {
   const DgtApp({super.key});
@@ -49,7 +50,7 @@ class _DgtAppState extends ConsumerState<DgtApp> {
           GlobalCupertinoLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
         ],
-        home: const Scaffold(body: Center(child: CircularProgressIndicator())),
+        home: const AppSplashScreen(),
       );
     }
 
