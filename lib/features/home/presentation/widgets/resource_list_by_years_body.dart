@@ -6,6 +6,7 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../application/resource_controller.dart';
 import '../../domain/models/resource_document_model.dart';
+import '../pages/resource_detail_page.dart';
 
 class ResourceListByYearsBody extends ConsumerStatefulWidget {
   const ResourceListByYearsBody({
@@ -299,77 +300,90 @@ class _ResourceDocumentTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      height: 156,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
-        border: Border.all(
-          color: theme.colorScheme.secondary.withValues(alpha: 0.24),
-          width: 1.5,
+    return Material(
+      color: theme.colorScheme.surface,
+      borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => ResourceDetailPage(document: document),
+          ),
         ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 116,
-            height: 156,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer,
-              borderRadius: const BorderRadius.horizontal(
-                left: Radius.circular(AppSizes.cardRadius),
+        child: Container(
+          height: 156,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+            border: Border.all(
+              color: theme.colorScheme.secondary.withValues(alpha: 0.24),
+              width: 1.5,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 116,
+                height: 156,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  borderRadius: const BorderRadius.horizontal(
+                    left: Radius.circular(AppSizes.cardRadius),
+                  ),
+                ),
+                child: Icon(
+                  document.type == ResourceDocumentType.pdf
+                      ? Icons.picture_as_pdf_outlined
+                      : Icons.play_circle_outline,
+                  size: 44,
+                  color: theme.colorScheme.onPrimaryContainer,
+                ),
               ),
-            ),
-            child: Icon(
-              Icons.picture_as_pdf_outlined,
-              size: 44,
-              color: theme.colorScheme.onPrimaryContainer,
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSizes.spacing16),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    document.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.secondary,
-                      fontWeight: FontWeight.w900,
-                    ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSizes.spacing16),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        document.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: theme.colorScheme.secondary,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: AppSizes.spacing4),
+                      Text(
+                        document.description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: AppSizes.spacing8),
+                      Text(
+                        '${document.subjectName} • ${document.type.label}',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: AppSizes.spacing4),
-                  Text(
-                    document.description,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      height: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: AppSizes.spacing8),
-                  Text(
-                    '${document.subjectName} • ${document.fileType}',
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+              Icon(
+                document.isLocked ? Icons.lock_outline : Icons.chevron_right,
+                color: theme.colorScheme.secondary,
+              ),
+              const SizedBox(width: AppSizes.spacing8),
+            ],
           ),
-          Icon(
-            document.isLocked ? Icons.lock_outline : Icons.chevron_right,
-            color: theme.colorScheme.secondary,
-          ),
-          const SizedBox(width: AppSizes.spacing8),
-        ],
+        ),
       ),
     );
   }

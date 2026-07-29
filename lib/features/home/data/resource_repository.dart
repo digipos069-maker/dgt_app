@@ -113,13 +113,22 @@ class ResourceRepository {
 
     return List<ResourceDocumentModel>.generate(titles.length, (index) {
       final subject = subjects[index % subjects.length];
+      final type = index.isEven
+          ? ResourceDocumentType.pdf
+          : ResourceDocumentType.video;
       return ResourceDocumentModel(
         id: '$examId-$year-${index + 1}',
+        year: year,
         title: '${titles[index]} $year',
         description: descriptions[index],
         subjectId: subject.id,
         subjectName: subject.name,
-        fileType: index.isEven ? 'PDF' : 'Worksheet',
+        type: type,
+        sourceUrl: type == ResourceDocumentType.pdf
+            ? 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
+            : 'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4',
+        pageCount: type == ResourceDocumentType.pdf ? 12 + index : 0,
+        durationLabel: type == ResourceDocumentType.video ? '00:30' : '',
         isLocked: index == titles.length - 1,
       );
     }, growable: false);
