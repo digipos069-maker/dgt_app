@@ -368,6 +368,7 @@ class _VideoSectionState extends State<_VideoSection> {
     try {
       await controller.initialize();
       await controller.setVolume(1);
+      await controller.play();
     } on Object {
       await controller.dispose();
       _videoHasError = true;
@@ -376,7 +377,12 @@ class _VideoSectionState extends State<_VideoSection> {
       }
     }
     _isVideoInitializing = false;
-    if (mounted) setState(() {});
+    if (mounted) {
+      setState(() {});
+      if (_controller?.value.isPlaying == true) {
+        _showControlsTemporarily();
+      }
+    }
   }
 
   Future<void> _togglePlayback() async {
