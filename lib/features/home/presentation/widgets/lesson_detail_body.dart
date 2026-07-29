@@ -439,9 +439,14 @@ class _VideoSectionState extends State<_VideoSection> {
     if (controller == null || !controller.value.isInitialized) return;
 
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        fullscreenDialog: true,
-        builder: (_) => _FullscreenVideoPage(controller: controller),
+      PageRouteBuilder<void>(
+        opaque: true,
+        transitionDuration: const Duration(milliseconds: 180),
+        reverseTransitionDuration: const Duration(milliseconds: 180),
+        pageBuilder: (_, animation, secondaryAnimation) =>
+            _FullscreenVideoPage(controller: controller),
+        transitionsBuilder: (_, animation, secondaryAnimation, child) =>
+            FadeTransition(opacity: animation, child: child),
       ),
     );
   }
@@ -1227,15 +1232,14 @@ class _FullscreenVideoPage extends StatefulWidget {
 class _FullscreenVideoPageState extends State<_FullscreenVideoPage> {
   Timer? _controlsTimer;
   bool _showControls = true;
+  bool _showTransitionCover = true;
+  bool _isClosing = false;
+  bool _restoredBeforePop = false;
 
   @override
   void initState() {
     super.initState();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-    SystemChrome.setPreferredOrientations(const [
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _enterFullscreen());
     if (widget.controller.value.isPlaying) {
       _showControlsTemporarily();
     }
@@ -1244,9 +1248,58 @@ class _FullscreenVideoPageState extends State<_FullscreenVideoPage> {
   @override
   void dispose() {
     _controlsTimer?.cancel();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+    if (!_restoredBeforePop) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+    }
     super.dispose();
+  }
+
+  Future<void> _enterFullscreen() async {
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    await SystemChrome.setPreferredOrientations(const [
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+    await _waitForOrientation(landscape: true);
+    if (!mounted) return;
+    setState(() => _showTransitionCover = false);
+  }
+
+  Future<void> _exitFullscreen() async {
+    if (_isClosing) return;
+    _isClosing = true;
+    _controlsTimer?.cancel();
+    setState(() {
+      _showControls = false;
+      _showTransitionCover = true;
+    });
+
+    await Future<void>.delayed(const Duration(milliseconds: 180));
+    await SystemChrome.setPreferredOrientations(const [
+      DeviceOrientation.portraitUp,
+    ]);
+    await _waitForOrientation(landscape: false);
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    if (!mounted) return;
+
+    _restoredBeforePop = true;
+    Navigator.of(context).pop();
+    Future<void>.delayed(const Duration(milliseconds: 350), () {
+      SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+    });
+  }
+
+  Future<void> _waitForOrientation({required bool landscape}) async {
+    for (var attempt = 0; attempt < 20; attempt++) {
+      if (!mounted) return;
+      final size = MediaQuery.sizeOf(context);
+      if ((size.width > size.height) == landscape) {
+        await WidgetsBinding.instance.endOfFrame;
+        return;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+    }
   }
 
   Future<void> _togglePlayback() async {
@@ -1294,65 +1347,80 @@ class _FullscreenVideoPageState extends State<_FullscreenVideoPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: ValueListenableBuilder<VideoPlayerValue>(
-        valueListenable: widget.controller,
-        builder: (context, value, _) {
-          final duration = _formatVideoDuration(value.duration);
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _exitFullscreen();
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: ValueListenableBuilder<VideoPlayerValue>(
+          valueListenable: widget.controller,
+          builder: (context, value, _) {
+            final duration = _formatVideoDuration(value.duration);
 
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              Center(
-                child: AspectRatio(
-                  aspectRatio: value.aspectRatio > 0
-                      ? value.aspectRatio
-                      : 16 / 9,
-                  child: VideoPlayer(widget.controller),
-                ),
-              ),
-              Positioned.fill(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTap: _toggleControls,
-                ),
-              ),
-              IgnorePointer(
-                ignoring: !_showControls && value.isPlaying,
-                child: AnimatedOpacity(
-                  opacity: _showControls || !value.isPlaying ? 1 : 0,
-                  duration: const Duration(milliseconds: 220),
-                  child: Center(
-                    child: _PlayButton(
-                      isPlaying: value.isPlaying,
-                      onPressed: _togglePlayback,
-                    ),
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                Center(
+                  child: AspectRatio(
+                    aspectRatio: value.aspectRatio > 0
+                        ? value.aspectRatio
+                        : 16 / 9,
+                    child: VideoPlayer(widget.controller),
                   ),
                 ),
-              ),
-              Positioned(
-                left: AppSizes.spacing12,
-                right: AppSizes.spacing12,
-                bottom: AppSizes.spacing8,
-                child: IgnorePointer(
+                Positioned.fill(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onTap: _toggleControls,
+                  ),
+                ),
+                IgnorePointer(
                   ignoring: !_showControls && value.isPlaying,
                   child: AnimatedOpacity(
                     opacity: _showControls || !value.isPlaying ? 1 : 0,
                     duration: const Duration(milliseconds: 220),
-                    child: _VideoScrubber(
-                      controller: widget.controller,
-                      duration: duration,
-                      onToggleMute: _toggleMute,
-                      onFullscreen: () => Navigator.of(context).pop(),
-                      isFullscreen: true,
+                    child: Center(
+                      child: _PlayButton(
+                        isPlaying: value.isPlaying,
+                        onPressed: _togglePlayback,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          );
-        },
+                Positioned(
+                  left: AppSizes.spacing12,
+                  right: AppSizes.spacing12,
+                  bottom: AppSizes.spacing8,
+                  child: IgnorePointer(
+                    ignoring: !_showControls && value.isPlaying,
+                    child: AnimatedOpacity(
+                      opacity: _showControls || !value.isPlaying ? 1 : 0,
+                      duration: const Duration(milliseconds: 220),
+                      child: _VideoScrubber(
+                        controller: widget.controller,
+                        duration: duration,
+                        onToggleMute: _toggleMute,
+                        onFullscreen: _exitFullscreen,
+                        isFullscreen: true,
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: AnimatedOpacity(
+                      opacity: _showTransitionCover ? 1 : 0,
+                      duration: const Duration(milliseconds: 180),
+                      child: const ColoredBox(color: Colors.black),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
