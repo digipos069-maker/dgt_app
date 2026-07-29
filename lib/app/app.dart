@@ -20,6 +20,12 @@ class _DgtAppState extends ConsumerState<DgtApp> {
   bool _didCompleteStartup = false;
 
   @override
+  void reassemble() {
+    super.reassemble();
+    ref.invalidate(appRouterProvider);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final locale = ref.watch(languageControllerProvider);
     final themeMode = ref.watch(themeControllerProvider);

@@ -17,6 +17,8 @@ import '../features/home/presentation/pages/learning_center_page.dart';
 import '../features/home/presentation/pages/lesson_detail_page.dart';
 import '../features/home/presentation/pages/lesson_list_page.dart';
 import '../features/home/presentation/pages/resource_page.dart';
+import '../features/home/presentation/pages/resource_years_page.dart';
+import '../features/home/presentation/pages/resource_list_by_years_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final isAuthenticated = ref.watch(
@@ -28,7 +30,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ),
   );
 
-  return GoRouter(
+  final router = GoRouter(
     initialLocation: isAuthenticated ? HomePage.routePath : LoginPage.routePath,
     routes: [
       GoRoute(
@@ -144,8 +146,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) =>
             _noTransitionPage(state, const ResourcePage()),
       ),
+      GoRoute(
+        path: ResourceYearsPage.routePath,
+        name: ResourceYearsPage.routeName,
+        pageBuilder: (context, state) => _noTransitionPage(
+          state,
+          ResourceYearsPage(examId: state.pathParameters['examId'] ?? 'bac-ii'),
+        ),
+      ),
+      GoRoute(
+        path: ResourceListByYearsPage.routePath,
+        name: ResourceListByYearsPage.routeName,
+        pageBuilder: (context, state) => _noTransitionPage(
+          state,
+          ResourceListByYearsPage(
+            examId: state.pathParameters['examId'] ?? 'bac-ii',
+            year: int.tryParse(state.pathParameters['year'] ?? '') ?? 2025,
+          ),
+        ),
+      ),
     ],
   );
+
+  ref.onDispose(router.dispose);
+  return router;
 });
 
 int? _queryInt(GoRouterState state, String key) {

@@ -6,6 +6,7 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../application/resource_controller.dart';
 import '../../domain/models/exam_resource_model.dart';
+import '../pages/resource_years_page.dart';
 
 class ResourceBody extends ConsumerWidget {
   const ResourceBody({super.key});
@@ -140,70 +141,83 @@ class _ResourceCard extends StatelessWidget {
         ? colors.primaryContainer
         : colors.secondaryContainer;
 
-    return Container(
-      padding: const EdgeInsets.all(AppSizes.spacing16),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
-        border: Border.all(
-          color: resource.isLocked
-              ? colors.outlineVariant
-              : accent.withValues(alpha: 0.48),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
+    return Material(
+      color: colors.surface,
+      borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => ResourceYearsPage(examId: resource.id),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: background,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  _resourceIcon(resource.icon),
-                  color: foreground,
-                  size: 28,
-                ),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(AppSizes.spacing16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+            border: Border.all(
+              color: resource.isLocked
+                  ? colors.outlineVariant
+                  : accent.withValues(alpha: 0.48),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 14,
+                offset: const Offset(0, 4),
               ),
-              const Spacer(),
-              _AccessBadge(isLocked: resource.isLocked),
             ],
           ),
-          const SizedBox(height: AppSizes.spacing16),
-          Text(
-            resource.examName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.titleLarge?.copyWith(
-              color: colors.secondary,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: AppSizes.spacing8),
-          Expanded(
-            child: Text(
-              resource.shortDescription,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colors.onSurfaceVariant,
-                height: 1.45,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: background,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      _resourceIcon(resource.icon),
+                      color: foreground,
+                      size: 28,
+                    ),
+                  ),
+                  const Spacer(),
+                  _AccessBadge(isLocked: resource.isLocked),
+                  const SizedBox(width: AppSizes.spacing4),
+                  Icon(Icons.chevron_right, color: colors.secondary),
+                ],
               ),
-            ),
+              const SizedBox(height: AppSizes.spacing16),
+              Text(
+                resource.examName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: colors.secondary,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: AppSizes.spacing8),
+              Expanded(
+                child: Text(
+                  resource.shortDescription,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                    height: 1.45,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
