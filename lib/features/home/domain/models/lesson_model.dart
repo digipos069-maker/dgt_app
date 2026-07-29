@@ -91,9 +91,11 @@ class QuizQuestionModel {
     required this.id,
     required this.questionKey,
     required this.options,
+    this.quizId,
   });
 
   final String id;
+  final int? quizId;
   final String questionKey;
   final List<QuizOptionModel> options;
 }

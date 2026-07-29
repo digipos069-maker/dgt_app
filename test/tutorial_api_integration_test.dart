@@ -128,7 +128,39 @@ void main() {
     expect(detail.titleKey, 'Complex numbers');
     expect(detail.descriptionKey, 'lessonLinearEquationsDescription');
     expect(detail.mainVideoUrl, contains('lesson.mp4'));
+    expect(detail.questions.single.quizId, 4);
     expect(detail.questions.single.questionKey, contains('sqrt'));
+    expect(detail.questions.single.options, hasLength(4));
+  });
+
+  test('supports quizId and root-level quiz options', () async {
+    final repository = TutorialRepository(
+      TutorialApiService(
+        client: MockClient(
+          (_) async => http.Response(
+            jsonEncode({
+              'id': 7,
+              'slug': 'alternate-quiz-shape',
+              'quiz': {
+                'quizId': 42,
+                'question': 'Choose the correct value',
+                'options': ['1', '2', '3', '4'],
+                'correctAnswer': '3',
+              },
+            }),
+            200,
+          ),
+        ),
+      ),
+    );
+
+    final detail = await repository.fetchTutorialDetail(
+      courseId: '4',
+      slug: 'alternate-quiz-shape',
+      token: 'session-token',
+    );
+
+    expect(detail.questions.single.quizId, 42);
     expect(detail.questions.single.options, hasLength(4));
   });
 }

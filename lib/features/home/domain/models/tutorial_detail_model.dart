@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class TutorialDetailModel {
   const TutorialDetailModel({
     required this.id,
@@ -18,7 +20,7 @@ class TutorialDetailModel {
       throw const FormatException('Invalid tutorial detail');
     }
 
-    final quizzesJson = value['quizzes'];
+    final quizzesJson = value['quizzes'] ?? value['quiz'] ?? value['questions'];
     return TutorialDetailModel(
       id: _readInt(value['id']),
       title: _readString(value['title']),
@@ -30,12 +32,10 @@ class TutorialDetailModel {
       gradeId: _readInt(value['gradeId']),
       orderId: _readInt(value['orderId']),
       lessonId: _readInt(value['lessonId']),
-      quizzes: quizzesJson is List
-          ? quizzesJson
-                .map(TutorialQuizModel.tryParse)
-                .whereType<TutorialQuizModel>()
-                .toList(growable: false)
-          : const [],
+      quizzes: _readQuizItems(quizzesJson)
+          .map(TutorialQuizModel.tryParse)
+          .whereType<TutorialQuizModel>()
+          .toList(growable: false),
     );
   }
 
@@ -63,22 +63,23 @@ class TutorialQuizModel {
   static TutorialQuizModel? tryParse(Object? value) {
     if (value is! Map<String, dynamic>) return null;
 
-    final quizData = value['quizData'];
-    final options = quizData is Map<String, dynamic>
-        ? quizData['options']
-        : null;
+    final quizData = _readMap(value['quizData']);
+    final options = quizData?['options'] ?? value['options'];
     return TutorialQuizModel(
-      id: _readInt(value['id']),
-      question: _readString(value['question']),
+      id: _readInt(value['id'] ?? value['quizId'] ?? quizData?['id']),
+      question: _readString(value['question'] ?? quizData?['question']),
       options: options is List
           ? options
                 .map(_readString)
                 .where((option) => option.isNotEmpty)
                 .toList(growable: false)
           : const [],
-      correctAnswer: quizData is Map<String, dynamic>
-          ? _readString(quizData['correct'])
-          : '',
+      correctAnswer: _readString(
+        quizData?['correct'] ??
+            quizData?['correctAnswer'] ??
+            value['correct'] ??
+            value['correctAnswer'],
+      ),
     );
   }
 
@@ -86,6 +87,31 @@ class TutorialQuizModel {
   final String question;
   final List<String> options;
   final String correctAnswer;
+}
+
+Iterable<Object?> _readQuizItems(Object? value) {
+  if (value is List) return value;
+  if (value is Map<String, dynamic>) {
+    for (final key in const ['data', 'items', 'results', 'rows']) {
+      final nested = value[key];
+      if (nested is List) return nested;
+    }
+    return [value];
+  }
+  return const [];
+}
+
+Map<String, dynamic>? _readMap(Object? value) {
+  if (value is Map<String, dynamic>) return value;
+  if (value is String && value.trim().isNotEmpty) {
+    try {
+      final decoded = jsonDecode(value);
+      return decoded is Map<String, dynamic> ? decoded : null;
+    } on FormatException {
+      return null;
+    }
+  }
+  return null;
 }
 
 String _readString(Object? value) {

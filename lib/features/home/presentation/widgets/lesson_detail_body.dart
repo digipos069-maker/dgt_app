@@ -81,6 +81,17 @@ class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
   final Set<String> _submittedQuestions = {};
   final Map<String, _QuizAnswerFeedback> _answerFeedback = {};
 
+  @override
+  void didUpdateWidget(covariant LessonDetailContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.detail.lessonId != widget.detail.lessonId) {
+      _answers.clear();
+      _submittingQuestions.clear();
+      _submittedQuestions.clear();
+      _answerFeedback.clear();
+    }
+  }
+
   Future<void> _submitQuestion(QuizQuestionModel question) async {
     final selectedOptionId = _answers[question.id];
     if (selectedOptionId == null) {
@@ -88,7 +99,7 @@ class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
       return;
     }
 
-    final quizId = int.tryParse(question.id);
+    final quizId = question.quizId;
     if (quizId == null) {
       _showQuizSnackBar(
         context.l10n.text('quizSubmissionUnavailable'),

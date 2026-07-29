@@ -57,6 +57,7 @@ class TutorialRepository {
         .map(
           (quiz) => QuizQuestionModel(
             id: quiz.id > 0 ? quiz.id.toString() : quiz.question,
+            quizId: quiz.id > 0 ? quiz.id : null,
             questionKey: quiz.question,
             options: [
               for (final (index, option) in quiz.options.indexed)
