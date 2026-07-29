@@ -29,13 +29,14 @@ class ResourceRepository {
 
     return ResourceYearBundle(
       exam: exam,
-      years: const [
-        ResourceYearModel(year: 2025, resourceCount: 12),
-        ResourceYearModel(year: 2024, resourceCount: 10),
-        ResourceYearModel(year: 2023, resourceCount: 8),
-        ResourceYearModel(year: 2022, resourceCount: 7),
-        ResourceYearModel(year: 2021, resourceCount: 6),
-      ],
+      years: List<ResourceYearModel>.generate(
+        16,
+        (index) => ResourceYearModel(
+          year: 2025 - index,
+          resourceCount: 12 - (index % 7),
+        ),
+        growable: false,
+      ),
     );
   }
 

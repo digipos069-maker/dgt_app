@@ -23,8 +23,9 @@ void main() {
     );
 
     expect(bundle.exam.id, 'bac-ii');
-    expect(bundle.years, isNotEmpty);
+    expect(bundle.years, hasLength(16));
     expect(bundle.years.first.year, 2025);
+    expect(bundle.years.last.year, 2010);
     expect(bundle.years.first.resourceCount, greaterThan(0));
   });
 
