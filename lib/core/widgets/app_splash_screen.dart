@@ -126,14 +126,6 @@ class _AppSplashScreenState extends State<AppSplashScreen>
                           fontWeight: FontWeight.w900,
                         ),
                       ),
-                      SizedBox(height: AppSizes.spacing24),
-                      SizedBox.square(
-                        dimension: 24,
-                        child: CircularProgressIndicator(
-                          color: AppColors.primary,
-                          strokeWidth: 2.5,
-                        ),
-                      ),
                     ],
                   ),
                 ),
