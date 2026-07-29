@@ -194,6 +194,10 @@ class AppLocalizations {
       'lessonTypeReading': 'Reading',
       'lessonTypeLocked': 'Locked',
       'minutesShort': 'min',
+      'videoMute': 'Mute',
+      'videoUnmute': 'Turn sound on',
+      'videoFullscreen': 'Enter fullscreen',
+      'videoExitFullscreen': 'Exit fullscreen',
       'lessonDetailSubjectMath': 'Mathematics 101',
       'lessonDetailModuleOne': 'Module 1',
       'lessonLinearEquationsDescription':
@@ -437,6 +441,10 @@ class AppLocalizations {
       'lessonTypeReading': 'ការអាន',
       'lessonTypeLocked': 'ចាក់សោ',
       'minutesShort': 'នាទី',
+      'videoMute': 'បិទសំឡេង',
+      'videoUnmute': 'បើកសំឡេង',
+      'videoFullscreen': 'បើកពេញអេក្រង់',
+      'videoExitFullscreen': 'ចាកចេញពីពេញអេក្រង់',
       'lessonDetailSubjectMath': 'គណិតវិទ្យា 101',
       'lessonDetailModuleOne': 'ម៉ូឌុល 1',
       'lessonLinearEquationsDescription':
