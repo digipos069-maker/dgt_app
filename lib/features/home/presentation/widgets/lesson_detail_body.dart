@@ -1108,72 +1108,81 @@ class _VideoScrubber extends StatelessWidget {
       shadows: [Shadow(color: Colors.black87, blurRadius: 4)],
     );
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    return Row(
       children: [
-        controller == null
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child: LinearProgressIndicator(
-                  value: 0,
-                  minHeight: 3,
-                  backgroundColor: Colors.white.withValues(alpha: 0.35),
-                  color: Theme.of(context).colorScheme.primary,
+        IconButton(
+          tooltip: controller?.value.volume == 0
+              ? context.l10n.text('videoUnmute')
+              : context.l10n.text('videoMute'),
+          onPressed: onToggleMute,
+          color: Colors.white,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+          icon: Icon(
+            controller?.value.volume == 0 ? Icons.volume_off : Icons.volume_up,
+            size: 18,
+          ),
+        ),
+        const SizedBox(width: AppSizes.spacing4),
+        Text(
+          controller == null
+              ? '0:00'
+              : _formatPosition(controller!.value.position),
+          style: textStyle,
+        ),
+        const SizedBox(width: AppSizes.spacing8),
+        Expanded(
+          child: controller == null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    value: 0,
+                    minHeight: 3,
+                    backgroundColor: Colors.white.withValues(alpha: 0.35),
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                )
+              : SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    trackHeight: 3,
+                    activeTrackColor: Theme.of(context).colorScheme.primary,
+                    inactiveTrackColor: Colors.white.withValues(alpha: 0.32),
+                    thumbColor: Theme.of(context).colorScheme.primary,
+                    thumbShape: const RoundSliderThumbShape(
+                      enabledThumbRadius: 5,
+                    ),
+                    overlayColor: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.16),
+                    overlayShape: const RoundSliderOverlayShape(
+                      overlayRadius: 12,
+                    ),
+                  ),
+                  child: Slider(
+                    min: 0,
+                    max: _durationMilliseconds(controller!),
+                    value: _positionMilliseconds(controller!),
+                    onChanged: (value) => controller!.seekTo(
+                      Duration(milliseconds: value.round()),
+                    ),
+                  ),
                 ),
-              )
-            : VideoProgressIndicator(
-                controller!,
-                allowScrubbing: true,
-                padding: const EdgeInsets.symmetric(vertical: 5),
-                colors: VideoProgressColors(
-                  playedColor: Theme.of(context).colorScheme.primary,
-                  bufferedColor: Colors.white.withValues(alpha: 0.55),
-                  backgroundColor: Colors.white.withValues(alpha: 0.3),
-                ),
-              ),
-        Row(
-          children: [
-            IconButton(
-              tooltip: controller?.value.volume == 0
-                  ? context.l10n.text('videoUnmute')
-                  : context.l10n.text('videoMute'),
-              onPressed: onToggleMute,
-              color: Colors.white,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints.tightFor(width: 36, height: 32),
-              icon: Icon(
-                controller?.value.volume == 0
-                    ? Icons.volume_off
-                    : Icons.volume_up,
-                size: 19,
-              ),
-            ),
-            const SizedBox(width: AppSizes.spacing4),
-            Text(
-              controller == null
-                  ? '0:00'
-                  : _formatPosition(controller!.value.position),
-              style: textStyle,
-            ),
-            const SizedBox(width: AppSizes.spacing4),
-            Text('/', style: textStyle),
-            const SizedBox(width: AppSizes.spacing4),
-            Text(duration, style: textStyle),
-            const Spacer(),
-            IconButton(
-              tooltip: context.l10n.text(
-                isFullscreen ? 'videoExitFullscreen' : 'videoFullscreen',
-              ),
-              onPressed: onFullscreen,
-              color: Colors.white,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints.tightFor(width: 36, height: 32),
-              icon: Icon(
-                isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
-                size: 22,
-              ),
-            ),
-          ],
+        ),
+        const SizedBox(width: AppSizes.spacing8),
+        Text(duration, style: textStyle),
+        const SizedBox(width: AppSizes.spacing4),
+        IconButton(
+          tooltip: context.l10n.text(
+            isFullscreen ? 'videoExitFullscreen' : 'videoFullscreen',
+          ),
+          onPressed: onFullscreen,
+          color: Colors.white,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+          icon: Icon(
+            isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
+            size: 21,
+          ),
         ),
       ],
     );
@@ -1184,6 +1193,19 @@ class _VideoScrubber extends StatelessWidget {
     final seconds = position.inSeconds.remainder(60).toString().padLeft(2, '0');
     if (position.inHours == 0) return '$minutes:$seconds';
     return '${position.inHours}:${minutes.toString().padLeft(2, '0')}:$seconds';
+  }
+
+  double _durationMilliseconds(VideoPlayerController controller) {
+    return controller.value.duration.inMilliseconds
+        .clamp(1, double.maxFinite)
+        .toDouble();
+  }
+
+  double _positionMilliseconds(VideoPlayerController controller) {
+    final duration = _durationMilliseconds(controller);
+    return controller.value.position.inMilliseconds
+        .clamp(0, duration)
+        .toDouble();
   }
 }
 
