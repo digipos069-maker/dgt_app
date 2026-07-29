@@ -318,6 +318,8 @@ class _VideoSectionState extends State<_VideoSection> {
   VideoPlayerController? _controller;
   Timer? _controlsTimer;
   bool _showControls = true;
+  bool _isVideoInitializing = true;
+  bool _videoHasError = false;
 
   @override
   void initState() {
@@ -341,6 +343,10 @@ class _VideoSectionState extends State<_VideoSection> {
   }
 
   Future<void> _initializeVideo() async {
+    _isVideoInitializing = true;
+    _videoHasError = false;
+    if (mounted) setState(() {});
+
     final previousController = _controller;
     _controller = null;
     await previousController?.dispose();
@@ -348,6 +354,8 @@ class _VideoSectionState extends State<_VideoSection> {
     final videoUrl = widget.detail.mainVideoUrl.trim();
     final uri = Uri.tryParse(videoUrl);
     if (uri == null || !uri.hasScheme) {
+      _isVideoInitializing = false;
+      _videoHasError = true;
       if (mounted) setState(() {});
       return;
     }
@@ -362,10 +370,12 @@ class _VideoSectionState extends State<_VideoSection> {
       await controller.setVolume(1);
     } on Object {
       await controller.dispose();
+      _videoHasError = true;
       if (identical(_controller, controller)) {
         _controller = null;
       }
     }
+    _isVideoInitializing = false;
     if (mounted) setState(() {});
   }
 
@@ -474,7 +484,11 @@ class _VideoSectionState extends State<_VideoSection> {
                     if (isReady)
                       VideoPlayer(_controller!)
                     else
-                      _VideoArtwork(thumbnailUrl: detail.videoThumbnail),
+                      _VideoArtwork(
+                        thumbnailUrl: detail.videoThumbnail,
+                        isLoading: _isVideoInitializing,
+                        hasError: _videoHasError,
+                      ),
                     Container(color: Colors.black.withValues(alpha: 0.06)),
                     if (isReady)
                       Positioned.fill(
@@ -483,41 +497,39 @@ class _VideoSectionState extends State<_VideoSection> {
                           onTap: _toggleControls,
                         ),
                       ),
-                    IgnorePointer(
-                      ignoring: isReady && !_showControls && value.isPlaying,
-                      child: AnimatedOpacity(
-                        opacity: !isReady || _showControls || !value.isPlaying
-                            ? 1
-                            : 0,
-                        duration: const Duration(milliseconds: 220),
-                        child: Center(
-                          child: _PlayButton(
-                            isPlaying: isReady && value.isPlaying,
-                            onPressed: isReady ? _togglePlayback : null,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      left: AppSizes.spacing12,
-                      right: AppSizes.spacing12,
-                      bottom: AppSizes.spacing8,
-                      child: IgnorePointer(
-                        ignoring: isReady && !_showControls && value.isPlaying,
+                    if (isReady)
+                      IgnorePointer(
+                        ignoring: !_showControls && value.isPlaying,
                         child: AnimatedOpacity(
-                          opacity: !isReady || _showControls || !value.isPlaying
-                              ? 1
-                              : 0,
+                          opacity: _showControls || !value.isPlaying ? 1 : 0,
                           duration: const Duration(milliseconds: 220),
-                          child: _VideoScrubber(
-                            controller: isReady ? _controller : null,
-                            duration: duration,
-                            onToggleMute: isReady ? _toggleMute : null,
-                            onFullscreen: isReady ? _openFullscreen : null,
+                          child: Center(
+                            child: _PlayButton(
+                              isPlaying: value.isPlaying,
+                              onPressed: _togglePlayback,
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    if (isReady)
+                      Positioned(
+                        left: AppSizes.spacing12,
+                        right: AppSizes.spacing12,
+                        bottom: AppSizes.spacing8,
+                        child: IgnorePointer(
+                          ignoring: !_showControls && value.isPlaying,
+                          child: AnimatedOpacity(
+                            opacity: _showControls || !value.isPlaying ? 1 : 0,
+                            duration: const Duration(milliseconds: 220),
+                            child: _VideoScrubber(
+                              controller: _controller,
+                              duration: duration,
+                              onToggleMute: _toggleMute,
+                              onFullscreen: _openFullscreen,
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 );
               },
@@ -959,45 +971,85 @@ class _QuizAnswerFeedback {
 }
 
 class _VideoArtwork extends StatelessWidget {
-  const _VideoArtwork({required this.thumbnailUrl});
+  const _VideoArtwork({
+    required this.thumbnailUrl,
+    required this.isLoading,
+    required this.hasError,
+  });
 
   final String thumbnailUrl;
+  final bool isLoading;
+  final bool hasError;
 
   @override
   Widget build(BuildContext context) {
-    final fallback = const DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFE8EDFA), Color(0xFFE0F2FE)],
-        ),
-      ),
-      child: Stack(
-        children: [
-          Center(
-            child: Text(
-              '2x + 5 = 15',
-              style: TextStyle(
-                color: AppColors.secondary,
-                fontSize: 37,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-          Positioned(
-            left: 24,
-            top: 24,
-            child: Icon(Icons.edit_note, color: AppColors.secondary, size: 42),
-          ),
-        ],
-      ),
+    final placeholder = _VideoLoadingPlaceholder(
+      isLoading: isLoading,
+      hasError: hasError,
     );
-    if (thumbnailUrl.isEmpty) return fallback;
+    if (hasError) return placeholder;
+    if (thumbnailUrl.isEmpty) return placeholder;
+
     return Image.network(
       thumbnailUrl,
       fit: BoxFit.cover,
-      errorBuilder: (_, _, _) => fallback,
+      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+        if (wasSynchronouslyLoaded || frame != null) return child;
+        return placeholder;
+      },
+      errorBuilder: (_, _, _) => placeholder,
+    );
+  }
+}
+
+class _VideoLoadingPlaceholder extends StatelessWidget {
+  const _VideoLoadingPlaceholder({
+    required this.isLoading,
+    required this.hasError,
+  });
+
+  final bool isLoading;
+  final bool hasError;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return ColoredBox(
+      color: const Color(0xFF171B22),
+      child: Center(
+        child: hasError
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.videocam_off_outlined,
+                    color: Colors.white70,
+                    size: 34,
+                  ),
+                  const SizedBox(height: AppSizes.spacing8),
+                  Text(
+                    context.l10n.text('videoLoadFailed'),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              )
+            : isLoading
+            ? const SizedBox.square(
+                dimension: 26,
+                child: CircularProgressIndicator(
+                  color: Colors.white70,
+                  strokeWidth: 2,
+                ),
+              )
+            : const Icon(
+                Icons.play_circle_outline,
+                color: Colors.white70,
+                size: 36,
+              ),
+      ),
     );
   }
 }

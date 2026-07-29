@@ -197,6 +197,7 @@ class AppLocalizations {
       'videoUnmute': 'Turn sound on',
       'videoFullscreen': 'Enter fullscreen',
       'videoExitFullscreen': 'Exit fullscreen',
+      'videoLoadFailed': 'Video unavailable',
       'lessonDetailSubjectMath': 'Mathematics 101',
       'lessonDetailModuleOne': 'Module 1',
       'lessonLinearEquationsDescription':
@@ -443,6 +444,7 @@ class AppLocalizations {
       'videoUnmute': 'បើកសំឡេង',
       'videoFullscreen': 'បើកពេញអេក្រង់',
       'videoExitFullscreen': 'ចាកចេញពីពេញអេក្រង់',
+      'videoLoadFailed': 'មិនអាចបង្ហាញវីដេអូបាន',
       'lessonDetailSubjectMath': 'គណិតវិទ្យា 101',
       'lessonDetailModuleOne': 'ម៉ូឌុល 1',
       'lessonLinearEquationsDescription':
