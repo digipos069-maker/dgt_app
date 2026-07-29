@@ -210,7 +210,9 @@ class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
                       _VideoSection(detail: widget.detail),
                       const SizedBox(height: AppSizes.spacing32),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSizes.spacing4,
+                        ),
                         child: _QuizSection(
                           detail: widget.detail,
                           answers: _answers,
@@ -608,30 +610,31 @@ class _QuizSection extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
+          width: 1.5,
+        ),
       ),
-      padding: const EdgeInsets.all(AppSizes.spacing24),
+      padding: const EdgeInsets.all(AppSizes.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.quiz, color: theme.colorScheme.secondary),
+                child: Icon(
+                  Icons.quiz_outlined,
+                  size: 20,
+                  color: theme.colorScheme.primary,
+                ),
               ),
               const SizedBox(width: AppSizes.spacing12),
               Expanded(
@@ -640,7 +643,7 @@ class _QuizSection extends StatelessWidget {
                   children: [
                     Text(
                       context.l10n.text(detail.quizTitleKey),
-                      style: theme.textTheme.titleLarge?.copyWith(
+                      style: theme.textTheme.titleMedium?.copyWith(
                         color: theme.colorScheme.secondary,
                         fontWeight: FontWeight.w900,
                       ),
@@ -648,8 +651,8 @@ class _QuizSection extends StatelessWidget {
                     const SizedBox(height: AppSizes.spacing4),
                     Text(
                       context.l10n.text(detail.quizSubtitleKey),
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.outline,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -657,8 +660,20 @@ class _QuizSection extends StatelessWidget {
               ),
             ],
           ),
-          Divider(height: 32, color: theme.colorScheme.surfaceContainerHighest),
+          const SizedBox(height: AppSizes.spacing24),
           for (final (index, question) in detail.questions.indexed) ...[
+            if (index > 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppSizes.spacing24,
+                ),
+                child: Divider(
+                  height: 1,
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.65,
+                  ),
+                ),
+              ),
             _QuizQuestion(
               number: index + 1,
               question: question,
@@ -669,7 +684,6 @@ class _QuizSection extends StatelessWidget {
               feedback: answerFeedback[question.id],
               onSubmit: () => onSubmit(question),
             ),
-            const SizedBox(height: AppSizes.spacing24),
           ],
         ],
       ),
@@ -725,7 +739,7 @@ class _QuizQuestion extends StatelessWidget {
               crossAxisCount: isWide ? 2 : 1,
               crossAxisSpacing: AppSizes.spacing12,
               mainAxisSpacing: AppSizes.spacing12,
-              mainAxisExtent: 88,
+              mainAxisExtent: 78,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               children: [
@@ -802,64 +816,75 @@ class _QuizOption extends StatelessWidget {
       _QuizOptionStatus.neutral => null,
     };
     final backgroundColor = switch (status) {
-      _QuizOptionStatus.correct => AppColors.success.withValues(alpha: 0.08),
-      _QuizOptionStatus.incorrect => AppColors.error.withValues(alpha: 0.08),
+      _QuizOptionStatus.correct => AppColors.success.withValues(alpha: 0.06),
+      _QuizOptionStatus.incorrect => AppColors.error.withValues(alpha: 0.06),
       _QuizOptionStatus.neutral =>
         isSelected
-            ? theme.colorScheme.primaryContainer
-            : theme.colorScheme.surfaceContainerLowest,
+            ? theme.colorScheme.primary.withValues(alpha: 0.07)
+            : theme.colorScheme.surface,
     };
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color:
-                statusColor ??
-                (isSelected
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.outlineVariant),
-            width: status == _QuizOptionStatus.neutral ? 1 : 2,
-          ),
-        ),
-        padding: const EdgeInsets.all(AppSizes.spacing16),
-        child: Row(
-          children: [
-            _SelectionIndicator(isSelected: isSelected, status: status),
-            const SizedBox(width: AppSizes.spacing8),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  MixedLatexText(
-                    text: context.l10n.text(option.labelKey),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
-                  if (status != _QuizOptionStatus.neutral) ...[
-                    const SizedBox(height: AppSizes.spacing4),
-                    Text(
-                      context.l10n.text(
-                        status == _QuizOptionStatus.correct
-                            ? 'quizAnswerCorrect'
-                            : 'quizAnswerIncorrect',
-                      ),
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: statusColor,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
+    return Material(
+      color: backgroundColor,
+      borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+            border: Border.all(
+              color:
+                  statusColor ??
+                  (isSelected
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.outlineVariant),
+              width: status == _QuizOptionStatus.neutral && !isSelected
+                  ? 1
+                  : 1.5,
             ),
-          ],
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.spacing16,
+            vertical: AppSizes.spacing12,
+          ),
+          child: Row(
+            children: [
+              _SelectionIndicator(isSelected: isSelected, status: status),
+              const SizedBox(width: AppSizes.spacing12),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    MixedLatexText(
+                      text: context.l10n.text(option.labelKey),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
+                    ),
+                    if (status != _QuizOptionStatus.neutral) ...[
+                      const SizedBox(height: AppSizes.spacing4),
+                      Text(
+                        context.l10n.text(
+                          status == _QuizOptionStatus.correct
+                              ? 'quizAnswerCorrect'
+                              : 'quizAnswerIncorrect',
+                        ),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: statusColor,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -882,22 +907,24 @@ class _SelectionIndicator extends StatelessWidget {
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 160),
-      width: 22,
-      height: 22,
+      width: 20,
+      height: 20,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
           color: isSelected ? color : Theme.of(context).colorScheme.outline,
-          width: 2,
+          width: 1.5,
         ),
       ),
       child: status == _QuizOptionStatus.correct
-          ? Icon(Icons.check, color: color, size: 15)
+          ? Icon(Icons.check, color: color, size: 14)
+          : status == _QuizOptionStatus.incorrect
+          ? Icon(Icons.close, color: color, size: 14)
           : isSelected
           ? Center(
               child: Container(
-                width: 10,
-                height: 10,
+                width: 8,
+                height: 8,
                 decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               ),
             )
