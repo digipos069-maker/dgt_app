@@ -103,8 +103,6 @@ class _HomeDashboardContent extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const _SearchField(),
-              const SizedBox(height: AppSizes.spacing24),
               _WelcomeSummary(username: username),
               const SizedBox(height: AppSizes.spacing24),
               if (isWide)
@@ -184,47 +182,6 @@ class _StatsColumn extends StatelessWidget {
         SizedBox(height: AppSizes.spacing32),
         _DailyGoalCard(),
       ],
-    );
-  }
-}
-
-class _SearchField extends StatelessWidget {
-  const _SearchField();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 680),
-        child: TextField(
-          textInputAction: TextInputAction.search,
-          decoration: InputDecoration(
-            hintText: context.l10n.text('homeSearchHint'),
-            prefixIcon: const Icon(Icons.search),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.spacing16,
-              vertical: 14,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(999),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(999),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(999),
-              borderSide: BorderSide(
-                color: Theme.of(
-                  context,
-                ).colorScheme.secondary.withValues(alpha: 0.5),
-                width: 2,
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

@@ -118,7 +118,7 @@ class TutorialRepository {
           ? LessonType.video
           : LessonType.reading,
       durationMinutes: 12 + (index * 3),
-      isCompleted: !locked && index < 2,
+      isCompleted: tutorial.isCompleted,
     );
   }
 

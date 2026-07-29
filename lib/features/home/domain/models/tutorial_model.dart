@@ -11,6 +11,7 @@ class TutorialModel {
     required this.lessonId,
     required this.videoThumbnail,
     required this.isLocked,
+    required this.isCompleted,
   });
 
   factory TutorialModel.fromJson(Object? value) {
@@ -18,6 +19,7 @@ class TutorialModel {
       throw const FormatException('Invalid tutorial item');
     }
 
+    final progress = value['progress'];
     return TutorialModel(
       id: _readInt(value['id']),
       title: _readString(value['title']),
@@ -30,6 +32,11 @@ class TutorialModel {
       lessonId: _readInt(value['lessonId']),
       videoThumbnail: _readString(value['videoThumbnail']),
       isLocked: _readBool(value['lock']) || _readBool(value['isLocked']),
+      isCompleted:
+          _readBool(value['isCompleted']) ||
+          _readBool(value['completed']) ||
+          (progress is Map<String, dynamic> &&
+              _readBool(progress['isCompleted'] ?? progress['completed'])),
     );
   }
 
@@ -44,6 +51,7 @@ class TutorialModel {
   final int lessonId;
   final String videoThumbnail;
   final bool isLocked;
+  final bool isCompleted;
 
   static String _readString(Object? value) {
     final text = value?.toString().trim() ?? '';

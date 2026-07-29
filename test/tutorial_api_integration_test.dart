@@ -49,6 +49,7 @@ void main() {
                 "gradeId": 12,
                 "orderId": 1,
                 "lessonId": 4,
+                "isCompleted": true,
                 "videoThumbnail": null,
                 "lock": 0
               }

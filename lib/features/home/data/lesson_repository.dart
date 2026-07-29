@@ -37,7 +37,7 @@ class LessonRepository {
           titleKey: 'lessonLinearEquations',
           type: LessonType.video,
           durationMinutes: 12,
-          isCompleted: true,
+          isCompleted: false,
         ),
         LessonModel(
           courseId: 'algebra',
@@ -45,7 +45,7 @@ class LessonRepository {
           titleKey: 'lessonQuadraticFormula',
           type: LessonType.reading,
           durationMinutes: 15,
-          isCompleted: true,
+          isCompleted: false,
         ),
         LessonModel(
           courseId: 'algebra',
@@ -69,7 +69,7 @@ class LessonRepository {
           titleKey: 'lessonNewtonsLaws',
           type: LessonType.video,
           durationMinutes: 10,
-          isCompleted: true,
+          isCompleted: false,
         ),
         LessonModel(
           courseId: 'force-motion',

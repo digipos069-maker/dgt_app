@@ -364,13 +364,15 @@ class _LessonTile extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: AppSizes.spacing4),
-                    Text(
-                      _lessonMeta(context, lesson),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                    if (lesson.type != LessonType.video) ...[
+                      const SizedBox(height: AppSizes.spacing4),
+                      Text(
+                        _lessonMeta(context, lesson),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
@@ -388,10 +390,7 @@ class _LessonTile extends StatelessWidget {
       LessonType.reading => 'lessonTypeReading',
       LessonType.locked => 'lessonTypeLocked',
     };
-    if (lesson.type == LessonType.locked) {
-      return context.l10n.text(typeKey);
-    }
-    return '${context.l10n.text(typeKey)} • ${lesson.durationMinutes} ${context.l10n.text('minutesShort')}';
+    return context.l10n.text(typeKey);
   }
 }
 
