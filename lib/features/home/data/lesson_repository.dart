@@ -136,6 +136,7 @@ class LessonRepository {
       quizSubtitleKey: 'lessonQuizSubtitleLinear',
       questions: [
         QuizQuestionModel(
+          quizId: 1,
           id: 'q1',
           questionKey: 'quizLinearQuestionOne',
           options: [
@@ -146,6 +147,7 @@ class LessonRepository {
           ],
         ),
         QuizQuestionModel(
+          quizId: 1,
           id: 'q2',
           questionKey: 'quizLinearQuestionTwo',
           options: [
@@ -169,6 +171,7 @@ class LessonRepository {
       quizSubtitleKey: 'lessonQuizSubtitleQuadratic',
       questions: [
         QuizQuestionModel(
+          quizId: 1,
           id: 'q1',
           questionKey: 'quizQuadraticQuestionOne',
           options: [
@@ -192,6 +195,7 @@ class LessonRepository {
       quizSubtitleKey: 'lessonQuizSubtitlePhysics',
       questions: [
         QuizQuestionModel(
+          quizId: 1,
           id: 'q1',
           questionKey: 'quizPhysicsQuestionOne',
           options: [
@@ -215,6 +219,7 @@ class LessonRepository {
       quizSubtitleKey: 'lessonQuizSubtitlePhysics',
       questions: [
         QuizQuestionModel(
+          quizId: 1,
           id: 'q1',
           questionKey: 'quizPhysicsQuestionOne',
           options: [
@@ -238,6 +243,7 @@ class LessonRepository {
       quizSubtitleKey: 'lessonQuizSubtitleNarrative',
       questions: [
         QuizQuestionModel(
+          quizId: 1,
           id: 'q1',
           questionKey: 'quizNarrativeQuestionOne',
           options: [
@@ -261,6 +267,7 @@ class LessonRepository {
       quizSubtitleKey: 'lessonQuizSubtitleNarrative',
       questions: [
         QuizQuestionModel(
+          quizId: 1,
           id: 'q1',
           questionKey: 'quizNarrativeQuestionOne',
           options: [

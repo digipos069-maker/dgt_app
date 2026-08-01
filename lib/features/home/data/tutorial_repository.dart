@@ -57,7 +57,7 @@ class TutorialRepository {
         .map(
           (quiz) => QuizQuestionModel(
             id: quiz.id > 0 ? quiz.id.toString() : quiz.question,
-            quizId: quiz.id > 0 ? quiz.id : null,
+            quizId: quiz.id,
             questionKey: quiz.question,
             options: [
               for (final (index, option) in quiz.options.indexed)
@@ -84,7 +84,7 @@ class TutorialRepository {
       durationLabel: '12:45',
       quizTitleKey: 'lessonQuizTitle',
       quizSubtitleKey: 'lessonQuizSubtitleLinear',
-      questions: questions.isNotEmpty ? questions : _fallbackQuestions,
+      questions: questions,
       mainVideoUrl: tutorial.mainVideoUrl,
       videoThumbnail: tutorial.videoThumbnail,
     );

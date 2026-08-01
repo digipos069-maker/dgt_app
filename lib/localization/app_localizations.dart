@@ -234,6 +234,7 @@ class AppLocalizations {
       'quizSubmitFailedMessage': 'Please check your connection and try again.',
       'quizSubmissionUnavailable':
           'This practice question cannot be submitted to the API.',
+      'noQuizForLesson': 'There is no quiz for this lesson.',
       'close': 'Close',
       'quizLinearQuestionOne': 'What is x in 2x + 5 = 15?',
       'quizLinearQ1A': 'A) 5',
@@ -480,6 +481,7 @@ class AppLocalizations {
       'quizSubmitFailedMessage':
           'សូមពិនិត្យការតភ្ជាប់អ៊ីនធឺណិត ហើយព្យាយាមម្តងទៀត។',
       'quizSubmissionUnavailable': 'សំណួរអនុវត្តនេះមិនអាចបញ្ជូនទៅ API បានទេ។',
+      'noQuizForLesson': 'មិនមានកម្រងសំណួរសម្រាប់មេរៀននេះទេ។',
       'close': 'បិទ',
       'quizLinearQuestionOne': 'តើ x មានតម្លៃប៉ុន្មានក្នុង 2x + 5 = 15?',
       'quizLinearQ1A': 'ក) 5',

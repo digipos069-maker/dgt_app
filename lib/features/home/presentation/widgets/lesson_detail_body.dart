@@ -205,42 +205,46 @@ class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
             child: _DetailHeader(detail: widget.detail, onBack: widget.onBack),
           ),
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                0,
-                AppSizes.spacing16,
-                0,
-                AppSizes.pageBottomPadding,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 896),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _VideoSection(detail: widget.detail),
-                      const SizedBox(height: AppSizes.spacing32),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSizes.spacing4,
+            child: ScrollConfiguration(
+              behavior: ScrollConfiguration.of(context).copyWith(overscroll: false),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  0,
+                  AppSizes.spacing16,
+                  0,
+                  AppSizes.pageBottomPadding,
+                ),
+                physics: const ClampingScrollPhysics(),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 896),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _VideoSection(detail: widget.detail),
+                        const SizedBox(height: AppSizes.spacing32),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSizes.spacing4,
+                          ),
+                          child: _QuizSection(
+                            detail: widget.detail,
+                            answers: _answers,
+                            onChanged: (questionId, optionId) {
+                              setState(() {
+                                _answers[questionId] = optionId;
+                                _submittedQuestions.remove(questionId);
+                                _answerFeedback.remove(questionId);
+                              });
+                            },
+                            submittingQuestions: _submittingQuestions,
+                            submittedQuestions: _submittedQuestions,
+                            answerFeedback: _answerFeedback,
+                            onSubmit: _submitQuestion,
+                          ),
                         ),
-                        child: _QuizSection(
-                          detail: widget.detail,
-                          answers: _answers,
-                          onChanged: (questionId, optionId) {
-                            setState(() {
-                              _answers[questionId] = optionId;
-                              _submittedQuestions.remove(questionId);
-                              _answerFeedback.remove(questionId);
-                            });
-                          },
-                          submittingQuestions: _submittingQuestions,
-                          submittedQuestions: _submittedQuestions,
-                          answerFeedback: _answerFeedback,
-                          onSubmit: _submitQuestion,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -695,7 +699,21 @@ class _QuizSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSizes.spacing24),
-          for (final (index, question) in detail.questions.indexed) ...[
+          if (detail.questions.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSizes.spacing32),
+              child: Center(
+                child: Text(
+                  context.l10n.text('noQuizForLesson'),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            )
+          else
+            for (final (index, question) in detail.questions.indexed) ...[
             if (index > 0)
               Padding(
                 padding: const EdgeInsets.symmetric(

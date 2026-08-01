@@ -66,7 +66,7 @@ class TutorialQuizModel {
     final quizData = _readMap(value['quizData']);
     final options = quizData?['options'] ?? value['options'];
     return TutorialQuizModel(
-      id: _readInt(value['id'] ?? value['quizId'] ?? quizData?['id']),
+      id: _readInt(value['id'] ?? value['quizId'] ?? value['quiz_id'] ?? quizData?['id'] ?? quizData?['quizId'] ?? quizData?['quiz_id']),
       question: _readString(value['question'] ?? quizData?['question']),
       options: options is List
           ? options

@@ -76,6 +76,7 @@ class BasicCourseRepository {
           : 'Check your understanding of this basic lesson.',
       questions: [
         QuizQuestionModel(
+          quizId: 1,
           id: 'q1',
           questionKey: quiz['question']! as String,
           options: [
