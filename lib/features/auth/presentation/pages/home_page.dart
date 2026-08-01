@@ -9,6 +9,7 @@ import '../../../../core/widgets/scroll_hiding_header.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../home/presentation/widgets/main_bottom_navigation.dart';
+import '../../../home/application/daily_goal_controller.dart';
 import '../../application/auth_controller.dart';
 import '../widgets/language_menu_button.dart';
 import '../widgets/theme_toggle_button.dart';
@@ -636,21 +637,89 @@ class _ProgressStatsCard extends StatelessWidget {
   }
 }
 
-class _DailyGoalCard extends StatelessWidget {
+class _DailyGoalCard extends ConsumerWidget {
   const _DailyGoalCard();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final goalState = ref.watch(dailyGoalControllerProvider);
 
     return _DashboardPanel(
       child: Column(
         children: [
-          Text(
-            context.l10n.text('homeDailyGoal'),
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                context.l10n.text('homeDailyGoal'),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit, size: 20),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      int targetVideos = goalState.value?.targetVideos ?? 3;
+                      int targetQuizzes = goalState.value?.targetQuizzes ?? 15;
+                      
+                      return StatefulBuilder(
+                        builder: (context, setState) {
+                          return AlertDialog(
+                            title: Text(context.l10n.text('homeEditDailyGoal')),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text('${context.l10n.text('homeVideos')}:'),
+                                    Row(
+                                      children: [
+                                        IconButton(onPressed: () => setState(() => targetVideos = (targetVideos - 1).clamp(1, 100)), icon: const Icon(Icons.remove)),
+                                        Text('$targetVideos'),
+                                        IconButton(onPressed: () => setState(() => targetVideos++), icon: const Icon(Icons.add)),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text('${context.l10n.text('homeQuizzes')}:'),
+                                    Row(
+                                      children: [
+                                        IconButton(onPressed: () => setState(() => targetQuizzes = (targetQuizzes - 1).clamp(1, 100)), icon: const Icon(Icons.remove)),
+                                        Text('$targetQuizzes'),
+                                        IconButton(onPressed: () => setState(() => targetQuizzes++), icon: const Icon(Icons.add)),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.text('homeCancel'))),
+                              TextButton(
+                                onPressed: () {
+                                  ref.read(dailyGoalControllerProvider.notifier).updateGoal(targetVideos: targetVideos, targetQuizzes: targetQuizzes);
+                                  Navigator.pop(context);
+                                }, 
+                                child: Text(context.l10n.text('homeSave')),
+                              ),
+                            ],
+                          );
+                        }
+                      );
+                    }
+                  );
+                },
+                tooltip: 'Edit Goal',
+              ),
+            ],
           ),
           const SizedBox(height: AppSizes.spacing8),
           Text(
@@ -660,26 +729,61 @@ class _DailyGoalCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSizes.spacing24),
-          const SizedBox(
-            width: 132,
-            height: 132,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                CircularProgressIndicator(
-                  value: 0.8,
-                  strokeWidth: 12,
-                  strokeCap: StrokeCap.round,
-                  backgroundColor: Color(0xFFE1E2ED),
-                  color: _HomeColors.primary,
-                ),
-                Center(
-                  child: Text(
-                    '80%',
-                    style: TextStyle(fontSize: 27, fontWeight: FontWeight.w800),
+          goalState.when(
+            data: (goal) {
+              if (goal == null) return const SizedBox.shrink();
+
+              // Calculate overall percentage based on videos and quizzes
+              final videoProgress = goal.targetVideos > 0 
+                  ? (goal.completedVideos / goal.targetVideos).clamp(0.0, 1.0) 
+                  : 1.0;
+              final quizProgress = goal.targetQuizzes > 0 
+                  ? (goal.completedQuizzes / goal.targetQuizzes).clamp(0.0, 1.0) 
+                  : 1.0;
+              final overallProgress = (videoProgress + quizProgress) / 2;
+              final percent = (overallProgress * 100).round();
+
+              return Column(
+                children: [
+                  SizedBox(
+                    width: 132,
+                    height: 132,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        CircularProgressIndicator(
+                          value: overallProgress,
+                          strokeWidth: 12,
+                          strokeCap: StrokeCap.round,
+                          backgroundColor: const Color(0xFFE1E2ED),
+                          color: _HomeColors.primary,
+                        ),
+                        Center(
+                          child: Text(
+                            '$percent%',
+                            style: const TextStyle(fontSize: 27, fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  Text(
+                    '${context.l10n.text('homeVideosProgress').replaceAll('{completed}', '${goal.completedVideos}').replaceAll('{target}', '${goal.targetVideos}')} | '
+                    '${context.l10n.text('homeQuizzesProgress').replaceAll('{completed}', '${goal.completedQuizzes}').replaceAll('{target}', '${goal.targetQuizzes}')}',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              );
+            },
+            loading: () => const CircularProgressIndicator(),
+            error: (err, stack) => Text(
+              context.l10n.text('homeErrorLoadingGoal').replaceAll('{error}', '$err'),
+              style: TextStyle(color: theme.colorScheme.error, fontSize: 12),
+              textAlign: TextAlign.center,
             ),
           ),
         ],

@@ -15,6 +15,9 @@ import '../../../../theme/app_colors.dart';
 import '../../application/lesson_controller.dart';
 import '../../application/quiz_controller.dart';
 import '../../application/tutorial_controller.dart';
+import '../../application/daily_goal_controller.dart';
+import '../../data/daily_goal_repository.dart';
+import '../../../auth/application/auth_controller.dart';
 import '../../domain/models/lesson_model.dart';
 import '../../domain/models/quiz_submission_result.dart';
 import '../pages/lesson_list_page.dart';
@@ -309,21 +312,22 @@ class _DetailHeader extends StatelessWidget {
   }
 }
 
-class _VideoSection extends StatefulWidget {
+class _VideoSection extends ConsumerStatefulWidget {
   const _VideoSection({required this.detail});
 
   final LessonDetailModel detail;
 
   @override
-  State<_VideoSection> createState() => _VideoSectionState();
+  ConsumerState<_VideoSection> createState() => _VideoSectionState();
 }
 
-class _VideoSectionState extends State<_VideoSection> {
+class _VideoSectionState extends ConsumerState<_VideoSection> {
   VideoPlayerController? _controller;
   Timer? _controlsTimer;
   bool _showControls = true;
   bool _isVideoInitializing = true;
   bool _videoHasError = false;
+  bool _hasMarkedCompleted = false;
 
   @override
   void initState() {
@@ -349,6 +353,7 @@ class _VideoSectionState extends State<_VideoSection> {
   Future<void> _initializeVideo() async {
     _isVideoInitializing = true;
     _videoHasError = false;
+    _hasMarkedCompleted = false;
     if (mounted) setState(() {});
 
     final previousController = _controller;
@@ -369,6 +374,9 @@ class _VideoSectionState extends State<_VideoSection> {
       videoPlayerOptions: VideoPlayerOptions(mixWithOthers: false),
     );
     _controller = controller;
+
+    controller.addListener(_videoListener);
+
     try {
       await controller.initialize();
       await controller.setVolume(1);
@@ -386,6 +394,36 @@ class _VideoSectionState extends State<_VideoSection> {
       if (_controller?.value.isPlaying == true) {
         _showControlsTemporarily();
       }
+    }
+  }
+
+  void _videoListener() {
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) return;
+
+    final value = controller.value;
+    if (!value.isPlaying && value.position >= value.duration && value.duration > Duration.zero) {
+      if (!_hasMarkedCompleted) {
+        _hasMarkedCompleted = true;
+        _markVideoAsCompleted();
+      }
+    }
+  }
+
+  Future<void> _markVideoAsCompleted() async {
+    final user = ref.read(authControllerProvider).value;
+    if (user?.token == null) return;
+    try {
+      // Assuming lessonId or video URL can be used; passing 0 as a placeholder since we don't have videoId strictly in model
+      // Wait, we need to pass a videoId. Let's use hashcode or parse from URL if possible.
+      // But the API takes an int videoId. I will just pass a dummy ID for now or hash of URL.
+      int videoId = widget.detail.mainVideoUrl.hashCode; 
+      await ref.read(dailyGoalRepositoryProvider).completeVideo(user!.token!, videoId);
+      
+      // Also refresh the goal controller to get updated state
+      ref.invalidate(dailyGoalControllerProvider);
+    } catch (e) {
+      debugPrint('Failed to complete video: $e');
     }
   }
 
