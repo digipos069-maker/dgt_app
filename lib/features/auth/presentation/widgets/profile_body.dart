@@ -27,14 +27,17 @@ class ProfileBody extends StatelessWidget {
 
     return Theme(
       data: theme.copyWith(textTheme: textTheme),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
-          10,
-          24,
-          10,
-          AppSizes.pageBottomPadding,
-        ),
-        child: Center(
+      child: ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(overscroll: false),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(
+            10,
+            24,
+            10,
+            AppSizes.pageBottomPadding,
+          ),
+          physics: const ClampingScrollPhysics(),
+          child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 520),
             child: Column(
@@ -57,6 +60,7 @@ class ProfileBody extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }

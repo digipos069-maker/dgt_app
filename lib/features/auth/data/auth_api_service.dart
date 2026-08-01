@@ -22,7 +22,10 @@ class AuthApiService {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
-          body: jsonEncode({'email': email, 'password': password}),
+          body: jsonEncode({
+            if (email.contains('@')) 'email': email else 'phone': email,
+            'password': password,
+          }),
         )
         .timeout(const Duration(seconds: 15));
     final jsonBody = _decodeBody(response.body);
@@ -54,7 +57,7 @@ class AuthApiService {
             'Content-Type': 'application/json',
           },
           body: jsonEncode({
-            'email': email,
+            if (email.contains('@')) 'email': email else 'phone': email,
             'fullName': fullName,
             'gradeId': gradeId,
             'password': password,
