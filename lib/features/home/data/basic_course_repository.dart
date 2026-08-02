@@ -4,12 +4,16 @@ import '../domain/models/basic_course_model.dart';
 import '../domain/models/basic_lesson_model.dart';
 import '../domain/models/lesson_model.dart';
 
+import 'basic_course_api_service.dart';
+
 final basicCourseRepositoryProvider = Provider<BasicCourseRepository>((ref) {
-  return const BasicCourseRepository();
+  return BasicCourseRepository(apiService: ref.watch(basicCourseApiServiceProvider));
 });
 
 class BasicCourseRepository {
-  const BasicCourseRepository();
+  const BasicCourseRepository({required this.apiService});
+  
+  final BasicCourseApiService apiService;
 
   Future<List<BasicCourseModel>> fetchBasicCourses({
     required String languageCode,
@@ -21,73 +25,84 @@ class BasicCourseRepository {
   }
 
   Future<BasicLessonBundle> fetchBasicLessons({
+    required String token,
     required String courseId,
     required String languageCode,
   }) async {
-    await Future<void>.delayed(const Duration(milliseconds: 300));
-
-    final courseData = _courseData(languageCode);
-    final courseJson = courseData.firstWhere(
-      (item) => item['id'] == courseId,
-      orElse: () => courseData.first,
-    );
-    final resolvedCourseId = courseJson['id']!.toString();
-    final lessonData = _lessonData(languageCode)[resolvedCourseId] ?? const [];
-
-    return BasicLessonBundle(
-      course: BasicCourseModel.fromJson(courseJson),
-      lessons: lessonData
-          .map(
-            (item) =>
-                BasicLessonModel.fromJson(item, courseId: resolvedCourseId),
-          )
-          .toList(growable: false),
+    final subjectId = _getSubjectIdForCourse(courseId);
+    return await apiService.fetchBasicContent(
+      token: token,
+      subjectId: subjectId,
+      courseId: courseId,
     );
   }
 
+  String _getSubjectIdForCourse(String courseId) {
+    return switch (courseId) {
+      'mathematics' => '1',
+      'physics' => '2',
+      'chemistry' => '3',
+      'biology' => '4',
+      _ => '1',
+    };
+  }
+
   Future<LessonDetailModel> fetchBasicLessonDetail({
+    required String token,
     required String courseId,
-    required String lessonId,
+    required String lessonId, // this is the slug
     required String languageCode,
   }) async {
-    final bundle = await fetchBasicLessons(
-      courseId: courseId,
-      languageCode: languageCode,
-    );
-    final lesson = bundle.lessons.firstWhere(
-      (item) => item.id == lessonId,
-      orElse: () => bundle.lessons.first,
-    );
-    final quiz = _quizData(languageCode)[bundle.course.id]!;
-    final options = quiz['options']! as List<String>;
     final isKhmer = languageCode == 'km';
+    final json = await apiService.fetchBasicContentDetail(
+      token: token,
+      slug: lessonId,
+    );
+    
+    final subjectMap = json['subject'] as Map<String, dynamic>?;
+    String subjectName = 'Course';
+    if (subjectMap != null) {
+      subjectName = (isKhmer ? subjectMap['nameKm'] : subjectMap['nameEn'])?.toString() ?? 'Course';
+    }
+
+    // Parse quizzes from backend if they exist (we don't know exact structure yet, but we'll try)
+    final questions = <QuizQuestionModel>[];
+    final quizList = json['quizzes'] as List<dynamic>? ?? [];
+    if (quizList.isNotEmpty) {
+      for (final (index, q) in quizList.indexed) {
+        if (q is Map<String, dynamic>) {
+          final optionsList = q['options'] as List<dynamic>? ?? [];
+          questions.add(QuizQuestionModel(
+            id: q['id']?.toString() ?? index.toString(),
+            questionKey: q['question']?.toString() ?? '',
+            options: optionsList.map((o) {
+              if (o is Map<String, dynamic>) {
+                return QuizOptionModel(id: o['id']?.toString() ?? '', labelKey: o['text']?.toString() ?? '');
+              } else if (o is String) {
+                return QuizOptionModel(id: o, labelKey: o);
+              }
+              return const QuizOptionModel(id: '', labelKey: '');
+            }).toList(),
+          ));
+        }
+      }
+    }
 
     return LessonDetailModel(
-      courseId: bundle.course.id,
-      lessonId: lesson.id,
-      titleKey: lesson.name,
-      subjectKey: bundle.course.name,
+      courseId: courseId,
+      lessonId: lessonId,
+      titleKey: (json['title'] ?? json['name'])?.toString() ?? '',
+      subjectKey: subjectName,
       moduleKey: isKhmer ? 'មេរៀនមូលដ្ឋាន' : 'Basic lesson',
-      descriptionKey: lesson.description,
-      durationLabel: lesson.durationLabel,
+      descriptionKey: (json['description'] ?? json['desc'])?.toString() ?? '',
+      durationLabel: (json['durationLabel'] ?? json['duration'])?.toString() ?? '10:00',
       quizTitleKey: isKhmer ? 'សំណួរមេរៀន' : 'Lesson quiz',
       quizSubtitleKey: isKhmer
           ? 'សាកល្បងការយល់ដឹងរបស់អ្នកអំពីមេរៀននេះ។'
           : 'Check your understanding of this basic lesson.',
-      questions: [
-        QuizQuestionModel(
-          quizId: 1,
-          id: 'q1',
-          questionKey: quiz['question']! as String,
-          options: [
-            for (final (index, option) in options.indexed)
-              QuizOptionModel(
-                id: String.fromCharCode(65 + index),
-                labelKey: option,
-              ),
-          ],
-        ),
-      ],
+      questions: questions,
+      mainVideoUrl: json['mainVideoUrl']?.toString() ?? '',
+      videoThumbnail: (json['videoThumbnail'] ?? json['thumbnail'])?.toString() ?? '',
     );
   }
 

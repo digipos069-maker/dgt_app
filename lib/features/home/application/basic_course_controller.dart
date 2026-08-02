@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../auth/application/auth_controller.dart';
+
 import '../data/basic_course_repository.dart';
 import '../domain/models/basic_course_model.dart';
 import '../domain/models/basic_lesson_model.dart';
@@ -13,24 +15,52 @@ final basicCoursesProvider = FutureProvider.autoDispose
     });
 
 final basicLessonsProvider = FutureProvider.autoDispose
-    .family<BasicLessonBundle, BasicLessonsRequest>((ref, request) {
-      return ref
-          .watch(basicCourseRepositoryProvider)
-          .fetchBasicLessons(
-            courseId: request.courseId,
-            languageCode: request.languageCode,
-          );
+    .family<BasicLessonBundle, BasicLessonsRequest>((ref, request) async {
+      try {
+        final authState = ref.watch(authControllerProvider);
+        final user = switch (authState) {
+          AsyncData(:final value) => value,
+          _ => null,
+        };
+        final token = user?.token;
+        if (token == null || token.isEmpty) throw Exception('Unauthorized');
+
+        return await ref
+            .watch(basicCourseRepositoryProvider)
+            .fetchBasicLessons(
+              token: token,
+              courseId: request.courseId,
+              languageCode: request.languageCode,
+            );
+      } catch (e, st) {
+        print('Error in basicLessonsProvider: $e\n$st');
+        rethrow;
+      }
     });
 
 final basicLessonDetailProvider = FutureProvider.autoDispose
-    .family<LessonDetailModel, BasicLessonDetailRequest>((ref, request) {
-      return ref
-          .watch(basicCourseRepositoryProvider)
-          .fetchBasicLessonDetail(
-            courseId: request.courseId,
-            lessonId: request.lessonId,
-            languageCode: request.languageCode,
-          );
+    .family<LessonDetailModel, BasicLessonDetailRequest>((ref, request) async {
+      try {
+        final authState = ref.watch(authControllerProvider);
+        final user = switch (authState) {
+          AsyncData(:final value) => value,
+          _ => null,
+        };
+        final token = user?.token;
+        if (token == null || token.isEmpty) throw Exception('Unauthorized');
+
+        return await ref
+            .watch(basicCourseRepositoryProvider)
+            .fetchBasicLessonDetail(
+              token: token,
+              courseId: request.courseId,
+              lessonId: request.lessonId,
+              languageCode: request.languageCode,
+            );
+      } catch (e, st) {
+        print('Error in basicLessonDetailProvider: $e\n$st');
+        rethrow;
+      }
     });
 
 class BasicLessonsRequest {

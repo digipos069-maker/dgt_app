@@ -15,13 +15,13 @@ class BasicLessonModel {
     required String courseId,
   }) {
     return BasicLessonModel(
-      id: json['id']?.toString() ?? '',
+      id: (json['slug'] ?? json['id'])?.toString() ?? '',
       courseId: courseId,
-      name: json['name']?.toString() ?? '',
-      thumbnail: json['thumbnail']?.toString() ?? '',
+      name: (json['title'] ?? json['name'])?.toString() ?? '',
+      thumbnail: (json['videoThumbnail'] ?? json['thumbnail'])?.toString() ?? '',
       description: (json['description'] ?? json['desc'])?.toString() ?? '',
       durationLabel:
-          (json['durationLabel'] ?? json['duration'])?.toString() ?? '',
+          (json['durationLabel'] ?? json['duration'])?.toString() ?? '10:00', // Default since API lacks it
     );
   }
 
