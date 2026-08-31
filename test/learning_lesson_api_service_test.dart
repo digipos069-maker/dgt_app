@@ -22,7 +22,10 @@ void main() {
     expect(requestedUri.path, '/api/lessons');
     expect(requestedUri.queryParameters['gradeId'], '12');
     expect(requestedUri.queryParameters['subjectId'], '1');
-    expect(result, hasLength(1));
+    expect(requestedUri.queryParameters['page'], '1');
+    expect(requestedUri.queryParameters['limit'], '10');
+    expect(result, isA<List>());
+    expect((result as List), hasLength(1));
   });
 
   test('parses common lesson API field names', () {
