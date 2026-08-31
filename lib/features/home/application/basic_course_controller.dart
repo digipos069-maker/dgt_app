@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../auth/application/auth_controller.dart';
@@ -14,29 +16,112 @@ final basicCoursesProvider = FutureProvider.autoDispose
           .fetchBasicCourses(languageCode: languageCode);
     });
 
-final basicLessonsProvider = FutureProvider.autoDispose
-    .family<BasicLessonBundle, BasicLessonsRequest>((ref, request) async {
-      try {
-        final authState = ref.watch(authControllerProvider);
-        final user = switch (authState) {
-          AsyncData(:final value) => value,
-          _ => null,
-        };
-        final token = user?.token;
-        if (token == null || token.isEmpty) throw Exception('Unauthorized');
+class BasicLessonsNotifier extends AsyncNotifier<BasicLessonBundle> {
+  BasicLessonsNotifier(this.arg);
 
-        return await ref
-            .watch(basicCourseRepositoryProvider)
-            .fetchBasicLessons(
-              token: token,
-              courseId: request.courseId,
-              languageCode: request.languageCode,
-            );
-      } catch (e, st) {
-        print('Error in basicLessonsProvider: $e\n$st');
-        rethrow;
-      }
+  final BasicLessonsRequest arg;
+  bool _isFetchingMore = false;
+
+  static const int initialLimit = 10;
+  static const int scrollLimit = 5;
+
+  @override
+  Future<BasicLessonBundle> build() async {
+    _isFetchingMore = false;
+    final cacheLink = ref.keepAlive();
+    Timer? cacheTimer;
+
+    ref.onCancel(() {
+      cacheTimer = Timer(const Duration(minutes: 10), cacheLink.close);
     });
+    ref.onResume(() {
+      cacheTimer?.cancel();
+      cacheTimer = null;
+    });
+    ref.onDispose(() => cacheTimer?.cancel());
+
+    return _fetchPage(page: 1, limit: initialLimit);
+  }
+
+  Future<BasicLessonBundle> _fetchPage({
+    required int page,
+    required int limit,
+    int? offset,
+  }) async {
+    final authState = ref.watch(authControllerProvider);
+    final user = switch (authState) {
+      AsyncData(:final value) => value,
+      _ => null,
+    };
+    final token = user?.token;
+    if (token == null || token.isEmpty) throw Exception('Unauthorized');
+
+    return ref.read(basicCourseRepositoryProvider).fetchBasicLessons(
+      token: token,
+      courseId: arg.courseId,
+      languageCode: arg.languageCode,
+      page: page,
+      limit: limit,
+      offset: offset,
+    );
+  }
+
+  Future<void> loadMore() async {
+    final currentBundle = state.value;
+    if (currentBundle == null ||
+        !currentBundle.hasMore ||
+        _isFetchingMore ||
+        state.isLoading ||
+        currentBundle.isFetchingMore) {
+      return;
+    }
+
+    _isFetchingMore = true;
+    state = AsyncData(currentBundle.copyWith(isFetchingMore: true));
+    try {
+      final currentCount = currentBundle.lessons.length;
+      final nextPage = (currentCount ~/ scrollLimit) + 1;
+      final newBundle = await _fetchPage(
+        page: nextPage,
+        limit: scrollLimit,
+        offset: currentCount,
+      );
+
+      final existingIds = <String>{
+        for (final lesson in currentBundle.lessons) lesson.id,
+      };
+
+      final uniqueNewLessons = <BasicLessonModel>[];
+      for (final lesson in newBundle.lessons) {
+        if (existingIds.add(lesson.id)) {
+          uniqueNewLessons.add(lesson);
+        }
+      }
+
+      final hasMore = newBundle.hasMore && uniqueNewLessons.isNotEmpty;
+      final resolvedPage =
+          (newBundle.page >= nextPage) ? newBundle.page : nextPage;
+
+      state = AsyncData(
+        currentBundle.copyWith(
+          lessons: [...currentBundle.lessons, ...uniqueNewLessons],
+          page: resolvedPage,
+          hasMore: hasMore,
+          isFetchingMore: false,
+        ),
+      );
+    } catch (_) {
+      state = AsyncData(currentBundle.copyWith(isFetchingMore: false));
+    } finally {
+      _isFetchingMore = false;
+    }
+  }
+}
+
+final basicLessonsProvider = AsyncNotifierProvider.autoDispose
+    .family<BasicLessonsNotifier, BasicLessonBundle, BasicLessonsRequest>(
+      (arg) => BasicLessonsNotifier(arg),
+    );
 
 final basicLessonDetailProvider = FutureProvider.autoDispose
     .family<LessonDetailModel, BasicLessonDetailRequest>((ref, request) async {

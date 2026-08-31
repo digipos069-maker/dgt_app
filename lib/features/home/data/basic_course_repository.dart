@@ -28,12 +28,82 @@ class BasicCourseRepository {
     required String token,
     required String courseId,
     required String languageCode,
+    int page = 1,
+    int limit = 10,
+    int? offset,
   }) async {
     final subjectId = _getSubjectIdForCourse(courseId);
-    return await apiService.fetchBasicContent(
+    final jsonBody = await apiService.fetchBasicContentRaw(
       token: token,
       subjectId: subjectId,
-      courseId: courseId,
+      page: page,
+      limit: limit,
+      offset: offset,
+    );
+
+    final dataList = jsonBody['data'] as List<dynamic>? ?? [];
+
+    BasicCourseModel course;
+    if (dataList.isNotEmpty && dataList.first['subject'] != null) {
+      final subjectObj = dataList.first['subject'];
+      final isKhmer = languageCode == 'km';
+      final name =
+          (isKhmer ? subjectObj['nameKm'] : subjectObj['nameEn'])?.toString() ??
+          subjectObj['name']?.toString() ??
+          'Course';
+      course = BasicCourseModel(
+        id: courseId,
+        name: name,
+        thumbnail:
+            'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=1200&q=80',
+        description: 'Basic Content for $name',
+      );
+    } else {
+      course = BasicCourseModel(
+        id: courseId,
+        name: 'Basic Course',
+        thumbnail:
+            'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=1200&q=80',
+        description: 'Basic Course',
+      );
+    }
+
+    final lessons =
+        dataList.map((item) {
+          return BasicLessonModel.fromJson(
+            item as Map<String, dynamic>,
+            courseId: courseId,
+          );
+        }).toList();
+
+    // Check pagination metadata
+    int resolvedPage = page;
+    final metaObj =
+        (jsonBody['meta'] ?? jsonBody['pagination']) as Map<String, dynamic>?;
+    final pageVal = metaObj?['page'] ?? jsonBody['page'];
+    if (pageVal is num) resolvedPage = pageVal.toInt();
+
+    bool hasMore = false;
+    final directHasMore = metaObj?['hasMore'] ?? jsonBody['hasMore'];
+    if (directHasMore is bool) {
+      hasMore = directHasMore;
+    } else {
+      final totalVal = metaObj?['total'] ?? jsonBody['total'];
+      final totalPagesVal = metaObj?['totalPages'] ?? jsonBody['totalPages'];
+      if (totalPagesVal is num) {
+        hasMore = resolvedPage < totalPagesVal.toInt();
+      } else if (totalVal is num) {
+        hasMore = (resolvedPage * limit) < totalVal.toInt();
+      } else {
+        hasMore = lessons.length >= limit;
+      }
+    }
+
+    return BasicLessonBundle(
+      course: course,
+      lessons: lessons,
+      page: resolvedPage,
+      hasMore: hasMore,
     );
   }
 

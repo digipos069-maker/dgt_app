@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -31,7 +33,10 @@ class BasicLessonListBody extends ConsumerWidget {
     return Theme(
       data: theme.copyWith(textTheme: textTheme),
       child: lessonsState.when(
-        data: (bundle) => _BasicLessonListContent(bundle: bundle),
+        data: (bundle) => _BasicLessonListContent(
+          bundle: bundle,
+          request: request,
+        ),
         error: (_, _) => _BasicLessonListError(
           onRetry: () => ref.invalidate(basicLessonsProvider(request)),
         ),
@@ -41,42 +46,155 @@ class BasicLessonListBody extends ConsumerWidget {
   }
 }
 
-class _BasicLessonListContent extends StatelessWidget {
-  const _BasicLessonListContent({required this.bundle});
+class _BasicLessonListContent extends ConsumerStatefulWidget {
+  const _BasicLessonListContent({
+    required this.bundle,
+    required this.request,
+  });
 
   final BasicLessonBundle bundle;
+  final BasicLessonsRequest request;
+
+  @override
+  ConsumerState<_BasicLessonListContent> createState() =>
+      _BasicLessonListContentState();
+}
+
+class _BasicLessonListContentState
+    extends ConsumerState<_BasicLessonListContent> {
+  static const int _initialLimit = 10;
+  static const int _scrollLimit = 5;
+  late int _visibleCount;
+  late final ScrollController _scrollController;
+  bool _isLoadingMore = false;
+  Timer? _loadMoreTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _visibleCount = _initialLimit.clamp(0, widget.bundle.lessons.length);
+    _scrollController = ScrollController()..addListener(_onScroll);
+  }
+
+  @override
+  void didUpdateWidget(covariant _BasicLessonListContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _isLoadingMore = false;
+    if (oldWidget.bundle.lessons.length != widget.bundle.lessons.length) {
+      _loadMoreTimer?.cancel();
+      _visibleCount = widget.bundle.lessons.length;
+    }
+  }
+
+  @override
+  void dispose() {
+    _loadMoreTimer?.cancel();
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_isLoadingMore || widget.bundle.isFetchingMore) return;
+
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _loadMore();
+    }
+  }
+
+  void _loadMore() {
+    if (_isLoadingMore || widget.bundle.isFetchingMore) return;
+
+    // 1. If server pagination has more items, trigger API loadMore
+    if (widget.bundle.hasMore) {
+      setState(() {
+        _isLoadingMore = true;
+      });
+      ref.read(basicLessonsProvider(widget.request).notifier).loadMore();
+      return;
+    }
+
+    // 2. If client-side has buffered items not yet revealed
+    if (_visibleCount < widget.bundle.lessons.length) {
+      setState(() {
+        _isLoadingMore = true;
+      });
+
+      _loadMoreTimer?.cancel();
+      _loadMoreTimer = Timer(const Duration(milliseconds: 300), () {
+        if (!mounted) return;
+        setState(() {
+          _visibleCount = (_visibleCount + _scrollLimit).clamp(
+            0,
+            widget.bundle.lessons.length,
+          );
+          _isLoadingMore = false;
+        });
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final showLoading = widget.bundle.hasMore ||
+        widget.bundle.isFetchingMore ||
+        _visibleCount < widget.bundle.lessons.length;
+    final totalCount = _visibleCount.clamp(0, widget.bundle.lessons.length);
+    final itemCount = totalCount + 1 + (showLoading ? 1 : 0);
+
     return SafeArea(
       child: Column(
         children: [
           SizedBox(
             height: 56,
-            child: _BasicLessonHeader(title: bundle.course.name),
+            child: _BasicLessonHeader(title: widget.bundle.course.name),
           ),
           Expanded(
             child: ListView.separated(
+              controller: _scrollController,
               padding: const EdgeInsets.fromLTRB(
                 10,
                 24,
                 10,
                 AppSizes.pageBottomPadding,
               ),
-              itemCount: bundle.lessons.length + 1,
+              itemCount: itemCount,
               separatorBuilder: (_, _) =>
                   const SizedBox(height: AppSizes.spacing16),
               itemBuilder: (context, index) {
-                final Widget item;
                 if (index == 0) {
-                  item = _CourseIntroduction(bundle: bundle);
-                } else {
-                  item = _BasicLessonTile(lesson: bundle.lessons[index - 1]);
+                  return Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 760),
+                      child: _CourseIntroduction(bundle: widget.bundle),
+                    ),
+                  );
                 }
-                return Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 760),
-                    child: item,
+
+                if (index <= totalCount) {
+                  final lesson = widget.bundle.lessons[index - 1];
+                  return Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 760),
+                      child: _BasicLessonTile(lesson: lesson),
+                    ),
+                  );
+                }
+
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: AppSizes.spacing16),
+                  child: Center(
+                    child: SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Color(0xFF032EA1),
+                        ),
+                      ),
+                    ),
                   ),
                 );
               },

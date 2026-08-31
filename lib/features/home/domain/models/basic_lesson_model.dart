@@ -34,8 +34,33 @@ class BasicLessonModel {
 }
 
 class BasicLessonBundle {
-  const BasicLessonBundle({required this.course, required this.lessons});
+  const BasicLessonBundle({
+    required this.course,
+    required this.lessons,
+    this.page = 1,
+    this.hasMore = false,
+    this.isFetchingMore = false,
+  });
 
   final BasicCourseModel course;
   final List<BasicLessonModel> lessons;
+  final int page;
+  final bool hasMore;
+  final bool isFetchingMore;
+
+  BasicLessonBundle copyWith({
+    BasicCourseModel? course,
+    List<BasicLessonModel>? lessons,
+    int? page,
+    bool? hasMore,
+    bool? isFetchingMore,
+  }) {
+    return BasicLessonBundle(
+      course: course ?? this.course,
+      lessons: lessons ?? this.lessons,
+      page: page ?? this.page,
+      hasMore: hasMore ?? this.hasMore,
+      isFetchingMore: isFetchingMore ?? this.isFetchingMore,
+    );
+  }
 }
