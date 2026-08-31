@@ -161,9 +161,7 @@ class _ResourceCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppSizes.cardRadius),
             border: Border.all(
-              color: resource.isLocked
-                  ? colors.outlineVariant
-                  : accent.withValues(alpha: 0.48),
+              color: accent.withValues(alpha: 0.48),
               width: 1.5,
             ),
             boxShadow: [
@@ -193,7 +191,6 @@ class _ResourceCard extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  _AccessBadge(isLocked: resource.isLocked),
                   const SizedBox(width: AppSizes.spacing4),
                   Icon(Icons.chevron_right, color: colors.secondary),
                 ],
@@ -228,51 +225,7 @@ class _ResourceCard extends StatelessWidget {
   }
 }
 
-class _AccessBadge extends StatelessWidget {
-  const _AccessBadge({required this.isLocked});
 
-  final bool isLocked;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final background = isLocked
-        ? colors.surfaceContainerHighest
-        : colors.primaryContainer;
-    final foreground = isLocked
-        ? colors.onSurfaceVariant
-        : colors.onPrimaryContainer;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isLocked ? Icons.lock_outline : Icons.lock_open_outlined,
-            size: 16,
-            color: foreground,
-          ),
-          const SizedBox(width: AppSizes.spacing4),
-          Text(
-            context.l10n.text(
-              isLocked ? 'resourceLocked' : 'resourceAccessible',
-            ),
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: foreground,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _ResourceError extends StatelessWidget {
   const _ResourceError({required this.onRetry});

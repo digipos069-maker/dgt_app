@@ -12,4 +12,6 @@ abstract final class ApiConstants {
   static const dailyGoalPath = '/api/daily-goal';
   static const fcmTokenPath = '/api/fcm-token';
   static const videoCompletionPath = '/api/video/complete';
+  static const examsTypesPath = '/api/exams/types';
+  static const examsDocumentsPath = '/api/exams/documents';
 }

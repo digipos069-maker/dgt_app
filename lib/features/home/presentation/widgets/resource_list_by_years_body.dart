@@ -26,14 +26,39 @@ class ResourceListByYearsBody extends ConsumerStatefulWidget {
 class _ResourceListByYearsBodyState
     extends ConsumerState<ResourceListByYearsBody> {
   String? _selectedSubjectId;
+  final ScrollController _scrollController = ScrollController();
 
   @override
-  Widget build(BuildContext context) {
-    final request = ResourcesByYearRequest(
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      final request = _buildRequest();
+      ref.read(resourcesByYearProvider(request).notifier).loadMore();
+    }
+  }
+
+  ResourcesByYearRequest _buildRequest() {
+    return ResourcesByYearRequest(
       examId: widget.examId,
       year: widget.year,
       languageCode: Localizations.localeOf(context).languageCode,
+      subjectId: _selectedSubjectId,
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final request = _buildRequest();
     final resourcesState = ref.watch(resourcesByYearProvider(request));
     final theme = Theme.of(context);
 
@@ -50,6 +75,7 @@ class _ResourceListByYearsBodyState
           onSubjectSelected: (subjectId) {
             setState(() => _selectedSubjectId = subjectId);
           },
+          scrollController: _scrollController,
         ),
         error: (_, _) => _ResourceListError(
           onRetry: () => ref.invalidate(resourcesByYearProvider(request)),
@@ -65,19 +91,19 @@ class _ResourceListContent extends StatelessWidget {
     required this.bundle,
     required this.selectedSubjectId,
     required this.onSubjectSelected,
+    required this.scrollController,
   });
 
   final ResourceDocumentBundle bundle;
   final String? selectedSubjectId;
   final ValueChanged<String?> onSubjectSelected;
+  final ScrollController scrollController;
 
   @override
   Widget build(BuildContext context) {
-    final documents = selectedSubjectId == null
-        ? bundle.documents
-        : bundle.documents
-              .where((item) => item.subjectId == selectedSubjectId)
-              .toList(growable: false);
+    // Note: We don't filter documents here because the backend handles filtering via subjectId.
+    // If subjectId is set, the API only returns documents for that subject.
+    final documents = bundle.documents;
 
     return SafeArea(
       child: Column(
@@ -90,13 +116,14 @@ class _ResourceListContent extends StatelessWidget {
           ),
           Expanded(
             child: ListView.separated(
+              controller: scrollController,
               padding: const EdgeInsets.fromLTRB(
                 10,
                 24,
                 10,
                 AppSizes.pageBottomPadding,
               ),
-              itemCount: documents.isEmpty ? 3 : documents.length + 2,
+              itemCount: documents.isEmpty ? 3 : documents.length + 3, // +1 for loading indicator at bottom
               separatorBuilder: (_, _) =>
                   const SizedBox(height: AppSizes.spacing16),
               itemBuilder: (context, index) {
@@ -111,6 +138,13 @@ class _ResourceListContent extends StatelessWidget {
                   );
                 } else if (documents.isEmpty) {
                   item = const _EmptySubjectResources();
+                } else if (index == documents.length + 2) {
+                  item = bundle.hasMore 
+                      ? const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      : const SizedBox.shrink();
                 } else {
                   item = _ResourceDocumentTile(document: documents[index - 2]);
                 }
@@ -377,7 +411,7 @@ class _ResourceDocumentTile extends StatelessWidget {
                 ),
               ),
               Icon(
-                document.isLocked ? Icons.lock_outline : Icons.chevron_right,
+                Icons.chevron_right,
                 color: theme.colorScheme.secondary,
               ),
               const SizedBox(width: AppSizes.spacing8),

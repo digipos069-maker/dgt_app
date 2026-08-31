@@ -4,35 +4,56 @@ import '../domain/models/exam_resource_model.dart';
 import '../domain/models/resource_document_model.dart';
 import '../domain/models/resource_year_model.dart';
 
+import 'resource_api_service.dart';
+
 final resourceRepositoryProvider = Provider<ResourceRepository>((ref) {
-  return const ResourceRepository();
+  return ResourceRepository(apiService: ref.watch(resourceApiServiceProvider));
 });
 
 class ResourceRepository {
-  const ResourceRepository();
+  const ResourceRepository({required this.apiService});
+
+  final ResourceApiService apiService;
 
   Future<List<ExamResourceModel>> fetchResources({
+    required String token,
     required String languageCode,
   }) async {
-    await Future<void>.delayed(const Duration(milliseconds: 300));
+    final apiResources = await apiService.fetchExamTypes(token: token);
+    
+    final isKhmer = languageCode == 'km';
+    final staticResources = [
+      ExamResourceModel(
+        id: 'outstanding-student',
+        examName: isKhmer ? 'ប្រលងសិស្សពូកែ' : 'Outstanding Student Exam',
+        icon: 'trophy',
+        shortDescription: isKhmer ? 'វិញ្ញាសាប្រឡងសិស្សពូកែថ្នាក់ជាតិ' : 'National outstanding student exams',
+      ),
+      ExamResourceModel(
+        id: 'study-document',
+        examName: isKhmer ? 'ឯកសារសិក្សា' : 'Document for study',
+        icon: 'book',
+        shortDescription: isKhmer ? 'ឯកសារមេរៀន និងលំហាត់សម្រាប់សិក្សា' : 'Study materials and exercises',
+      ),
+    ];
 
-    final data = languageCode == 'km' ? _khmerMockData : _englishMockData;
-    return data.map(ExamResourceModel.fromJson).toList(growable: false);
+    return [...apiResources, ...staticResources];
   }
 
   Future<ResourceYearBundle> fetchResourceYears({
+    required String token,
     required String examId,
     required String languageCode,
   }) async {
-    final resources = await fetchResources(languageCode: languageCode);
+    final resources = await fetchResources(token: token, languageCode: languageCode);
     final exam = _findExam(resources, examId);
 
     return ResourceYearBundle(
       exam: exam,
       years: List<ResourceYearModel>.generate(
-        16,
+        (DateTime.now().year - 2009), // Generates years down to 2010
         (index) => ResourceYearModel(
-          year: 2025 - index,
+          year: DateTime.now().year - index,
           resourceCount: 12 - (index % 7),
         ),
         growable: false,
@@ -41,26 +62,53 @@ class ResourceRepository {
   }
 
   Future<ResourceDocumentBundle> fetchResourcesByYear({
+    required String token,
     required String examId,
     required int year,
     required String languageCode,
+    String? subjectId,
+    int page = 1,
   }) async {
-    final resources = await fetchResources(languageCode: languageCode);
+    final resources = await fetchResources(token: token, languageCode: languageCode);
     final exam = _findExam(resources, examId);
-    final isKhmer = languageCode == 'km';
-    final subjects = isKhmer ? _khmerSubjects : _englishSubjects;
-    final documents = _buildDocuments(
-      examId: examId,
+    
+    // For static exam types that don't exist in backend DB, we might want to map their IDs
+    // But since user's API returns `examType: { id: 4, name: ... }`, we assume examId maps directly 
+    // to examTypeId, unless it's a string like 'study-document'. If it's a non-numeric string, 
+    // we just pass it to API (API might handle slug or we return empty if error).
+    
+    final jsonResponse = await apiService.fetchDocuments(
+      token: token,
+      examTypeId: examId,
       year: year,
-      isKhmer: isKhmer,
-      subjects: subjects,
+      subjectId: subjectId,
+      page: page,
+      limit: 10,
     );
+
+    final data = jsonResponse['data'] as List<dynamic>? ?? [];
+    final meta = jsonResponse['meta'] as Map<String, dynamic>? ?? {};
+    
+    final documents = data.map((e) => ResourceDocumentModel.fromJson(e as Map<String, dynamic>)).toList();
+    
+    final subjectsSet = <String>{};
+    final subjects = <ResourceSubjectModel>[];
+    for (final doc in documents) {
+      if (subjectsSet.add(doc.subjectId)) {
+        subjects.add(ResourceSubjectModel(id: doc.subjectId, name: doc.subjectName));
+      }
+    }
+
+    final totalPages = meta['totalPages'] as int? ?? 1;
+    final hasMore = page < totalPages;
 
     return ResourceDocumentBundle(
       exam: exam,
       year: year,
       subjects: subjects,
       documents: documents,
+      page: page,
+      hasMore: hasMore,
     );
   }
 
@@ -74,79 +122,7 @@ class ResourceRepository {
     );
   }
 
-  List<ResourceDocumentModel> _buildDocuments({
-    required String examId,
-    required int year,
-    required bool isKhmer,
-    required List<ResourceSubjectModel> subjects,
-  }) {
-    final titles = isKhmer
-        ? const [
-            'វិញ្ញាសាហ្វឹកហាត់ពេញលេញ',
-            'សំណួរត្រៀមប្រឡង',
-            'វិញ្ញាសា និងចម្លើយ',
-            'មេរៀនសង្ខេបសម្រាប់រំលឹក',
-            'លំហាត់អនុវត្តកម្រិតខ្ពស់',
-          ]
-        : const [
-            'Complete practice paper',
-            'Exam preparation questions',
-            'Past paper with solutions',
-            'Quick revision notes',
-            'Advanced practice exercises',
-          ];
-    final descriptions = isKhmer
-        ? const [
-            'អនុវត្តតាមទម្រង់វិញ្ញាសាប្រឡងជាក់ស្តែង។',
-            'ពង្រឹងជំនាញសំខាន់ៗជាមួយសំណួរជ្រើសរើស។',
-            'ពិនិត្យវិធីដោះស្រាយ និងចម្លើយលម្អិត។',
-            'រំលឹកគោលគំនិត និងរូបមន្តសំខាន់ៗ។',
-            'សាកល្បងសមត្ថភាពជាមួយលំហាត់ពិបាកៗ។',
-          ]
-        : const [
-            'Practice with a paper structured like the official exam.',
-            'Strengthen key skills with a focused question set.',
-            'Review worked methods and detailed answers.',
-            'Refresh important concepts and formulas.',
-            'Challenge yourself with higher-level exercises.',
-          ];
 
-    return List<ResourceDocumentModel>.generate(titles.length, (index) {
-      final subject = subjects[index % subjects.length];
-      final type = index.isEven
-          ? ResourceDocumentType.pdf
-          : ResourceDocumentType.video;
-      return ResourceDocumentModel(
-        id: '$examId-$year-${index + 1}',
-        year: year,
-        title: '${titles[index]} $year',
-        description: descriptions[index],
-        subjectId: subject.id,
-        subjectName: subject.name,
-        type: type,
-        sourceUrl: type == ResourceDocumentType.pdf
-            ? 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
-            : 'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4',
-        pageCount: type == ResourceDocumentType.pdf ? 12 + index : 0,
-        durationLabel: type == ResourceDocumentType.video ? '00:30' : '',
-        isLocked: index == titles.length - 1,
-      );
-    }, growable: false);
-  }
-
-  static const _englishSubjects = <ResourceSubjectModel>[
-    ResourceSubjectModel(id: 'mathematics', name: 'Mathematics'),
-    ResourceSubjectModel(id: 'physics', name: 'Physics'),
-    ResourceSubjectModel(id: 'chemistry', name: 'Chemistry'),
-    ResourceSubjectModel(id: 'biology', name: 'Biology'),
-  ];
-
-  static const _khmerSubjects = <ResourceSubjectModel>[
-    ResourceSubjectModel(id: 'mathematics', name: 'គណិតវិទ្យា'),
-    ResourceSubjectModel(id: 'physics', name: 'រូបវិទ្យា'),
-    ResourceSubjectModel(id: 'chemistry', name: 'គីមីវិទ្យា'),
-    ResourceSubjectModel(id: 'biology', name: 'ជីវវិទ្យា'),
-  ];
 
   // Replace these maps with decoded API response data when the endpoint is ready.
   static const _englishMockData = <Map<String, dynamic>>[
