@@ -30,11 +30,35 @@ class LearningCenterBody extends ConsumerStatefulWidget {
 
 class _LearningCenterBodyState extends ConsumerState<LearningCenterBody> {
   late int _selectedSubjectId;
+  late final ScrollController _scrollController;
 
   @override
   void initState() {
     super.initState();
     _selectedSubjectId = widget.initialSubjectId.clamp(1, 4);
+    _scrollController = ScrollController()..addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (widget.gradeId == null) return;
+    final request = LearningLessonsRequest(
+      gradeId: widget.gradeId!,
+      subjectId: _selectedSubjectId,
+    );
+    final bundle = ref.read(learningLessonsProvider(request)).value;
+    if (bundle == null || !bundle.hasMore || bundle.isFetchingMore) return;
+
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      ref.read(learningLessonsProvider(request).notifier).loadMore();
+    }
   }
 
   Future<void> _refreshLessons() async {
@@ -45,7 +69,8 @@ class _LearningCenterBodyState extends ConsumerState<LearningCenterBody> {
       gradeId: gradeId,
       subjectId: _selectedSubjectId,
     );
-    final _ = await ref.refresh(learningLessonsProvider(request).future);
+    ref.invalidate(learningLessonsProvider(request));
+    await ref.read(learningLessonsProvider(request).future);
   }
 
   @override
@@ -73,6 +98,7 @@ class _LearningCenterBodyState extends ConsumerState<LearningCenterBody> {
               child: RefreshIndicator(
                 onRefresh: _refreshLessons,
                 child: SingleChildScrollView(
+                  controller: _scrollController,
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
@@ -289,7 +315,7 @@ class _LessonResults extends StatelessWidget {
     required this.onRetry,
   });
 
-  final AsyncValue<List<LearningLessonModel>> lessonsState;
+  final AsyncValue<LearningLessonBundle> lessonsState;
   final int gradeId;
   final int? gradeNumber;
   final int subjectId;
@@ -303,14 +329,17 @@ class _LessonResults extends StatelessWidget {
         child: Center(child: CircularProgressIndicator()),
       ),
       error: (_, _) => _LessonsError(onRetry: onRetry),
-      data: (lessons) {
-        if (lessons.isEmpty) return const _EmptyLessons();
-        return _buildLessonCards(lessons);
+      data: (bundle) {
+        if (bundle.lessons.isEmpty) return const _EmptyLessons();
+        return _buildLessonCards(bundle);
       },
     );
   }
 
-  Widget _buildLessonCards(List<LearningLessonModel> lessons) {
+  Widget _buildLessonCards(LearningLessonBundle bundle) {
+    final lessons = bundle.lessons;
+    final showLoading = bundle.hasMore || bundle.isFetchingMore;
+
     return Column(
       children: [
         for (var index = 0; index < lessons.length; index++) ...[
@@ -323,6 +352,20 @@ class _LessonResults extends StatelessWidget {
           ),
           const SizedBox(height: AppSizes.spacing24),
         ],
+        if (showLoading)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppSizes.spacing24),
+            child: Center(
+              child: SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }

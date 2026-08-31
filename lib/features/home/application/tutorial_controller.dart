@@ -9,38 +9,125 @@ import '../domain/models/lesson_model.dart';
 
 const tutorialCacheDuration = Duration(minutes: 10);
 
-final tutorialBundleProvider = FutureProvider.autoDispose
-    .family<CourseLessonBundle, TutorialRequest>((ref, request) {
-      final authState = ref.watch(authControllerProvider);
-      final user = switch (authState) {
-        AsyncData(:final value) => value,
-        _ => null,
+class TutorialBundleNotifier extends AsyncNotifier<CourseLessonBundle> {
+  TutorialBundleNotifier(this.arg);
+
+  final TutorialRequest arg;
+  bool _isFetchingMore = false;
+
+  static const int initialLimit = 10;
+  static const int scrollLimit = 5;
+
+  @override
+  Future<CourseLessonBundle> build() async {
+    _isFetchingMore = false;
+    final cacheLink = ref.keepAlive();
+    Timer? cacheTimer;
+
+    ref.onCancel(() {
+      cacheTimer = Timer(tutorialCacheDuration, cacheLink.close);
+    });
+    ref.onResume(() {
+      cacheTimer?.cancel();
+      cacheTimer = null;
+    });
+    ref.onDispose(() => cacheTimer?.cancel());
+
+    return _fetchPage(page: 1, limit: initialLimit);
+  }
+
+  Future<CourseLessonBundle> _fetchPage({
+    required int page,
+    required int limit,
+    int? offset,
+  }) async {
+    final authState = ref.watch(authControllerProvider);
+    final user = switch (authState) {
+      AsyncData(:final value) => value,
+      _ => null,
+    };
+    final token = user?.token;
+    if (token == null || token.isEmpty) {
+      throw const AppException('Authentication is required');
+    }
+
+    return ref.read(tutorialRepositoryProvider).fetchTutorials(
+      subjectId: arg.subjectId,
+      gradeId: arg.gradeId,
+      lessonId: arg.lessonId,
+      token: token,
+      page: page,
+      limit: limit,
+      offset: offset,
+    );
+  }
+
+  Future<void> loadMore() async {
+    final currentBundle = state.value;
+    if (currentBundle == null ||
+        !currentBundle.hasMore ||
+        _isFetchingMore ||
+        state.isLoading ||
+        currentBundle.isFetchingMore) {
+      return;
+    }
+
+    _isFetchingMore = true;
+    state = AsyncData(currentBundle.copyWith(isFetchingMore: true));
+    try {
+      final currentCount = currentBundle.lessons.length;
+      final nextPage = (currentCount ~/ scrollLimit) + 1;
+      final newBundle = await _fetchPage(
+        page: nextPage,
+        limit: scrollLimit,
+        offset: currentCount,
+      );
+
+      // Collect existing keys for deduplication
+      final existingKeys = <String>{
+        for (final lesson in currentBundle.lessons) _lessonKey(lesson),
       };
-      final token = user?.token;
-      if (token == null || token.isEmpty) {
-        throw const AppException('Authentication is required');
+
+      // Filter only new/latest items that are not already present in the list
+      final uniqueNewLessons = <LessonModel>[];
+      for (final lesson in newBundle.lessons) {
+        final key = _lessonKey(lesson);
+        if (existingKeys.add(key)) {
+          uniqueNewLessons.add(lesson);
+        }
       }
 
-      final cacheLink = ref.keepAlive();
-      Timer? cacheTimer;
-      ref.onCancel(() {
-        cacheTimer = Timer(tutorialCacheDuration, cacheLink.close);
-      });
-      ref.onResume(() {
-        cacheTimer?.cancel();
-        cacheTimer = null;
-      });
-      ref.onDispose(() => cacheTimer?.cancel());
+      // If no new unique items were found, we've reached the end of the data
+      final hasMore = newBundle.hasMore && uniqueNewLessons.isNotEmpty;
+      final resolvedPage =
+          (newBundle.page >= nextPage) ? newBundle.page : nextPage;
 
-      return ref
-          .watch(tutorialRepositoryProvider)
-          .fetchTutorials(
-            subjectId: request.subjectId,
-            gradeId: request.gradeId,
-            lessonId: request.lessonId,
-            token: token,
-          );
-    });
+      state = AsyncData(
+        currentBundle.copyWith(
+          lessons: [...currentBundle.lessons, ...uniqueNewLessons],
+          page: resolvedPage,
+          hasMore: hasMore,
+          isFetchingMore: false,
+        ),
+      );
+    } catch (_) {
+      state = AsyncData(currentBundle.copyWith(isFetchingMore: false));
+    } finally {
+      _isFetchingMore = false;
+    }
+  }
+
+  String _lessonKey(LessonModel lesson) {
+    if (lesson.id.isNotEmpty && lesson.id != '0') return lesson.id;
+    if (lesson.slug.isNotEmpty) return lesson.slug;
+    return lesson.title ?? lesson.titleKey;
+  }
+}
+
+final tutorialBundleProvider = AsyncNotifierProvider.autoDispose
+    .family<TutorialBundleNotifier, CourseLessonBundle, TutorialRequest>(
+      (arg) => TutorialBundleNotifier(arg),
+    );
 
 final tutorialDetailProvider = FutureProvider.autoDispose
     .family<LessonDetailModel, TutorialDetailRequest>((ref, request) {

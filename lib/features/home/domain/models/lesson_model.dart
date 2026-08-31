@@ -47,6 +47,9 @@ class CourseLessonBundle {
     required this.titleKey,
     required this.descriptionKey,
     required this.lessons,
+    this.page = 1,
+    this.hasMore = false,
+    this.isFetchingMore = false,
   });
 
   final String courseId;
@@ -54,6 +57,31 @@ class CourseLessonBundle {
   final String titleKey;
   final String descriptionKey;
   final List<LessonModel> lessons;
+  final int page;
+  final bool hasMore;
+  final bool isFetchingMore;
+
+  CourseLessonBundle copyWith({
+    String? courseId,
+    String? appBarTitleKey,
+    String? titleKey,
+    String? descriptionKey,
+    List<LessonModel>? lessons,
+    int? page,
+    bool? hasMore,
+    bool? isFetchingMore,
+  }) {
+    return CourseLessonBundle(
+      courseId: courseId ?? this.courseId,
+      appBarTitleKey: appBarTitleKey ?? this.appBarTitleKey,
+      titleKey: titleKey ?? this.titleKey,
+      descriptionKey: descriptionKey ?? this.descriptionKey,
+      lessons: lessons ?? this.lessons,
+      page: page ?? this.page,
+      hasMore: hasMore ?? this.hasMore,
+      isFetchingMore: isFetchingMore ?? this.isFetchingMore,
+    );
+  }
 }
 
 class LessonDetailModel {

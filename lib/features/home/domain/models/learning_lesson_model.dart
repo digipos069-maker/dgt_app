@@ -95,3 +95,31 @@ class LearningLessonModel {
     return double.tryParse(value?.toString() ?? '');
   }
 }
+
+class LearningLessonBundle {
+  const LearningLessonBundle({
+    required this.lessons,
+    this.page = 1,
+    this.hasMore = false,
+    this.isFetchingMore = false,
+  });
+
+  final List<LearningLessonModel> lessons;
+  final int page;
+  final bool hasMore;
+  final bool isFetchingMore;
+
+  LearningLessonBundle copyWith({
+    List<LearningLessonModel>? lessons,
+    int? page,
+    bool? hasMore,
+    bool? isFetchingMore,
+  }) {
+    return LearningLessonBundle(
+      lessons: lessons ?? this.lessons,
+      page: page ?? this.page,
+      hasMore: hasMore ?? this.hasMore,
+      isFetchingMore: isFetchingMore ?? this.isFetchingMore,
+    );
+  }
+}

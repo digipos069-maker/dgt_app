@@ -11,17 +11,22 @@ class LearningLessonApiService {
 
   final http.Client _client;
 
-  Future<List<Object?>> fetchLessons({
+  Future<Object?> fetchLessons({
     required int gradeId,
     required int subjectId,
+    int page = 1,
+    int limit = 10,
+    int? offset,
   }) async {
+    final queryParams = {
+      'subjectId': subjectId.toString(),
+      'gradeId': gradeId.toString(),
+      'page': page.toString(),
+      'limit': limit.toString(),
+      if (offset != null) 'offset': offset.toString(),
+    };
     final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.lessonsPath}')
-        .replace(
-          queryParameters: {
-            'subjectId': subjectId.toString(),
-            'gradeId': gradeId.toString(),
-          },
-        );
+        .replace(queryParameters: queryParams);
     final response = await _client
         .get(uri, headers: const {'Accept': '*/*'})
         .timeout(const Duration(seconds: 15));
@@ -31,7 +36,7 @@ class LearningLessonApiService {
       throw AppException(_readMessage(jsonBody) ?? 'Failed to load lessons');
     }
 
-    return _readList(jsonBody);
+    return jsonBody;
   }
 
   Object? _decodeBody(String body) {

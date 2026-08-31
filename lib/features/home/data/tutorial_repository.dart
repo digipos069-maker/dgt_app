@@ -19,15 +19,31 @@ class TutorialRepository {
     required int gradeId,
     required int lessonId,
     required String token,
+    int page = 1,
+    int limit = 10,
+    int? offset,
   }) async {
-    final data = await _apiService.fetchTutorials(
+    final rawResponse = await _apiService.fetchTutorials(
       subjectId: subjectId,
       gradeId: gradeId,
       lessonId: lessonId,
       token: token,
+      page: page,
+      limit: limit,
+      offset: offset,
     );
+
+    final (rawList, resolvedPage, hasMore) = _extractDataAndPagination(
+      rawResponse,
+      page,
+      limit,
+    );
+
     final tutorials =
-        data.map(_tryParse).whereType<TutorialModel>().toList(growable: false)
+        rawList
+            .map(_tryParse)
+            .whereType<TutorialModel>()
+            .toList(growable: false)
           ..sort((first, second) => first.orderId.compareTo(second.orderId));
 
     return CourseLessonBundle(
@@ -35,11 +51,74 @@ class TutorialRepository {
       appBarTitleKey: 'lessonsTitle',
       titleKey: _subjectTitleKey(subjectId),
       descriptionKey: 'gradeCardDescription',
+      page: resolvedPage,
+      hasMore: hasMore,
       lessons: [
         for (var index = 0; index < tutorials.length; index++)
-          _toLesson(tutorials[index], index, lessonId),
+          _toLesson(tutorials[index], (page - 1) * limit + index, lessonId),
       ],
     );
+  }
+
+  (List<Object?>, int, bool) _extractDataAndPagination(
+    Object? rawResponse,
+    int requestedPage,
+    int requestedLimit,
+  ) {
+    if (rawResponse is List) {
+      final hasMore = rawResponse.length >= requestedLimit;
+      return (rawResponse, requestedPage, hasMore);
+    }
+
+    if (rawResponse is! Map<String, dynamic>) {
+      return (const <Object?>[], requestedPage, false);
+    }
+
+    List<Object?> list = const <Object?>[];
+    for (final key in const ['data', 'tutorials', 'items', 'results', 'rows']) {
+      final val = rawResponse[key];
+      if (val is List) {
+        list = val.cast<Object?>();
+        break;
+      }
+    }
+
+    int page = requestedPage;
+    final metaObj =
+        (rawResponse['meta'] ?? rawResponse['pagination'])
+            as Map<String, dynamic>?;
+    final pageVal =
+        metaObj?['page'] ??
+        metaObj?['currentPage'] ??
+        rawResponse['page'] ??
+        rawResponse['currentPage'];
+    if (pageVal is num) page = pageVal.toInt();
+
+    bool hasMore = false;
+    final directHasMore = metaObj?['hasMore'] ?? rawResponse['hasMore'];
+    if (directHasMore is bool) {
+      hasMore = directHasMore;
+    } else {
+      final totalVal =
+          metaObj?['total'] ??
+          metaObj?['totalItems'] ??
+          rawResponse['total'] ??
+          rawResponse['totalItems'];
+      final totalPagesVal =
+          metaObj?['totalPages'] ??
+          metaObj?['lastPage'] ??
+          rawResponse['totalPages'] ??
+          rawResponse['lastPage'];
+      if (totalPagesVal is num) {
+        hasMore = page < totalPagesVal.toInt();
+      } else if (totalVal is num) {
+        hasMore = (page * requestedLimit) < totalVal.toInt();
+      } else {
+        hasMore = list.length >= requestedLimit;
+      }
+    }
+
+    return (list, page, hasMore);
   }
 
   Future<LessonDetailModel> fetchTutorialDetail({

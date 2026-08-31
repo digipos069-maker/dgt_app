@@ -10,22 +10,27 @@ class TutorialApiService {
 
   final http.Client _client;
 
-  Future<List<Object?>> fetchTutorials({
+  Future<Object?> fetchTutorials({
     required int subjectId,
     required int gradeId,
     required int lessonId,
     required String token,
+    int page = 1,
+    int limit = 10,
+    int? offset,
   }) async {
+    final queryParams = {
+      'subjectId': subjectId.toString(),
+      'gradeId': gradeId.toString(),
+      'lessonId': lessonId.toString(),
+      'page': page.toString(),
+      'limit': limit.toString(),
+      if (offset != null) 'offset': offset.toString(),
+    };
     final uri =
         Uri.parse(
           '${ApiConstants.baseUrl}${ApiConstants.tutorialsPath}',
-        ).replace(
-          queryParameters: {
-            'subjectId': subjectId.toString(),
-            'gradeId': gradeId.toString(),
-            'lessonId': lessonId.toString(),
-          },
-        );
+        ).replace(queryParameters: queryParams);
     final response = await _client
         .get(uri, headers: {'Accept': '*/*', 'Authorization': 'Bearer $token'})
         .timeout(const Duration(seconds: 15));
@@ -35,7 +40,7 @@ class TutorialApiService {
       throw AppException(_readMessage(jsonBody) ?? 'Failed to load tutorials');
     }
 
-    return _readList(jsonBody);
+    return jsonBody;
   }
 
   Future<Object?> fetchTutorialBySlug({

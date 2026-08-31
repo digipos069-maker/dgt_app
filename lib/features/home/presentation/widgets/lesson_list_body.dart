@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -77,6 +79,8 @@ class LessonListBody extends ConsumerWidget {
                   skipLoadingOnRefresh: false,
                   data: (bundle) => _LessonListContent(
                     bundle: bundle,
+                    courseId: courseId,
+                    tutorialRequest: tutorialRequest,
                     gradeId: gradeId,
                     gradeNumber: gradeNumber,
                     subjectId: subjectId,
@@ -108,22 +112,118 @@ class LessonListBody extends ConsumerWidget {
   }
 }
 
-class _LessonListContent extends StatelessWidget {
+class _LessonListContent extends ConsumerStatefulWidget {
   const _LessonListContent({
     required this.bundle,
+    required this.courseId,
+    this.tutorialRequest,
     this.gradeId,
     this.gradeNumber,
     this.subjectId,
   });
 
   final CourseLessonBundle bundle;
+  final String courseId;
+  final TutorialRequest? tutorialRequest;
   final int? gradeId;
   final int? gradeNumber;
   final int? subjectId;
 
   @override
+  ConsumerState<_LessonListContent> createState() => _LessonListContentState();
+}
+
+class _LessonListContentState extends ConsumerState<_LessonListContent> {
+  static const int _initialLimit = 10;
+  static const int _scrollLimit = 5;
+  late int _visibleCount;
+  late final ScrollController _scrollController;
+  bool _isLoadingMore = false;
+  Timer? _loadMoreTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _visibleCount = _initialLimit.clamp(0, widget.bundle.lessons.length);
+    _scrollController = ScrollController()..addListener(_onScroll);
+  }
+
+  @override
+  void didUpdateWidget(covariant _LessonListContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _isLoadingMore = false;
+    if (oldWidget.bundle.lessons.length != widget.bundle.lessons.length) {
+      _loadMoreTimer?.cancel();
+      _visibleCount = widget.bundle.lessons.length;
+    }
+  }
+
+  @override
+  void dispose() {
+    _loadMoreTimer?.cancel();
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_isLoadingMore || widget.bundle.isFetchingMore) return;
+
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _loadMore();
+    }
+  }
+
+  void _loadMore() {
+    if (_isLoadingMore || widget.bundle.isFetchingMore) return;
+
+    // 1. If server pagination has more items, trigger API loadMore
+    if (widget.bundle.hasMore) {
+      if (widget.tutorialRequest != null) {
+        setState(() {
+          _isLoadingMore = true;
+        });
+        ref
+            .read(tutorialBundleProvider(widget.tutorialRequest!).notifier)
+            .loadMore();
+      }
+      return;
+    }
+
+    // 2. If client-side has buffered items not yet revealed
+    if (_visibleCount < widget.bundle.lessons.length) {
+      setState(() {
+        _isLoadingMore = true;
+      });
+
+      _loadMoreTimer?.cancel();
+      _loadMoreTimer = Timer(const Duration(milliseconds: 300), () {
+        if (!mounted) return;
+        setState(() {
+          _visibleCount = (_visibleCount + _scrollLimit).clamp(
+            0,
+            widget.bundle.lessons.length,
+          );
+          _isLoadingMore = false;
+        });
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
+    final lessons = widget.bundle.lessons
+        .take(_visibleCount)
+        .toList(growable: false);
+    final hasMore =
+        widget.bundle.hasMore || (_visibleCount < widget.bundle.lessons.length);
+    final showLoading =
+        hasMore || widget.bundle.isFetchingMore || _isLoadingMore;
+    final totalItemCount = 1 + lessons.length + (showLoading ? 1 : 0);
+
+    return ListView.builder(
+      controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(
         10,
@@ -131,13 +231,14 @@ class _LessonListContent extends StatelessWidget {
         10,
         AppSizes.pageBottomPadding,
       ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
-          child: Column(
+      itemCount: totalItemCount,
+      itemBuilder: (context, index) {
+        final Widget item;
+        if (index == 0) {
+          item = Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _LessonSummaryCard(bundle: bundle),
+              _LessonSummaryCard(bundle: widget.bundle),
               const SizedBox(height: AppSizes.spacing32),
               Text(
                 context.l10n.text('lessonsTitle'),
@@ -147,19 +248,42 @@ class _LessonListContent extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSizes.spacing16),
-              for (final lesson in bundle.lessons) ...[
-                _LessonTile(
-                  lesson: lesson,
-                  gradeId: gradeId,
-                  gradeNumber: gradeNumber,
-                  subjectId: subjectId,
-                ),
-                const SizedBox(height: AppSizes.spacing16),
-              ],
             ],
+          );
+        } else if (index <= lessons.length) {
+          final lesson = lessons[index - 1];
+          item = Padding(
+            padding: const EdgeInsets.only(bottom: AppSizes.spacing16),
+            child: _LessonTile(
+              lesson: lesson,
+              gradeId: widget.gradeId,
+              gradeNumber: widget.gradeNumber,
+              subjectId: widget.subjectId,
+            ),
+          );
+        } else {
+          item = const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppSizes.spacing24),
+            child: Center(
+              child: SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                ),
+              ),
+            ),
+          );
+        }
+
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: item,
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
