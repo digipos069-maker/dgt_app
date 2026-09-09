@@ -19,6 +19,7 @@ class PayslipUploadWidget extends StatelessWidget {
   void _showFileSelectionDialog(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
+      enableDrag: false,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),

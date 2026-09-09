@@ -21,6 +21,7 @@ Future<void> showUpgradeSubscriptionModal({
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
+    enableDrag: false,
     backgroundColor: Colors.transparent,
     builder: (ctx) => UpgradeSubscriptionModal(
       initialPlan: initialPlan,
@@ -173,15 +174,21 @@ class _UpgradeSubscriptionModalState extends State<UpgradeSubscriptionModal> {
             const Divider(height: 1),
             // Body
             Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 20,
+              child: ScrollConfiguration(
+                behavior: ScrollConfiguration.of(context).copyWith(
+                  overscroll: false,
                 ),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 540),
-                    child: _buildCurrentStep(context),
+                child: SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 20,
+                  ),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 540),
+                      child: _buildCurrentStep(context),
+                    ),
                   ),
                 ),
               ),
