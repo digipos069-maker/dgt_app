@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
+import '../../../../theme/app_colors.dart';
 import '../../domain/models/profile_models.dart';
 import '../../domain/models/user_model.dart';
 
@@ -12,6 +13,7 @@ class ProfileBody extends StatelessWidget {
     required this.isProfileLoading,
     required this.onPaymentHistory,
     required this.onLogout,
+    this.onUpgradeSubscription,
     super.key,
   });
 
@@ -19,6 +21,7 @@ class ProfileBody extends StatelessWidget {
   final bool isProfileLoading;
   final VoidCallback onPaymentHistory;
   final VoidCallback onLogout;
+  final VoidCallback? onUpgradeSubscription;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +53,7 @@ class ProfileBody extends StatelessWidget {
                 _SubscriptionInformation(
                   subscriptions: user?.subscriptions ?? const [],
                   isLoading: isProfileLoading,
+                  onUpgrade: onUpgradeSubscription,
                 ),
                 const SizedBox(height: AppSizes.spacing32),
                 _AccountInformation(
@@ -70,10 +74,12 @@ class _SubscriptionInformation extends StatelessWidget {
   const _SubscriptionInformation({
     required this.subscriptions,
     required this.isLoading,
+    this.onUpgrade,
   });
 
   final List<SubscriptionModel> subscriptions;
   final bool isLoading;
+  final VoidCallback? onUpgrade;
 
   @override
   Widget build(BuildContext context) {
@@ -82,26 +88,84 @@ class _SubscriptionInformation extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          context.l10n.text('subscriptionInformation'),
-          style: theme.textTheme.titleLarge?.copyWith(
-            color: theme.colorScheme.secondary,
-            fontWeight: FontWeight.w900,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                context.l10n.text('subscriptionInformation'),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: theme.colorScheme.secondary,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            if (onUpgrade != null) ...[
+              const SizedBox(width: AppSizes.spacing12),
+              ElevatedButton.icon(
+                key: const Key('profile_upgrade_button'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.brandButton,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(0, 38),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  elevation: 1,
+                ),
+                onPressed: onUpgrade,
+                icon: const Icon(Icons.rocket_launch_rounded, size: 16),
+                label: Text(
+                  context.l10n.text('upgrade'),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
         const SizedBox(height: AppSizes.spacing12),
         if (isLoading && subscriptions.isEmpty)
           const _ProfilePanel(child: Center(child: CircularProgressIndicator()))
         else if (subscriptions.isEmpty)
           _ProfilePanel(
-            child: Text(
-              context.l10n.text('noActiveSubscription'),
-              textAlign: TextAlign.center,
+            child: Column(
+              children: [
+                Text(
+                  context.l10n.text('noActiveSubscription'),
+                  textAlign: TextAlign.center,
+                ),
+                if (onUpgrade != null) ...[
+                  const SizedBox(height: AppSizes.spacing12),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.brandButton,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(0, 44),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onPressed: onUpgrade,
+                    icon: const Icon(Icons.star_rounded, size: 16),
+                    label: Text(context.l10n.text('upgradePlan')),
+                  ),
+                ],
+              ],
             ),
           )
         else
           for (final subscription in subscriptions) ...[
-            _SubscriptionCard(subscription: subscription),
+            _SubscriptionCard(
+              subscription: subscription,
+              onUpgrade: onUpgrade,
+            ),
             if (subscription != subscriptions.last)
               const SizedBox(height: AppSizes.spacing12),
           ],
@@ -111,9 +175,13 @@ class _SubscriptionInformation extends StatelessWidget {
 }
 
 class _SubscriptionCard extends StatelessWidget {
-  const _SubscriptionCard({required this.subscription});
+  const _SubscriptionCard({
+    required this.subscription,
+    this.onUpgrade,
+  });
 
   final SubscriptionModel subscription;
+  final VoidCallback? onUpgrade;
 
   @override
   Widget build(BuildContext context) {
