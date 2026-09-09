@@ -1,9 +1,12 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/utils/app_exception.dart';
 import '../../../../localization/app_localizations.dart';
+import '../../application/subscription_controller.dart';
 import '../../domain/models/bank_transfer_info.dart';
 import '../../domain/models/subscription_plan.dart';
 import 'bank_details_card.dart';
@@ -30,7 +33,7 @@ Future<void> showUpgradeSubscriptionModal({
   );
 }
 
-class UpgradeSubscriptionModal extends StatefulWidget {
+class UpgradeSubscriptionModal extends ConsumerStatefulWidget {
   const UpgradeSubscriptionModal({
     required this.onNavigateToPaymentHistory,
     this.initialPlan,
@@ -41,11 +44,12 @@ class UpgradeSubscriptionModal extends StatefulWidget {
   final PlanTier? initialPlan;
 
   @override
-  State<UpgradeSubscriptionModal> createState() =>
+  ConsumerState<UpgradeSubscriptionModal> createState() =>
       _UpgradeSubscriptionModalState();
 }
 
-class _UpgradeSubscriptionModalState extends State<UpgradeSubscriptionModal> {
+class _UpgradeSubscriptionModalState
+    extends ConsumerState<UpgradeSubscriptionModal> {
   int _currentStep = 0; // 0: Select Plan, 1: Select Payment, 2: Bank Details & Payslip
   BillingCycle _cycle = BillingCycle.yearly;
   late PlanTier _selectedPlan;
@@ -87,13 +91,30 @@ class _UpgradeSubscriptionModalState extends State<UpgradeSubscriptionModal> {
       _uploadError = null;
     });
 
-    // Simulate network submission
-    await Future<void>.delayed(const Duration(milliseconds: 700));
+    String? transactionId;
+    try {
+      final result = await ref
+          .read(subscriptionControllerProvider.notifier)
+          .submitBankTransfer(
+            plan: _selectedPlan,
+            cycle: _cycle,
+            fileName: _attachedPayslip!,
+            currency: 'khr',
+          );
+      transactionId = result['trxId']?.toString();
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _uploadError = error is AppException
+            ? error.message
+            : error.toString().replaceAll('Exception: ', '');
+      });
+      return;
+    }
 
     if (!mounted) return;
 
-    final transactionId =
-        'TRX-${DateTime.now().millisecondsSinceEpoch % 10000000}';
     final planName =
         '${_selectedPlan.displayName} (${_cycle.isMonthly ? context.l10n.text('monthly') : context.l10n.text('yearly')})';
     final amountText = _selectedPlan.formattedPrice(_cycle, includeKhr: true);
@@ -104,7 +125,8 @@ class _UpgradeSubscriptionModalState extends State<UpgradeSubscriptionModal> {
       context: context,
       barrierDismissible: false,
       builder: (_) => SubscriptionSuccessDialog(
-        transactionId: transactionId,
+        transactionId:
+            transactionId ?? 'BT-${DateTime.now().millisecondsSinceEpoch}',
         planName: planName,
         amountText: amountText,
         onViewHistory: widget.onNavigateToPaymentHistory,

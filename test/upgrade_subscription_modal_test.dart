@@ -1,18 +1,85 @@
+import 'package:dgt_app/features/auth/application/auth_controller.dart';
+import 'package:dgt_app/features/auth/domain/models/user_model.dart';
+import 'package:dgt_app/features/subscription/data/subscription_repository.dart';
 import 'package:dgt_app/features/subscription/presentation/widgets/upgrade_subscription_modal.dart';
 import 'package:dgt_app/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+class MockSubscriptionRepository implements SubscriptionRepository {
+  @override
+  Future<String> uploadPayslip({
+    required List<int> fileBytes,
+    required String filename,
+    required String token,
+  }) async {
+    return '/uploads/payslip-1741521234567-891234567.jpg';
+  }
+
+  @override
+  Future<Map<String, dynamic>> submitBankTransfer({
+    required int planId,
+    required num amount,
+    required String currency,
+    required String billingCycle,
+    required String payslipUrl,
+    required String token,
+  }) async {
+    return {
+      'message': 'Bank transfer submitted and is pending verification',
+      'trxId': 'BT-1741521345678-4321',
+    };
+  }
+
+  @override
+  Future<Map<String, dynamic>> upgradeSubscription({
+    required int newPlanId,
+    required String token,
+  }) async {
+    return {
+      'id': 15,
+      'userId': 42,
+      'planId': newPlanId,
+      'status': 'pending',
+    };
+  }
+}
+
+class _FakeAuthController extends AuthController {
+  _FakeAuthController(this._user);
+  final UserModel _user;
+
+  @override
+  Future<UserModel?> build() async => _user;
+}
+
 Widget _buildTestApp(Widget child) {
-  return MaterialApp(
-    locale: const Locale('en'),
-    supportedLocales: AppLocalizations.supportedLocales,
-    localizationsDelegates: const [
-      AppLocalizations.delegate,
-      DefaultWidgetsLocalizations.delegate,
-      DefaultMaterialLocalizations.delegate,
+  return ProviderScope(
+    overrides: [
+      authControllerProvider.overrideWith(
+        () => _FakeAuthController(
+          const UserModel(
+            id: '42',
+            email: 'test@example.com',
+            username: 'testuser',
+            token: 'mock-token',
+          ),
+        ),
+      ),
+      subscriptionRepositoryProvider
+          .overrideWithValue(MockSubscriptionRepository()),
     ],
-    home: Scaffold(body: child),
+    child: MaterialApp(
+      locale: const Locale('en'),
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        DefaultWidgetsLocalizations.delegate,
+        DefaultMaterialLocalizations.delegate,
+      ],
+      home: Scaffold(body: child),
+    ),
   );
 }
 
@@ -119,8 +186,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pumpAndSettle();
 
-    // Success dialog pops up
+    // Success dialog pops up with real trxId returned from API
     expect(find.text('Payment Submitted!'), findsOneWidget);
+    expect(find.text('BT-1741521345678-4321'), findsOneWidget);
     expect(find.text('View Payment History'), findsOneWidget);
 
     // Tap View Payment History

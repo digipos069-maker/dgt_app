@@ -64,6 +64,11 @@ class ProfilePage extends ConsumerWidget {
           ref.read(authControllerProvider.notifier).logout();
           context.goNamed(LoginPage.routeName);
         },
+        onRefresh: () async {
+          try {
+            final _ = await ref.refresh(profileProvider.future);
+          } catch (_) {}
+        },
       ),
       bottomNavigationBar: const MainBottomNavigation(selectedIndex: 0),
     );

@@ -13,6 +13,7 @@ class ProfileBody extends StatelessWidget {
     required this.onPaymentHistory,
     required this.onLogout,
     this.onUpgradeSubscription,
+    this.onRefresh,
     super.key,
   });
 
@@ -21,50 +22,63 @@ class ProfileBody extends StatelessWidget {
   final VoidCallback onPaymentHistory;
   final VoidCallback onLogout;
   final VoidCallback? onUpgradeSubscription;
+  final RefreshCallback? onRefresh;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final textTheme = GoogleFonts.battambangTextTheme(theme.textTheme);
 
-    return Theme(
-      data: theme.copyWith(textTheme: textTheme),
-      child: ScrollConfiguration(
-        behavior: ScrollConfiguration.of(context).copyWith(overscroll: false),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            10,
-            24,
-            10,
-            AppSizes.pageBottomPadding,
-          ),
-          physics: const ClampingScrollPhysics(),
-          child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _ProfileIdentity(user: user),
-                const SizedBox(height: AppSizes.spacing32),
-                _PersonalInformation(user: user),
-                const SizedBox(height: AppSizes.spacing32),
-                _SubscriptionInformation(
-                  subscriptions: user?.subscriptions ?? const [],
-                  isLoading: isProfileLoading,
-                  onUpgrade: onUpgradeSubscription,
-                ),
-                const SizedBox(height: AppSizes.spacing32),
-                _AccountInformation(
-                  onPaymentHistory: onPaymentHistory,
-                  onLogout: onLogout,
-                ),
-              ],
-            ),
+    final scrollable = SingleChildScrollView(
+      physics: onRefresh != null
+          ? const AlwaysScrollableScrollPhysics()
+          : const ClampingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(
+        10,
+        24,
+        10,
+        AppSizes.pageBottomPadding,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _ProfileIdentity(user: user),
+              const SizedBox(height: AppSizes.spacing32),
+              _PersonalInformation(user: user),
+              const SizedBox(height: AppSizes.spacing32),
+              _SubscriptionInformation(
+                subscriptions: user?.subscriptions ?? const [],
+                isLoading: isProfileLoading,
+                onUpgrade: onUpgradeSubscription,
+              ),
+              const SizedBox(height: AppSizes.spacing32),
+              _AccountInformation(
+                onPaymentHistory: onPaymentHistory,
+                onLogout: onLogout,
+              ),
+            ],
           ),
         ),
       ),
-      ),
+    );
+
+    return Theme(
+      data: theme.copyWith(textTheme: textTheme),
+      child: onRefresh != null
+          ? RefreshIndicator(
+              color: theme.colorScheme.primary,
+              backgroundColor: theme.colorScheme.surface,
+              onRefresh: onRefresh!,
+              child: scrollable,
+            )
+          : ScrollConfiguration(
+              behavior:
+                  ScrollConfiguration.of(context).copyWith(overscroll: false),
+              child: scrollable,
+            ),
     );
   }
 }
