@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "669334270580",
+    "project_id": "dgtapp-39ae0",
+    "storage_bucket": "dgtapp-39ae0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:669334270580:android:de59db2f49437ff7a31721",
+        "android_client_info": {
+          "package_name": "com.dgt.kh"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBHe6JBoU1FITTGpnO8zJb42XR44O-5dL0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
