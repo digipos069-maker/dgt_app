@@ -338,7 +338,7 @@ class _LessonResults extends StatelessWidget {
 
   Widget _buildLessonCards(LearningLessonBundle bundle) {
     final lessons = bundle.lessons;
-    final showLoading = bundle.hasMore || bundle.isFetchingMore;
+    final showLoading = bundle.isFetchingMore;
 
     return Column(
       children: [

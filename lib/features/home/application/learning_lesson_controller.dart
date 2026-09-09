@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -13,8 +14,7 @@ class LearningLessonsNotifier extends AsyncNotifier<LearningLessonBundle> {
   final LearningLessonsRequest arg;
   bool _isFetchingMore = false;
 
-  static const int initialLimit = 10;
-  static const int scrollLimit = 5;
+  static const int pageSize = 10;
 
   @override
   Future<LearningLessonBundle> build() async {
@@ -31,20 +31,18 @@ class LearningLessonsNotifier extends AsyncNotifier<LearningLessonBundle> {
     });
     ref.onDispose(() => cacheTimer?.cancel());
 
-    return _fetchPage(page: 1, limit: initialLimit);
+    return _fetchPage(page: 1, limit: pageSize);
   }
 
   Future<LearningLessonBundle> _fetchPage({
     required int page,
     required int limit,
-    int? offset,
   }) async {
     return ref.read(learningLessonRepositoryProvider).fetchLessons(
       gradeId: arg.gradeId,
       subjectId: arg.subjectId,
       page: page,
       limit: limit,
-      offset: offset,
     );
   }
 
@@ -61,12 +59,10 @@ class LearningLessonsNotifier extends AsyncNotifier<LearningLessonBundle> {
     _isFetchingMore = true;
     state = AsyncData(currentBundle.copyWith(isFetchingMore: true));
     try {
-      final currentCount = currentBundle.lessons.length;
-      final nextPage = (currentCount ~/ scrollLimit) + 1;
+      final nextPage = currentBundle.page + 1;
       final newBundle = await _fetchPage(
         page: nextPage,
-        limit: scrollLimit,
-        offset: currentCount,
+        limit: pageSize,
       );
 
       final existingIds = <String>{
@@ -92,7 +88,13 @@ class LearningLessonsNotifier extends AsyncNotifier<LearningLessonBundle> {
           isFetchingMore: false,
         ),
       );
-    } catch (_) {
+    } catch (error, stackTrace) {
+      developer.log(
+        'Failed to load more learning lessons',
+        name: 'dgt.learning_lessons',
+        error: error,
+        stackTrace: stackTrace,
+      );
       state = AsyncData(currentBundle.copyWith(isFetchingMore: false));
     } finally {
       _isFetchingMore = false;

@@ -16,14 +16,12 @@ class LearningLessonApiService {
     required int subjectId,
     int page = 1,
     int limit = 10,
-    int? offset,
   }) async {
     final queryParams = {
       'subjectId': subjectId.toString(),
       'gradeId': gradeId.toString(),
       'page': page.toString(),
       'limit': limit.toString(),
-      if (offset != null) 'offset': offset.toString(),
     };
     final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.lessonsPath}')
         .replace(queryParameters: queryParams);

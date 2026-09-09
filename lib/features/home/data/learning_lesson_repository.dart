@@ -17,14 +17,12 @@ class LearningLessonRepository {
     required int subjectId,
     int page = 1,
     int limit = 10,
-    int? offset,
   }) async {
     final rawResponse = await _apiService.fetchLessons(
       gradeId: gradeId,
       subjectId: subjectId,
       page: page,
       limit: limit,
-      offset: offset,
     );
 
     final (rawList, resolvedPage, hasMore) = _extractDataAndPagination(
