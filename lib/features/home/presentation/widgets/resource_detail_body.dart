@@ -30,8 +30,13 @@ class ResourceDetailBody extends StatelessWidget {
               child: _ResourceDetailHeader(title: document.title),
             ),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
+              child: ScrollConfiguration(
+                behavior: ScrollConfiguration.of(context).copyWith(
+                  overscroll: false,
+                ),
+                child: SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(
                   10,
                   AppSizes.spacing24,
                   10,
@@ -57,7 +62,8 @@ class ResourceDetailBody extends StatelessWidget {
                 ),
               ),
             ),
-          ],
+          ),
+        ],
         ),
       ),
     );

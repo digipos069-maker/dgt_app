@@ -91,14 +91,20 @@ class _HomeDashboardContent extends StatelessWidget {
     final isWide = width >= 920;
     const horizontalPadding = 10.0;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(
-        horizontalPadding,
-        32,
-        horizontalPadding,
-        AppSizes.pageBottomPadding,
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(
+        overscroll: false,
+        physics: const ClampingScrollPhysics(),
       ),
-      child: Center(
+      child: SingleChildScrollView(
+        physics: const ClampingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(
+          horizontalPadding,
+          32,
+          horizontalPadding,
+          AppSizes.pageBottomPadding,
+        ),
+        child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1280),
           child: Column(
@@ -128,8 +134,9 @@ class _HomeDashboardContent extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class _LearningColumn extends StatelessWidget {

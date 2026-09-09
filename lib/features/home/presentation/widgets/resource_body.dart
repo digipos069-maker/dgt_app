@@ -50,15 +50,21 @@ class _ResourceContent extends StatelessWidget {
       return const _EmptyResources();
     }
 
-    return RefreshIndicator(
-      onRefresh: onRefresh,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final columns = constraints.maxWidth >= 720 ? 2 : 1;
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(
+        overscroll: false,
+      ),
+      child: RefreshIndicator(
+        onRefresh: onRefresh,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 720 ? 2 : 1;
 
-          return SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(
+            return SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: ClampingScrollPhysics(),
+              ),
+              padding: const EdgeInsets.fromLTRB(
               10,
               24,
               10,
@@ -94,8 +100,9 @@ class _ResourceContent extends StatelessWidget {
           );
         },
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class _ResourceIntroduction extends StatelessWidget {

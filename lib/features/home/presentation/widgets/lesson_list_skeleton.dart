@@ -10,7 +10,9 @@ class LessonListSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppSkeletonShimmer(
       child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: ClampingScrollPhysics(),
+        ),
         padding: const EdgeInsets.fromLTRB(
           10,
           AppSizes.spacing32,

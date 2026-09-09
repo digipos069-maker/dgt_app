@@ -32,15 +32,20 @@ class BasicLessonListBody extends ConsumerWidget {
 
     return Theme(
       data: theme.copyWith(textTheme: textTheme),
-      child: lessonsState.when(
-        data: (bundle) => _BasicLessonListContent(
-          bundle: bundle,
-          request: request,
+      child: ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(
+          overscroll: false,
         ),
-        error: (_, _) => _BasicLessonListError(
-          onRetry: () => ref.invalidate(basicLessonsProvider(request)),
+        child: lessonsState.when(
+          data: (bundle) => _BasicLessonListContent(
+            bundle: bundle,
+            request: request,
+          ),
+          error: (_, _) => _BasicLessonListError(
+            onRetry: () => ref.invalidate(basicLessonsProvider(request)),
+          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
       ),
     );
   }
@@ -153,6 +158,9 @@ class _BasicLessonListContentState
           Expanded(
             child: ListView.separated(
               controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: ClampingScrollPhysics(),
+              ),
               padding: const EdgeInsets.fromLTRB(
                 10,
                 24,

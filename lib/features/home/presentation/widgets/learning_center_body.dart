@@ -95,44 +95,51 @@ class _LearningCenterBodyState extends ConsumerState<LearningCenterBody> {
           children: [
             SizedBox(height: 56, child: _LearningHeader(onBack: widget.onBack)),
             Expanded(
-              child: RefreshIndicator(
-                onRefresh: _refreshLessons,
-                child: SingleChildScrollView(
-                  controller: _scrollController,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: EdgeInsets.fromLTRB(
-                    horizontalPadding,
-                    32,
-                    horizontalPadding,
-                    AppSizes.pageBottomPadding,
-                  ),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1280),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _SubjectCategoryStrip(
-                            selectedSubjectId: _selectedSubjectId,
-                            onSelected: (subjectId) {
-                              if (_selectedSubjectId == subjectId) return;
-                              setState(() => _selectedSubjectId = subjectId);
-                            },
-                          ),
-                          const SizedBox(height: AppSizes.spacing24),
-                          if (request == null || lessonsState == null)
-                            const _SelectGradeMessage()
-                          else
-                            _LessonResults(
-                              lessonsState: lessonsState,
-                              gradeId: widget.gradeId!,
-                              gradeNumber: widget.gradeNumber,
-                              subjectId: _selectedSubjectId,
-                              onRetry: () => ref.invalidate(
-                                learningLessonsProvider(request),
-                              ),
+              child: ScrollConfiguration(
+                behavior: ScrollConfiguration.of(context).copyWith(
+                  overscroll: false,
+                ),
+                child: RefreshIndicator(
+                  onRefresh: _refreshLessons,
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: ClampingScrollPhysics(),
+                    ),
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      32,
+                      horizontalPadding,
+                      AppSizes.pageBottomPadding,
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1280),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _SubjectCategoryStrip(
+                              selectedSubjectId: _selectedSubjectId,
+                              onSelected: (subjectId) {
+                                if (_selectedSubjectId == subjectId) return;
+                                setState(() => _selectedSubjectId = subjectId);
+                              },
                             ),
-                        ],
+                            const SizedBox(height: AppSizes.spacing24),
+                            if (request == null || lessonsState == null)
+                              const _SelectGradeMessage()
+                            else
+                              _LessonResults(
+                                lessonsState: lessonsState,
+                                gradeId: widget.gradeId!,
+                                gradeNumber: widget.gradeNumber,
+                                subjectId: _selectedSubjectId,
+                                onRetry: () => ref.invalidate(
+                                  learningLessonsProvider(request),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -236,6 +243,7 @@ class _SubjectCategoryStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      physics: const ClampingScrollPhysics(),
       child: Row(
         children: [
           for (final subject in _subjects) ...[

@@ -68,19 +68,24 @@ class _ResourceListByYearsBodyState
           theme.textTheme,
         ).apply(fontSizeDelta: 3),
       ),
-      child: resourcesState.when(
-        data: (bundle) => _ResourceListContent(
-          bundle: bundle,
-          selectedSubjectId: _selectedSubjectId,
-          onSubjectSelected: (subjectId) {
-            setState(() => _selectedSubjectId = subjectId);
-          },
-          scrollController: _scrollController,
+      child: ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(
+          overscroll: false,
         ),
-        error: (_, _) => _ResourceListError(
-          onRetry: () => ref.invalidate(resourcesByYearProvider(request)),
+        child: resourcesState.when(
+          data: (bundle) => _ResourceListContent(
+            bundle: bundle,
+            selectedSubjectId: _selectedSubjectId,
+            onSubjectSelected: (subjectId) {
+              setState(() => _selectedSubjectId = subjectId);
+            },
+            scrollController: _scrollController,
+          ),
+          error: (_, _) => _ResourceListError(
+            onRetry: () => ref.invalidate(resourcesByYearProvider(request)),
+          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
       ),
     );
   }
@@ -117,6 +122,9 @@ class _ResourceListContent extends StatelessWidget {
           Expanded(
             child: ListView.separated(
               controller: scrollController,
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: ClampingScrollPhysics(),
+              ),
               padding: const EdgeInsets.fromLTRB(
                 10,
                 24,

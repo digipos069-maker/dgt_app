@@ -28,12 +28,17 @@ class ResourceYearsBody extends ConsumerWidget {
           theme.textTheme,
         ).apply(fontSizeDelta: 3),
       ),
-      child: yearsState.when(
-        data: (bundle) => _ResourceYearsContent(bundle: bundle),
-        error: (_, _) => _ResourceYearsError(
-          onRetry: () => ref.invalidate(resourceYearsProvider(request)),
+      child: ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(
+          overscroll: false,
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        child: yearsState.when(
+          data: (bundle) => _ResourceYearsContent(bundle: bundle),
+          error: (_, _) => _ResourceYearsError(
+            onRetry: () => ref.invalidate(resourceYearsProvider(request)),
+          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+        ),
       ),
     );
   }
@@ -55,6 +60,9 @@ class _ResourceYearsContent extends StatelessWidget {
           ),
           Expanded(
             child: ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: ClampingScrollPhysics(),
+              ),
               padding: const EdgeInsets.fromLTRB(
                 10,
                 24,

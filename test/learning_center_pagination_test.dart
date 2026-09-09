@@ -55,7 +55,6 @@ class FakeLearningLessonRepository implements LearningLessonRepository {
 void main() {
   testWidgets('loading spinner only shows when fetching more and hides on end of data', (tester) async {
     final repository = FakeLearningLessonRepository(totalLessons: 15);
-    const req = LearningLessonsRequest(gradeId: 1, subjectId: 1);
 
     await tester.pumpWidget(
       ProviderScope(

@@ -50,13 +50,17 @@ class LessonListBody extends ConsumerWidget {
 
     return Theme(
       data: theme.copyWith(textTheme: battambangTheme),
-      child: RefreshIndicator(
-        edgeOffset: 56,
-        displacement: 72,
-        color: theme.colorScheme.primary,
-        backgroundColor: theme.colorScheme.surface,
-        onRefresh: () => _refreshLessons(ref, tutorialRequest: tutorialRequest),
-        child: SafeArea(
+      child: ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(
+          overscroll: false,
+        ),
+        child: RefreshIndicator(
+          edgeOffset: 56,
+          displacement: 72,
+          color: theme.colorScheme.primary,
+          backgroundColor: theme.colorScheme.surface,
+          onRefresh: () => _refreshLessons(ref, tutorialRequest: tutorialRequest),
+          child: SafeArea(
           child: Column(
             children: [
               SizedBox(
@@ -93,8 +97,9 @@ class LessonListBody extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Future<void> _refreshLessons(
     WidgetRef ref, {
@@ -219,7 +224,9 @@ class _LessonListContentState extends ConsumerState<_LessonListContent> {
 
     return ListView.builder(
       controller: _scrollController,
-      physics: const AlwaysScrollableScrollPhysics(),
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: ClampingScrollPhysics(),
+      ),
       padding: const EdgeInsets.fromLTRB(
         10,
         AppSizes.spacing32,
@@ -586,7 +593,9 @@ class _LessonListError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: ClampingScrollPhysics(),
+      ),
       slivers: [
         SliverFillRemaining(
           hasScrollBody: false,

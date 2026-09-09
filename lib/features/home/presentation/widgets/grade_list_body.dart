@@ -47,20 +47,26 @@ class _GradeListContent extends StatelessWidget {
       return const _EmptyGrades();
     }
 
-    return RefreshIndicator(
-      onRefresh: onRefresh,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final columns = constraints.maxWidth >= 620 ? 2 : 1;
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(
+        overscroll: false,
+      ),
+      child: RefreshIndicator(
+        onRefresh: onRefresh,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 620 ? 2 : 1;
 
-          return GridView.builder(
-            padding: const EdgeInsets.fromLTRB(
-              10,
-              24,
-              10,
-              AppSizes.pageBottomPadding,
-            ),
-            physics: const AlwaysScrollableScrollPhysics(),
+            return GridView.builder(
+              padding: const EdgeInsets.fromLTRB(
+                10,
+                24,
+                10,
+                AppSizes.pageBottomPadding,
+              ),
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: ClampingScrollPhysics(),
+              ),
             itemCount: grades.length + 1,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: columns,
@@ -78,8 +84,9 @@ class _GradeListContent extends StatelessWidget {
           );
         },
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class _GradeIntroduction extends StatelessWidget {

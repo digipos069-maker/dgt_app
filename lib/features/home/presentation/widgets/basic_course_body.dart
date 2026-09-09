@@ -51,14 +51,21 @@ class _CourseContent extends StatelessWidget {
       return const _EmptyCourses();
     }
 
-    return RefreshIndicator(
-      onRefresh: onRefresh,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final columns = constraints.maxWidth >= 720 ? 2 : 1;
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(
+        overscroll: false,
+      ),
+      child: RefreshIndicator(
+        onRefresh: onRefresh,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 720 ? 2 : 1;
 
-          return GridView.builder(
-            padding: const EdgeInsets.fromLTRB(
+            return GridView.builder(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: ClampingScrollPhysics(),
+              ),
+              padding: const EdgeInsets.fromLTRB(
               10,
               24,
               10,
@@ -76,8 +83,9 @@ class _CourseContent extends StatelessWidget {
           );
         },
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class _BasicCourseCard extends StatelessWidget {
