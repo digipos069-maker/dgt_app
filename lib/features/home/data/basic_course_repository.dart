@@ -135,27 +135,79 @@ class BasicCourseRepository {
       subjectName = (isKhmer ? subjectMap['nameKm'] : subjectMap['nameEn'])?.toString() ?? 'Course';
     }
 
-    // Parse quizzes from backend if they exist (we don't know exact structure yet, but we'll try)
+    // Parse quizzes from backend if they exist
     final questions = <QuizQuestionModel>[];
     final quizList = json['quizzes'] as List<dynamic>? ?? [];
     if (quizList.isNotEmpty) {
-      for (final (index, q) in quizList.indexed) {
+      for (final q in quizList) {
         if (q is Map<String, dynamic>) {
-          final optionsList = q['options'] as List<dynamic>? ?? [];
-          questions.add(QuizQuestionModel(
-            id: q['id']?.toString() ?? index.toString(),
-            questionKey: q['question']?.toString() ?? '',
-            options: optionsList.map((o) {
-              if (o is Map<String, dynamic>) {
-                return QuizOptionModel(id: o['id']?.toString() ?? '', labelKey: o['text']?.toString() ?? '');
-              } else if (o is String) {
-                return QuizOptionModel(id: o, labelKey: o);
-              }
-              return const QuizOptionModel(id: '', labelKey: '');
-            }).toList(),
-          ));
+          questions.add(QuizQuestionModel.fromJson(q));
         }
       }
+    }
+
+    if (questions.isEmpty) {
+      questions.addAll([
+        QuizQuestionModel(
+          id: 'bc_q1',
+          questionKey: isKhmer
+              ? 'តើមួយណាជាសេចក្តីសង្ខេបត្រឹមត្រូវនៃមេរៀននេះ?'
+              : 'What is the main concept taught in this lesson?',
+          options: [
+            QuizOptionModel(
+              id: 'A',
+              labelKey: isKhmer
+                  ? 'ក) ការយល់ដឹងអំពីគោលការណ៍គ្រឹះ'
+                  : 'A) Understanding foundational principles',
+            ),
+            QuizOptionModel(
+              id: 'B',
+              labelKey: isKhmer
+                  ? 'ខ) ការទន្ទេញចាំដោយមិនយល់'
+                  : 'B) Memorization without context',
+            ),
+            QuizOptionModel(
+              id: 'C',
+              labelKey: isKhmer
+                  ? 'គ) គ្មានសារៈសំខាន់'
+                  : 'C) Unrelated concept',
+            ),
+          ],
+        ),
+        QuizQuestionModel.matching(
+          id: 'bc_q2_matching',
+          matchingData: MatchingQuizData(
+            stems: [
+              QuizStem(id: 's1', text: isKhmer ? 'គោលការណ៍ A' : 'Concept A'),
+              QuizStem(id: 's2', text: isKhmer ? 'គោលការណ៍ B' : 'Concept B'),
+            ],
+            options: [
+              MatchingOption(id: 'o1', text: isKhmer ? 'និយមន័យ A' : 'Definition A'),
+              MatchingOption(id: 'o2', text: isKhmer ? 'និយមន័យ B' : 'Definition B'),
+            ],
+            description: isKhmer
+                ? 'ផ្គូផ្គងគោលការណ៍ជាមួយនិយមន័យត្រឹមត្រូវ'
+                : 'Match basic concepts with their definitions',
+            correctMatches: {
+              's1': 'o1',
+              's2': 'o2',
+            },
+          ),
+        ),
+        QuizQuestionModel.dragAndDrop(
+          id: 'bc_q3_drag_drop',
+          dragAndDropData: const DragAndDropQuizData(
+            correct: '2H₂O',
+            draggables: [
+              '2H₂O',
+              'H₂',
+              'O₂',
+            ],
+            droppableId: 'water-molecule',
+            prompt: 'Drag the correct answer into the slot:',
+          ),
+        ),
+      ]);
     }
 
     return LessonDetailModel(

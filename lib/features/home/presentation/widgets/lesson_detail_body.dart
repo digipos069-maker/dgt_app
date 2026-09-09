@@ -9,9 +9,7 @@ import 'package:video_player/video_player.dart';
 
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/utils/app_exception.dart';
-import '../../../../core/widgets/mixed_latex_text.dart';
 import '../../../../localization/app_localizations.dart';
-import '../../../../theme/app_colors.dart';
 import '../../application/lesson_controller.dart';
 import '../../application/quiz_controller.dart';
 import '../../application/tutorial_controller.dart';
@@ -22,6 +20,7 @@ import '../../domain/models/lesson_model.dart';
 import '../../domain/models/quiz_submission_result.dart';
 import '../pages/lesson_list_page.dart';
 import 'lesson_detail_skeleton.dart';
+import 'quiz/lesson_quiz_section.dart';
 
 class LessonDetailBody extends ConsumerWidget {
   const LessonDetailBody({
@@ -80,15 +79,19 @@ class LessonDetailContent extends ConsumerStatefulWidget {
 
 class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
   final Map<String, String> _answers = {};
+  final Map<String, Map<String, String>> _matchingAnswers = {};
+  final Map<String, String?> _dragAnswers = {};
   final Set<String> _submittingQuestions = {};
   final Set<String> _submittedQuestions = {};
-  final Map<String, _QuizAnswerFeedback> _answerFeedback = {};
+  final Map<String, QuizAnswerFeedback> _answerFeedback = {};
 
   @override
   void didUpdateWidget(covariant LessonDetailContent oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.detail.lessonId != widget.detail.lessonId) {
       _answers.clear();
+      _matchingAnswers.clear();
+      _dragAnswers.clear();
       _submittingQuestions.clear();
       _submittedQuestions.clear();
       _answerFeedback.clear();
@@ -96,6 +99,76 @@ class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
   }
 
   Future<void> _submitQuestion(QuizQuestionModel question) async {
+    switch (question.type) {
+      case QuizType.matching:
+        _submitMatchingQuestion(question);
+        break;
+      case QuizType.dragAndDrop:
+        _submitDragAndDropQuestion(question);
+        break;
+      case QuizType.multipleChoice:
+        await _submitMultipleChoiceQuestion(question);
+        break;
+    }
+  }
+
+  void _submitMatchingQuestion(QuizQuestionModel question) {
+    final matches = _matchingAnswers[question.id] ?? {};
+    final matchingData = question.matchingData;
+    if (matchingData == null) return;
+
+    if (matches.length < matchingData.stems.length) {
+      _showQuizSnackBar('Please match all terms before submitting.');
+      return;
+    }
+
+    final isCorrect = matchingData.areAllMatchesCorrect(matches);
+    setState(() {
+      if (isCorrect) {
+        _submittedQuestions.add(question.id);
+      }
+      _answerFeedback[question.id] = QuizAnswerFeedback(isCorrect: isCorrect);
+    });
+
+    _showQuizSnackBar(
+      isCorrect
+          ? context.l10n.text('quizCorrect')
+          : context.l10n.text('quizIncorrect'),
+      isError: !isCorrect,
+    );
+  }
+
+  void _submitDragAndDropQuestion(QuizQuestionModel question) {
+    final dropped = _dragAnswers[question.id];
+    final dragData = question.dragAndDropData;
+    if (dragData == null) return;
+
+    if (dropped == null || dropped.isEmpty) {
+      _showQuizSnackBar('Please place an answer before submitting.');
+      return;
+    }
+
+    final isCorrect = dragData.isCorrect(dropped);
+    setState(() {
+      if (isCorrect) {
+        _submittedQuestions.add(question.id);
+      }
+      _answerFeedback[question.id] = QuizAnswerFeedback(
+        isCorrect: isCorrect,
+        selectedAnswer: dropped,
+        correctAnswer: dragData.correct,
+      );
+    });
+
+    _showQuizSnackBar(
+      isCorrect
+          ? context.l10n.text('quizCorrect')
+          : context.l10n.text('quizIncorrect'),
+      isError: !isCorrect,
+    );
+  }
+
+  Future<void> _submitMultipleChoiceQuestion(QuizQuestionModel question) async {
     final selectedOptionId = _answers[question.id];
     if (selectedOptionId == null) {
       _showQuizSnackBar(context.l10n.text('quizSelectAnswer'));
@@ -158,10 +231,10 @@ class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
         _submittedQuestions.add(question.id);
       }
       if (isCorrect != null) {
-        _answerFeedback[question.id] = _QuizAnswerFeedback(
+        _answerFeedback[question.id] = QuizAnswerFeedback(
           isCorrect: isCorrect,
-          selectedOptionId: selectedOptionId,
-          correctOptionId: isCorrect ? selectedOptionId : correctOptionId,
+          selectedAnswer: selectedOptionId,
+          correctAnswer: isCorrect ? selectedOptionId : correctOptionId,
         );
       }
     });
@@ -230,12 +303,30 @@ class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
                           padding: const EdgeInsets.symmetric(
                             horizontal: AppSizes.spacing4,
                           ),
-                          child: _QuizSection(
-                            detail: widget.detail,
+                          child: LessonQuizSection(
+                            quizTitleKey: widget.detail.quizTitleKey,
+                            quizSubtitleKey: widget.detail.quizSubtitleKey,
+                            questions: widget.detail.questions,
                             answers: _answers,
                             onChanged: (questionId, optionId) {
                               setState(() {
                                 _answers[questionId] = optionId;
+                                _submittedQuestions.remove(questionId);
+                                _answerFeedback.remove(questionId);
+                              });
+                            },
+                            matchingAnswers: _matchingAnswers,
+                            onMatchingChanged: (questionId, matches) {
+                              setState(() {
+                                _matchingAnswers[questionId] = matches;
+                                _submittedQuestions.remove(questionId);
+                                _answerFeedback.remove(questionId);
+                              });
+                            },
+                            dragAnswers: _dragAnswers,
+                            onDragChanged: (questionId, droppedItem) {
+                              setState(() {
+                                _dragAnswers[questionId] = droppedItem;
                                 _submittedQuestions.remove(questionId);
                                 _answerFeedback.remove(questionId);
                               });
@@ -659,382 +750,6 @@ class _VideoSectionState extends ConsumerState<_VideoSection> {
     if (duration.inHours == 0) return '$minutes:$seconds';
     return '${duration.inHours}:$minutes:$seconds';
   }
-}
-
-class _QuizSection extends StatelessWidget {
-  const _QuizSection({
-    required this.detail,
-    required this.answers,
-    required this.onChanged,
-    required this.submittingQuestions,
-    required this.submittedQuestions,
-    required this.answerFeedback,
-    required this.onSubmit,
-  });
-
-  final LessonDetailModel detail;
-  final Map<String, String> answers;
-  final void Function(String questionId, String optionId) onChanged;
-  final Set<String> submittingQuestions;
-  final Set<String> submittedQuestions;
-  final Map<String, _QuizAnswerFeedback> answerFeedback;
-  final ValueChanged<QuizQuestionModel> onSubmit;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
-          width: 1.5,
-        ),
-      ),
-      padding: const EdgeInsets.all(AppSizes.spacing16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.quiz_outlined,
-                  size: 20,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-              const SizedBox(width: AppSizes.spacing12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.text(detail.quizTitleKey),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.colorScheme.secondary,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: AppSizes.spacing4),
-                    Text(
-                      context.l10n.text(detail.quizSubtitleKey),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSizes.spacing24),
-          if (detail.questions.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSizes.spacing32),
-              child: Center(
-                child: Text(
-                  context.l10n.text('noQuizForLesson'),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-            )
-          else
-            for (final (index, question) in detail.questions.indexed) ...[
-            if (index > 0)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: AppSizes.spacing24,
-                ),
-                child: Divider(
-                  height: 1,
-                  color: theme.colorScheme.outlineVariant.withValues(
-                    alpha: 0.65,
-                  ),
-                ),
-              ),
-            _QuizQuestion(
-              number: index + 1,
-              question: question,
-              selectedOption: answers[question.id],
-              onChanged: (optionId) => onChanged(question.id, optionId),
-              isSubmitting: submittingQuestions.contains(question.id),
-              isSubmitted: submittedQuestions.contains(question.id),
-              feedback: answerFeedback[question.id],
-              onSubmit: () => onSubmit(question),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _QuizQuestion extends StatelessWidget {
-  const _QuizQuestion({
-    required this.number,
-    required this.question,
-    required this.selectedOption,
-    required this.onChanged,
-    required this.isSubmitting,
-    required this.isSubmitted,
-    required this.feedback,
-    required this.onSubmit,
-  });
-
-  final int number;
-  final QuizQuestionModel question;
-  final String? selectedOption;
-  final ValueChanged<String> onChanged;
-  final bool isSubmitting;
-  final bool isSubmitted;
-  final _QuizAnswerFeedback? feedback;
-  final VoidCallback onSubmit;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        MixedLatexText(
-          text: context.l10n.text(question.questionKey),
-          prefix: '${context.l10n.text('questionPrefix')}$number. ',
-          prefixStyle: TextStyle(
-            color: theme.colorScheme.secondary,
-            fontWeight: FontWeight.w900,
-          ),
-          style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.onSurface,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: AppSizes.spacing16),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final isWide = constraints.maxWidth >= 620;
-            return GridView.count(
-              crossAxisCount: isWide ? 2 : 1,
-              crossAxisSpacing: AppSizes.spacing12,
-              mainAxisSpacing: AppSizes.spacing12,
-              mainAxisExtent: 78,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                for (final option in question.options)
-                  _QuizOption(
-                    option: option,
-                    isSelected: selectedOption == option.id,
-                    status: _statusForOption(option.id),
-                    onTap: () => onChanged(option.id),
-                  ),
-              ],
-            );
-          },
-        ),
-        const SizedBox(height: AppSizes.spacing16),
-        Align(
-          alignment: Alignment.centerRight,
-          child: FilledButton.icon(
-            onPressed: isSubmitting ? null : onSubmit,
-            icon: isSubmitting
-                ? const SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Icon(
-                    isSubmitted
-                        ? Icons.check_circle_outline
-                        : Icons.send_outlined,
-                  ),
-            label: Text(
-              context.l10n.text(isSubmitted ? 'quizSubmitted' : 'submitQuiz'),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  _QuizOptionStatus _statusForOption(String optionId) {
-    final currentFeedback = feedback;
-    if (currentFeedback == null) return _QuizOptionStatus.neutral;
-    if (currentFeedback.correctOptionId == optionId ||
-        (currentFeedback.isCorrect &&
-            currentFeedback.selectedOptionId == optionId)) {
-      return _QuizOptionStatus.correct;
-    }
-    if (!currentFeedback.isCorrect &&
-        currentFeedback.selectedOptionId == optionId) {
-      return _QuizOptionStatus.incorrect;
-    }
-    return _QuizOptionStatus.neutral;
-  }
-}
-
-class _QuizOption extends StatelessWidget {
-  const _QuizOption({
-    required this.option,
-    required this.isSelected,
-    required this.status,
-    required this.onTap,
-  });
-
-  final QuizOptionModel option;
-  final bool isSelected;
-  final _QuizOptionStatus status;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final statusColor = switch (status) {
-      _QuizOptionStatus.correct => AppColors.success,
-      _QuizOptionStatus.incorrect => AppColors.error,
-      _QuizOptionStatus.neutral => null,
-    };
-    final backgroundColor = switch (status) {
-      _QuizOptionStatus.correct => AppColors.success.withValues(alpha: 0.06),
-      _QuizOptionStatus.incorrect => AppColors.error.withValues(alpha: 0.06),
-      _QuizOptionStatus.neutral =>
-        isSelected
-            ? theme.colorScheme.primary.withValues(alpha: 0.07)
-            : theme.colorScheme.surface,
-    };
-
-    return Material(
-      color: backgroundColor,
-      borderRadius: BorderRadius.circular(AppSizes.cardRadius),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppSizes.cardRadius),
-            border: Border.all(
-              color:
-                  statusColor ??
-                  (isSelected
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.outlineVariant),
-              width: status == _QuizOptionStatus.neutral && !isSelected
-                  ? 1
-                  : 1.5,
-            ),
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.spacing16,
-            vertical: AppSizes.spacing12,
-          ),
-          child: Row(
-            children: [
-              _SelectionIndicator(isSelected: isSelected, status: status),
-              const SizedBox(width: AppSizes.spacing12),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    MixedLatexText(
-                      text: context.l10n.text(option.labelKey),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface,
-                        fontWeight: isSelected
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                      ),
-                    ),
-                    if (status != _QuizOptionStatus.neutral) ...[
-                      const SizedBox(height: AppSizes.spacing4),
-                      Text(
-                        context.l10n.text(
-                          status == _QuizOptionStatus.correct
-                              ? 'quizAnswerCorrect'
-                              : 'quizAnswerIncorrect',
-                        ),
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: statusColor,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SelectionIndicator extends StatelessWidget {
-  const _SelectionIndicator({required this.isSelected, required this.status});
-
-  final bool isSelected;
-  final _QuizOptionStatus status;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = switch (status) {
-      _QuizOptionStatus.correct => AppColors.success,
-      _QuizOptionStatus.incorrect => AppColors.error,
-      _QuizOptionStatus.neutral => Theme.of(context).colorScheme.primary,
-    };
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 160),
-      width: 20,
-      height: 20,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: isSelected ? color : Theme.of(context).colorScheme.outline,
-          width: 1.5,
-        ),
-      ),
-      child: status == _QuizOptionStatus.correct
-          ? Icon(Icons.check, color: color, size: 14)
-          : status == _QuizOptionStatus.incorrect
-          ? Icon(Icons.close, color: color, size: 14)
-          : isSelected
-          ? Center(
-              child: Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-              ),
-            )
-          : null,
-    );
-  }
-}
-
-enum _QuizOptionStatus { neutral, correct, incorrect }
-
-class _QuizAnswerFeedback {
-  const _QuizAnswerFeedback({
-    required this.isCorrect,
-    required this.selectedOptionId,
-    required this.correctOptionId,
-  });
-
-  final bool isCorrect;
-  final String selectedOptionId;
-  final String? correctOptionId;
 }
 
 class _VideoArtwork extends StatelessWidget {

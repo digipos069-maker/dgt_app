@@ -157,6 +157,40 @@ class LessonRepository {
             QuizOptionModel(id: 'D', labelKey: 'quizLinearQ2D'),
           ],
         ),
+        QuizQuestionModel.matching(
+          id: 'q3_matching',
+          matchingData: MatchingQuizData(
+            stems: [
+              QuizStem(id: 's1', text: 'Variable x'),
+              QuizStem(id: 's2', text: 'Constant 5'),
+              QuizStem(id: 's3', text: 'Coefficient 2'),
+            ],
+            options: [
+              MatchingOption(id: 'o1', text: 'Unknown value to solve'),
+              MatchingOption(id: 'o2', text: 'Fixed numeric value'),
+              MatchingOption(id: 'o3', text: 'Multiplicative factor of x'),
+            ],
+            description: 'Match algebraic terms with their definitions',
+            correctMatches: {
+              's1': 'o1',
+              's2': 'o2',
+              's3': 'o3',
+            },
+          ),
+        ),
+        QuizQuestionModel.dragAndDrop(
+          id: 'q4_drag_drop',
+          dragAndDropData: DragAndDropQuizData(
+            correct: '2H₂O',
+            draggables: [
+              '2H₂O',
+              'H₂',
+              'O₂',
+            ],
+            droppableId: 'water-molecule',
+            prompt: 'Drag the balanced water molecule product into the slot:',
+          ),
+        ),
       ],
     ),
     'algebra/quadratic-formula': LessonDetailModel(
@@ -181,6 +215,32 @@ class LessonRepository {
             QuizOptionModel(id: 'D', labelKey: 'quizQuadraticQ1D'),
           ],
         ),
+        QuizQuestionModel.matching(
+          id: 'q2_quad_matching',
+          matchingData: MatchingQuizData(
+            stems: [
+              QuizStem(id: 's1', text: 'b² - 4ac > 0'),
+              QuizStem(id: 's2', text: 'b² - 4ac = 0'),
+              QuizStem(id: 's3', text: 'b² - 4ac < 0'),
+            ],
+            options: [
+              MatchingOption(id: 'o1', text: 'Two distinct real roots'),
+              MatchingOption(id: 'o2', text: 'One repeated real root'),
+              MatchingOption(id: 'o3', text: 'Two complex conjugate roots'),
+            ],
+            description: 'Match discriminant values with their root nature',
+            correctMatches: {'s1': 'o1', 's2': 'o2', 's3': 'o3'},
+          ),
+        ),
+        QuizQuestionModel.dragAndDrop(
+          id: 'q3_quad_drag',
+          dragAndDropData: DragAndDropQuizData(
+            correct: 'b² - 4ac',
+            draggables: ['b² - 4ac', '2a', '-b ± √D'],
+            droppableId: 'discriminant-slot',
+            prompt: 'Drag the quadratic discriminant formula into the target:',
+          ),
+        ),
       ],
     ),
     'force-motion/newtons-laws': LessonDetailModel(
@@ -204,6 +264,32 @@ class LessonRepository {
             QuizOptionModel(id: 'C', labelKey: 'quizPhysicsQ1C'),
             QuizOptionModel(id: 'D', labelKey: 'quizPhysicsQ1D'),
           ],
+        ),
+        QuizQuestionModel.matching(
+          id: 'q2_physics_matching',
+          matchingData: MatchingQuizData(
+            stems: [
+              QuizStem(id: 's1', text: "Newton's 1st Law"),
+              QuizStem(id: 's2', text: "Newton's 2nd Law"),
+              QuizStem(id: 's3', text: "Newton's 3rd Law"),
+            ],
+            options: [
+              MatchingOption(id: 'o1', text: 'Inertia: object stays at rest or in uniform motion'),
+              MatchingOption(id: 'o2', text: 'Force equals mass times acceleration (F = ma)'),
+              MatchingOption(id: 'o3', text: 'For every action, equal and opposite reaction'),
+            ],
+            description: "Match Newton's laws with their physical meanings",
+            correctMatches: {'s1': 'o1', 's2': 'o2', 's3': 'o3'},
+          ),
+        ),
+        QuizQuestionModel.dragAndDrop(
+          id: 'q3_physics_drag',
+          dragAndDropData: DragAndDropQuizData(
+            correct: 'F = ma',
+            draggables: ['F = ma', 'v = d/t', 'W = F·d'],
+            droppableId: 'second-law-slot',
+            prompt: "Drag the formula for Newton's 2nd Law into the slot:",
+          ),
         ),
       ],
     ),
@@ -252,6 +338,32 @@ class LessonRepository {
             QuizOptionModel(id: 'C', labelKey: 'quizNarrativeQ1C'),
             QuizOptionModel(id: 'D', labelKey: 'quizNarrativeQ1D'),
           ],
+        ),
+        QuizQuestionModel.matching(
+          id: 'q2_story_matching',
+          matchingData: MatchingQuizData(
+            stems: [
+              QuizStem(id: 's1', text: 'Exposition'),
+              QuizStem(id: 's2', text: 'Climax'),
+              QuizStem(id: 's3', text: 'Resolution'),
+            ],
+            options: [
+              MatchingOption(id: 'o1', text: 'Introduces setting and characters'),
+              MatchingOption(id: 'o2', text: 'Peak dramatic tension or turning point'),
+              MatchingOption(id: 'o3', text: 'Conclusion and untangling of conflict'),
+            ],
+            description: 'Match narrative plot stages with their roles',
+            correctMatches: {'s1': 'o1', 's2': 'o2', 's3': 'o3'},
+          ),
+        ),
+        QuizQuestionModel.dragAndDrop(
+          id: 'q3_story_drag',
+          dragAndDropData: DragAndDropQuizData(
+            correct: 'Exposition',
+            draggables: ['Exposition', 'Climax', 'Resolution'],
+            droppableId: 'initial-stage',
+            prompt: 'Drag the initial stage of a classic story structure:',
+          ),
         ),
       ],
     ),

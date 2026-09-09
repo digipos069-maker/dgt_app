@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+export 'quiz_models.dart';
+import 'quiz_models.dart';
+
 enum LessonType { video, reading, locked }
 
 class LessonModel {
@@ -112,25 +115,4 @@ class LessonDetailModel {
   final List<QuizQuestionModel> questions;
   final String mainVideoUrl;
   final String videoThumbnail;
-}
-
-class QuizQuestionModel {
-  const QuizQuestionModel({
-    required this.id,
-    required this.questionKey,
-    required this.options,
-    this.quizId,
-  });
-
-  final String id;
-  final int? quizId;
-  final String questionKey;
-  final List<QuizOptionModel> options;
-}
-
-class QuizOptionModel {
-  const QuizOptionModel({required this.id, required this.labelKey});
-
-  final String id;
-  final String labelKey;
 }

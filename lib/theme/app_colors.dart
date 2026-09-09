@@ -6,6 +6,8 @@ abstract final class AppColors {
   static const secondary = Color(0xFF233D81);
   static const success = Color(0xFF16A34A);
   static const error = Color(0xFFDC2626);
+  static const brandButton = Color(0xFF032EA1);
+  static const brandTable = Color(0xFF032EA1);
 
   static const lightBackground = Color(0xFFF8FAFC);
   static const lightSurface = Color(0xFFFFFFFF);

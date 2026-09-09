@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'quiz_models.dart';
+
 class TutorialDetailModel {
   const TutorialDetailModel({
     required this.id,
@@ -58,6 +60,7 @@ class TutorialQuizModel {
     required this.question,
     required this.options,
     required this.correctAnswer,
+    this.rawMap = const {},
   });
 
   static TutorialQuizModel? tryParse(Object? value) {
@@ -80,6 +83,7 @@ class TutorialQuizModel {
             value['correct'] ??
             value['correctAnswer'],
       ),
+      rawMap: value,
     );
   }
 
@@ -87,6 +91,11 @@ class TutorialQuizModel {
   final String question;
   final List<String> options;
   final String correctAnswer;
+  final Map<String, dynamic> rawMap;
+
+  QuizQuestionModel toQuizQuestionModel() {
+    return QuizQuestionModel.fromJson(rawMap);
+  }
 }
 
 Iterable<Object?> _readQuizItems(Object? value) {

@@ -129,23 +129,17 @@ class TutorialRepository {
       token: token,
     );
     final tutorial = TutorialDetailModel.fromJson(data);
-    final questions = tutorial.quizzes
-        .where((quiz) => quiz.question.isNotEmpty && quiz.options.isNotEmpty)
-        .map(
-          (quiz) => QuizQuestionModel(
-            id: quiz.id > 0 ? quiz.id.toString() : quiz.question,
-            quizId: quiz.id,
-            questionKey: quiz.question,
-            options: [
-              for (final (index, option) in quiz.options.indexed)
-                QuizOptionModel(
-                  id: String.fromCharCode(65 + index),
-                  labelKey: option,
-                ),
-            ],
-          ),
+    final parsedQuestions = tutorial.quizzes
+        .map((quiz) => quiz.toQuizQuestionModel())
+        .where(
+          (q) =>
+              q.questionKey.isNotEmpty ||
+              q.matchingData != null ||
+              q.dragAndDropData != null,
         )
         .toList(growable: false);
+    final questions =
+        parsedQuestions.isNotEmpty ? parsedQuestions : _fallbackQuestions;
 
     return LessonDetailModel(
       courseId: courseId,
@@ -217,15 +211,39 @@ class TutorialRepository {
         QuizOptionModel(id: 'D', labelKey: 'quizLinearQ1D'),
       ],
     ),
-    QuizQuestionModel(
-      id: 'q2',
-      questionKey: 'quizLinearQuestionTwo',
-      options: [
-        QuizOptionModel(id: 'A', labelKey: 'quizLinearQ2A'),
-        QuizOptionModel(id: 'B', labelKey: 'quizLinearQ2B'),
-        QuizOptionModel(id: 'C', labelKey: 'quizLinearQ2C'),
-        QuizOptionModel(id: 'D', labelKey: 'quizLinearQ2D'),
-      ],
+    QuizQuestionModel.matching(
+      id: 'q2_matching',
+      matchingData: MatchingQuizData(
+        stems: [
+          QuizStem(id: 's1', text: 'Variable x'),
+          QuizStem(id: 's2', text: 'Constant 5'),
+          QuizStem(id: 's3', text: 'Coefficient 2'),
+        ],
+        options: [
+          MatchingOption(id: 'o1', text: 'Unknown value to solve'),
+          MatchingOption(id: 'o2', text: 'Fixed numeric value'),
+          MatchingOption(id: 'o3', text: 'Multiplicative factor of x'),
+        ],
+        description: 'Match algebraic terms with their definitions',
+        correctMatches: {
+          's1': 'o1',
+          's2': 'o2',
+          's3': 'o3',
+        },
+      ),
+    ),
+    QuizQuestionModel.dragAndDrop(
+      id: 'q3_drag_drop',
+      dragAndDropData: DragAndDropQuizData(
+        correct: '2H₂O',
+        draggables: [
+          '2H₂O',
+          'H₂',
+          'O₂',
+        ],
+        droppableId: 'water-molecule',
+        prompt: 'Drag the balanced water molecule product into the slot:',
+      ),
     ),
   ];
 }
