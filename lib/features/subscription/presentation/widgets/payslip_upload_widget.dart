@@ -114,12 +114,12 @@ class PayslipUploadWidget extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: AppColors.brandButton.withValues(alpha: 0.1),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.cloud_upload_outlined,
-                      color: AppColors.brandButton,
+                      color: theme.colorScheme.primary,
                       size: 26,
                     ),
                   ),
@@ -252,15 +252,17 @@ class _OptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return ListTile(
       onTap: onTap,
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: AppColors.brandButton.withValues(alpha: 0.1),
+          color: theme.colorScheme.primary.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon, color: AppColors.brandButton, size: 20),
+        child: Icon(icon, color: theme.colorScheme.primary, size: 20),
       ),
       title: Text(
         title,

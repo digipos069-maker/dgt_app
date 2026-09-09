@@ -73,10 +73,10 @@ void main() {
     final upgradeButtonFinder = find.byKey(const Key('profile_upgrade_button'));
     expect(upgradeButtonFinder, findsOneWidget);
 
-    // Verify the button has the brand color #032EA1
+    // Verify the button has the main primary color
     final buttonWidget = tester.widget<ElevatedButton>(upgradeButtonFinder);
     final bg = buttonWidget.style?.backgroundColor?.resolve({});
-    expect(bg, AppColors.brandButton);
+    expect(bg, AppColors.primary);
 
     // Tap upgrade button
     await tester.tap(upgradeButtonFinder);

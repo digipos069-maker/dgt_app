@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
-import '../../../../theme/app_colors.dart';
 import '../../domain/models/subscription_plan.dart';
 
 class PlanCard extends StatelessWidget {
@@ -30,9 +29,9 @@ class PlanCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isSelected
-              ? AppColors.brandButton
+              ? theme.colorScheme.primary
               : (isPopular
-                  ? AppColors.brandButton.withValues(alpha: 0.5)
+                  ? theme.colorScheme.primary.withValues(alpha: 0.6)
                   : theme.colorScheme.outlineVariant),
           width: isSelected ? 2.5 : (isPopular ? 1.5 : 1.0),
         ),
@@ -50,9 +49,9 @@ class PlanCard extends StatelessWidget {
           if (isPopular)
             Container(
               padding: const EdgeInsets.symmetric(vertical: 4),
-              decoration: const BoxDecoration(
-                color: AppColors.brandButton,
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary,
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(14),
                   topRight: Radius.circular(14),
                 ),
@@ -60,8 +59,8 @@ class PlanCard extends StatelessWidget {
               child: Text(
                 context.l10n.text('mostPopular'),
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: theme.colorScheme.onPrimary,
                   fontSize: 11,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 0.5,
@@ -180,8 +179,8 @@ class PlanCard extends StatelessWidget {
                 ElevatedButton(
                   onPressed: onSelect,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.brandButton,
-                    foregroundColor: Colors.white,
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: theme.colorScheme.onPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),

@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
-import '../../../../theme/app_colors.dart';
 import '../../domain/models/bank_transfer_info.dart';
 
 class BankDetailsCard extends StatelessWidget {
@@ -56,12 +55,12 @@ class BankDetailsCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.brandButton,
+                  color: theme.colorScheme.primary,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.account_balance_rounded,
-                  color: Colors.white,
+                  color: theme.colorScheme.onPrimary,
                   size: 24,
                 ),
               ),
@@ -190,7 +189,7 @@ class _DetailRow extends StatelessWidget {
                 value,
                 style: theme.textTheme.titleSmall?.copyWith(
                   color: isHighlighted
-                      ? AppColors.brandButton
+                      ? theme.colorScheme.primary
                       : theme.colorScheme.onSurface,
                   fontWeight: isHighlighted ? FontWeight.w900 : FontWeight.w700,
                   fontSize: isHighlighted ? 16 : 14,

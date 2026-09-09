@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
-import '../../../../theme/app_colors.dart';
 
 enum PaymentMethodType {
   bankTransfer,
@@ -67,7 +66,7 @@ class _MethodCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
-                ? AppColors.brandButton
+                ? theme.colorScheme.primary
                 : theme.colorScheme.outlineVariant,
             width: isSelected ? 2 : 1,
           ),
@@ -86,14 +85,14 @@ class _MethodCard extends StatelessWidget {
               height: 48,
               decoration: BoxDecoration(
                 color: isSelected
-                    ? AppColors.brandButton
+                    ? theme.colorScheme.primary
                     : theme.colorScheme.primaryContainer,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 icon,
                 color: isSelected
-                    ? Colors.white
+                    ? theme.colorScheme.onPrimary
                     : theme.colorScheme.onPrimaryContainer,
                 size: 26,
               ),
@@ -151,7 +150,7 @@ class _MethodCard extends StatelessWidget {
                   ? Icons.check_circle_rounded
                   : Icons.radio_button_unchecked_rounded,
               color: isSelected
-                  ? AppColors.brandButton
+                  ? theme.colorScheme.primary
                   : theme.colorScheme.outline,
             ),
           ],

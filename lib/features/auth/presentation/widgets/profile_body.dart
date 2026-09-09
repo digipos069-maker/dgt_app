@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
-import '../../../../theme/app_colors.dart';
 import '../../domain/models/profile_models.dart';
 import '../../domain/models/user_model.dart';
 
@@ -105,8 +104,8 @@ class _SubscriptionInformation extends StatelessWidget {
               ElevatedButton.icon(
                 key: const Key('profile_upgrade_button'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.brandButton,
-                  foregroundColor: Colors.white,
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: theme.colorScheme.onPrimary,
                   minimumSize: const Size(0, 38),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 14,
@@ -145,8 +144,8 @@ class _SubscriptionInformation extends StatelessWidget {
                   const SizedBox(height: AppSizes.spacing12),
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.brandButton,
-                      foregroundColor: Colors.white,
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: theme.colorScheme.onPrimary,
                       minimumSize: const Size(0, 44),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),

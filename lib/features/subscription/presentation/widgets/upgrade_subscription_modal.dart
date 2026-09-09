@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
-import '../../../../theme/app_colors.dart';
 import '../../domain/models/bank_transfer_info.dart';
 import '../../domain/models/subscription_plan.dart';
 import 'bank_details_card.dart';
@@ -323,8 +322,8 @@ class _UpgradeSubscriptionModalState extends State<UpgradeSubscriptionModal> {
         const SizedBox(height: AppSizes.spacing24),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.brandButton,
-            foregroundColor: Colors.white,
+            backgroundColor: theme.colorScheme.primary,
+            foregroundColor: theme.colorScheme.onPrimary,
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
@@ -383,8 +382,8 @@ class _UpgradeSubscriptionModalState extends State<UpgradeSubscriptionModal> {
         const SizedBox(height: AppSizes.spacing24),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.brandButton,
-            foregroundColor: Colors.white,
+            backgroundColor: theme.colorScheme.primary,
+            foregroundColor: theme.colorScheme.onPrimary,
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),

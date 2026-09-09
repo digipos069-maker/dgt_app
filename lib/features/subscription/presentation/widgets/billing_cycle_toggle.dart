@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
-import '../../../../theme/app_colors.dart';
 import '../../domain/models/subscription_plan.dart';
 
 class BillingCycleToggle extends StatelessWidget {
@@ -73,12 +72,12 @@ class _ToggleItem extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.brandButton : Colors.transparent,
+          color: isSelected ? theme.colorScheme.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.brandButton.withValues(alpha: 0.25),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.25),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -92,7 +91,7 @@ class _ToggleItem extends StatelessWidget {
               title,
               style: theme.textTheme.labelLarge?.copyWith(
                 color: isSelected
-                    ? Colors.white
+                    ? theme.colorScheme.onPrimary
                     : theme.colorScheme.onSurfaceVariant,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
               ),

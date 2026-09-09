@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
-import '../../../../theme/app_colors.dart';
 
 class SubscriptionSuccessDialog extends StatelessWidget {
   const SubscriptionSuccessDialog({
@@ -115,8 +114,8 @@ class SubscriptionSuccessDialog extends StatelessWidget {
             const SizedBox(height: AppSizes.spacing24),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.brandButton,
-                foregroundColor: Colors.white,
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: theme.colorScheme.onPrimary,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
