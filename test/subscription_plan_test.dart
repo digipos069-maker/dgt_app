@@ -4,25 +4,32 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('SubscriptionPlanModel & PlanTier', () {
-    test('default plans list contains Basic, Pro and Premium tiers', () {
-      final plans = PlanTier.defaultPlans;
-      expect(plans.length, 3);
-      expect(plans.any((p) => p.name == 'Basic'), isTrue);
-      expect(plans.any((p) => p.name == 'Pro' && p.isPopular), isTrue);
-      expect(plans.any((p) => p.name == 'Premium'), isTrue);
+    test('PLANS contains premium plan instance', () {
+      final plans = SubscriptionPlan.defaultPlans;
+      expect(plans.length, 1);
+
+      final premium = plans.firstWhere((p) => p.id == 2);
+      expect(premium.name, 'premium');
+      expect(premium.displayName, 'Premium');
+      expect(premium.price.usd, 2.99);
+      expect(premium.price.khr, 12000.00);
+      expect(premium.isPopular, isTrue);
     });
 
-    test('priceFor returns appropriate price for monthly vs yearly', () {
-      final proPlan = PlanTier.defaultPlans.firstWhere((p) => p.name == 'Pro');
-      expect(proPlan.priceFor(BillingCycle.monthly), 9.99);
-      expect(proPlan.priceFor(BillingCycle.yearly), 89.99);
-      expect(proPlan.formattedPrice(BillingCycle.monthly), '\$9.99');
-      expect(proPlan.formattedPrice(BillingCycle.yearly), '\$89.99');
+    test('priceFor and priceKhrFor return correct prices for monthly vs yearly', () {
+      final premiumPlan = SubscriptionPlan.defaultPlans.firstWhere((p) => p.id == 2);
+      expect(premiumPlan.priceFor(BillingCycle.monthly), 2.99);
+      expect(premiumPlan.priceFor(BillingCycle.yearly), 28.70);
+      expect(premiumPlan.priceKhrFor(BillingCycle.monthly), 12000.00);
+      expect(premiumPlan.priceKhrFor(BillingCycle.yearly), 115000.00);
+      expect(premiumPlan.formattedPrice(BillingCycle.monthly), '\$2.99');
+      expect(premiumPlan.formattedPrice(BillingCycle.yearly), '\$28.70');
+      expect(premiumPlan.formattedPrice(BillingCycle.monthly, includeKhr: true), '\$2.99 (12,000 ៛)');
     });
 
     test('monthlyEquivalentPrice calculates correct discount rate', () {
-      final proPlan = PlanTier.defaultPlans.firstWhere((p) => p.name == 'Pro');
-      expect(proPlan.monthlyEquivalentPrice(), '\$7.50');
+      final premiumPlan = SubscriptionPlan.defaultPlans.firstWhere((p) => p.id == 2);
+      expect(premiumPlan.monthlyEquivalentPrice(), '\$2.39');
     });
 
     test('BankTransferInfo default ABA details are valid', () {

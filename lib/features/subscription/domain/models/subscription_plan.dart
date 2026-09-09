@@ -8,89 +8,150 @@ enum BillingCycle {
   bool get isYearly => this == BillingCycle.yearly;
 }
 
-class PlanTier {
-  const PlanTier({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.monthlyPrice,
-    required this.yearlyPrice,
-    required this.features,
-    this.currency = 'USD',
-    this.currencySymbol = '\$',
-    this.isPopular = false,
-    this.icon = Icons.star_border_rounded,
+class PlanPrice {
+  const PlanPrice({
+    required this.usd,
+    required this.khr,
   });
 
-  final String id;
+  final double usd;
+  final double khr;
+
+  factory PlanPrice.fromJson(Map<String, dynamic> json) {
+    return PlanPrice(
+      usd: (json['usd'] as num?)?.toDouble() ?? 0.0,
+      khr: (json['khr'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'usd': usd,
+        'khr': khr,
+      };
+}
+
+class SubscriptionPlan {
+  const SubscriptionPlan({
+    required this.id,
+    required this.name,
+    required this.price,
+    this.description = '',
+    this.features = const [],
+    this.isPopular = false,
+    this.icon = Icons.star_border_rounded,
+    this.yearlyPriceUsd,
+    this.yearlyPriceKhr,
+  });
+
+  final int id;
   final String name;
+  final PlanPrice price;
   final String description;
-  final double monthlyPrice;
-  final double yearlyPrice;
-  final String currency;
-  final String currencySymbol;
   final List<String> features;
   final bool isPopular;
   final IconData icon;
+  final double? yearlyPriceUsd;
+  final double? yearlyPriceKhr;
 
-  double priceFor(BillingCycle cycle) =>
-      cycle.isMonthly ? monthlyPrice : yearlyPrice;
+  bool get isFree => price.usd == 0 && price.khr == 0;
 
-  String formattedPrice(BillingCycle cycle) {
-    final price = priceFor(cycle);
-    return '$currencySymbol${price.toStringAsFixed(2)}';
+  String get displayName {
+    if (name.isEmpty) return '';
+    return name[0].toUpperCase() + name.substring(1);
+  }
+
+  double priceFor(BillingCycle cycle) {
+    if (isFree) return 0.0;
+    if (cycle.isMonthly) {
+      return price.usd;
+    }
+    return yearlyPriceUsd ?? (price.usd * 12 * 0.8);
+  }
+
+  double priceKhrFor(BillingCycle cycle) {
+    if (isFree) return 0.0;
+    if (cycle.isMonthly) {
+      return price.khr;
+    }
+    return yearlyPriceKhr ?? (price.khr * 12 * 0.8);
+  }
+
+  String formattedPrice(BillingCycle cycle, {bool includeKhr = false}) {
+    if (isFree) return '\$0.00';
+    final usdPrice = priceFor(cycle);
+    final usdText = '\$${usdPrice.toStringAsFixed(2)}';
+    if (!includeKhr || price.khr <= 0) return usdText;
+    final khrVal = priceKhrFor(cycle).round();
+    return '$usdText (${formatKhr(khrVal)} ៛)';
   }
 
   String monthlyEquivalentPrice() {
-    final eq = yearlyPrice / 12;
-    return '$currencySymbol${eq.toStringAsFixed(2)}';
+    if (isFree) return '\$0.00';
+    final yearly = priceFor(BillingCycle.yearly);
+    final eq = yearly / 12;
+    return '\$${eq.toStringAsFixed(2)}';
   }
 
-  static const List<PlanTier> defaultPlans = [
-    PlanTier(
-      id: 'plan_basic',
-      name: 'Basic',
-      description: 'Essential access for individual students.',
-      monthlyPrice: 4.99,
-      yearlyPrice: 47.99,
-      icon: Icons.school_outlined,
-      features: [
-        'Access to all foundation lessons',
-        'Standard multiple choice quizzes',
-        'Standard video lessons & exercises',
-        'Community discussion support',
-      ],
-    ),
-    PlanTier(
-      id: 'plan_pro',
-      name: 'Pro',
-      description: 'The most popular plan for active exam mastery.',
-      monthlyPrice: 9.99,
-      yearlyPrice: 89.99,
-      isPopular: true,
-      icon: Icons.workspace_premium_outlined,
-      features: [
-        'Everything in Basic',
-        'Interactive Matching & Drag-and-Drop quizzes',
-        'Unlimited AI Tutor explanations',
-        'Downloadable lessons & offline practice',
-        'Priority progress analytics',
-      ],
-    ),
-    PlanTier(
-      id: 'plan_premium',
-      name: 'Premium',
-      description: 'Ultimate learning bundle with mentor review.',
-      monthlyPrice: 19.99,
-      yearlyPrice: 179.99,
-      icon: Icons.diamond_outlined,
-      features: [
-        'Everything in Pro',
-        '1-on-1 Mentor feedback on practice exams',
-        'Full past exam papers with solution PDFs',
-        'Multi-device family sub-account support',
-        'Verified Certificate of Completion',
-      ],
-    ),
-  ];
+  static String formatKhr(int amount) {
+    return amount.toString().replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]},',
+        );
+  }
+
+  factory SubscriptionPlan.fromJson(Map<String, dynamic> json) {
+    return SubscriptionPlan(
+      id: json['id'] as int,
+      name: json['name'] as String,
+      price: PlanPrice.fromJson(json['price'] as Map<String, dynamic>),
+      description: json['description'] as String? ?? '',
+      features: (json['features'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
+      isPopular: json['isPopular'] as bool? ?? false,
+      yearlyPriceUsd: (json['yearlyPriceUsd'] as num?)?.toDouble(),
+      yearlyPriceKhr: (json['yearlyPriceKhr'] as num?)?.toDouble(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'price': price.toJson(),
+      };
+
+  static const List<SubscriptionPlan> defaultPlans = PLANS;
 }
+
+typedef PlanTier = SubscriptionPlan;
+
+/// Predefined plans matching:
+/// export const PLANS = [
+///   { id: 1, name: 'free', price: { usd: 0.00, khr: 0.00 } },
+///   { id: 2, name: 'premium', price: { usd: 2.99, khr: 12000.00 } },
+/// ];
+// ignore: constant_identifier_names
+const List<SubscriptionPlan> PLANS = [
+  SubscriptionPlan(
+    id: 2,
+    name: 'premium',
+    price: PlanPrice(
+      usd: 2.99,
+      khr: 12000.00,
+    ),
+    yearlyPriceUsd: 28.70,
+    yearlyPriceKhr: 115000.00,
+    isPopular: true,
+    icon: Icons.workspace_premium_outlined,
+    description:
+        'Unlock all interactive quizzes, offline lessons & unlimited practice.',
+    features: [
+      'All interactive quizzes (Matching & Drag-and-Drop)',
+      'Unlimited lesson access & offline downloads',
+      'Detailed answer explanations & exam mastery',
+      'Priority student support & progress analytics',
+      'Multi-currency checkout: USD or KHR (Bakong / ABA)',
+    ],
+  ),
+];

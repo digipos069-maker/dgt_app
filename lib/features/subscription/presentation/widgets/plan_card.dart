@@ -93,7 +93,7 @@ class PlanCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            plan.name,
+                            plan.displayName,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w900,
                               color: theme.colorScheme.secondary,
@@ -104,7 +104,7 @@ class PlanCard extends StatelessWidget {
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
-                            maxLines: 1,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
@@ -123,25 +123,37 @@ class PlanCard extends StatelessWidget {
                           color: theme.colorScheme.secondary,
                         ),
                       ),
-                      const TextSpan(text: ' '),
-                      TextSpan(
-                        text: cycle.isMonthly
-                            ? context.l10n.text('perMonth')
-                            : context.l10n.text('perYear'),
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      if (cycle.isYearly) ...[
-                        const TextSpan(text: '  '),
+                      if (!plan.isFree) ...[
+                        const TextSpan(text: ' '),
                         TextSpan(
-                          text: '(${plan.monthlyEquivalentPrice()}${context.l10n.text('perMonth')})',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: const Color(0xFF166534),
-                            fontWeight: FontWeight.w700,
+                          text: cycle.isMonthly
+                              ? context.l10n.text('perMonth')
+                              : context.l10n.text('perYear'),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
+                        if (cycle.isYearly) ...[
+                          const TextSpan(text: '  '),
+                          TextSpan(
+                            text: '(${plan.monthlyEquivalentPrice()}${context.l10n.text('perMonth')})',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: const Color(0xFF166534),
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                        if (plan.price.khr > 0) ...[
+                          const TextSpan(text: '  •  '),
+                          TextSpan(
+                            text: '${SubscriptionPlan.formatKhr(plan.priceKhrFor(cycle).round())} ៛',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: const Color(0xFF166534),
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
                       ],
                     ],
                   ),
@@ -193,7 +205,7 @@ class PlanCard extends StatelessWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          '${context.l10n.text('selectPlan')} - ${plan.name}',
+                          '${context.l10n.text('selectPlan')} - ${plan.displayName}',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w800,

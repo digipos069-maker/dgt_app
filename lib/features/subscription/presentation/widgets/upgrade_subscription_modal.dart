@@ -92,9 +92,11 @@ class _UpgradeSubscriptionModalState extends State<UpgradeSubscriptionModal> {
 
     if (!mounted) return;
 
-    final transactionId = 'TRX-${DateTime.now().millisecondsSinceEpoch % 10000000}';
-    final planName = '${_selectedPlan.name} (${_cycle.isMonthly ? context.l10n.text('monthly') : context.l10n.text('yearly')})';
-    final amountText = _selectedPlan.formattedPrice(_cycle);
+    final transactionId =
+        'TRX-${DateTime.now().millisecondsSinceEpoch % 10000000}';
+    final planName =
+        '${_selectedPlan.displayName} (${_cycle.isMonthly ? context.l10n.text('monthly') : context.l10n.text('yearly')})';
+    final amountText = _selectedPlan.formattedPrice(_cycle, includeKhr: true);
 
     Navigator.of(context).pop();
 
@@ -288,11 +290,13 @@ class _UpgradeSubscriptionModalState extends State<UpgradeSubscriptionModal> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${_selectedPlan.name} Plan',
+                      '${_selectedPlan.displayName} Plan',
                       style: const TextStyle(fontWeight: FontWeight.w800),
                     ),
                     Text(
-                      '${_selectedPlan.formattedPrice(_cycle)} ${_cycle.isMonthly ? context.l10n.text('perMonth') : context.l10n.text('perYear')}',
+                      _selectedPlan.isFree
+                          ? '\$0.00'
+                          : '${_selectedPlan.formattedPrice(_cycle, includeKhr: true)} ${_cycle.isMonthly ? context.l10n.text('perMonth') : context.l10n.text('perYear')}',
                       style: TextStyle(
                         color: theme.colorScheme.onSurfaceVariant,
                         fontSize: 12,
@@ -374,7 +378,7 @@ class _UpgradeSubscriptionModalState extends State<UpgradeSubscriptionModal> {
       children: [
         BankDetailsCard(
           bankInfo: BankTransferInfo.defaultAba,
-          amountText: _selectedPlan.formattedPrice(_cycle),
+          amountText: _selectedPlan.formattedPrice(_cycle, includeKhr: true),
           referenceCode: _referenceCode,
         ),
         const SizedBox(height: AppSizes.spacing20),

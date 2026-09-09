@@ -58,22 +58,23 @@ void main() {
     expect(find.text('Monthly'), findsOneWidget);
     expect(find.text('Yearly'), findsOneWidget);
     expect(find.text('Save 20%'), findsOneWidget);
-    expect(find.textContaining('\$89.99'), findsWidgets); // Pro yearly price
+    expect(find.textContaining('\$28.70'), findsWidgets); // Premium yearly price
 
     // Toggle to Monthly
     await tester.tap(find.text('Monthly'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('\$9.99'), findsWidgets); // Monthly Pro price
+    expect(find.textContaining('\$2.99'), findsWidgets); // Premium monthly price
 
     // Toggle back to Yearly
     await tester.tap(find.text('Yearly'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('\$89.99'), findsWidgets);
+    expect(find.textContaining('\$28.70'), findsWidgets);
 
-    // Select Pro Plan
-    final selectProButton = find.widgetWithText(ElevatedButton, 'Select Plan - Pro');
-    expect(selectProButton, findsOneWidget);
-    await tester.tap(selectProButton);
+    // Select Premium Plan
+    final selectPremiumButton =
+        find.widgetWithText(ElevatedButton, 'Select Plan - Premium');
+    expect(selectPremiumButton, findsOneWidget);
+    await tester.tap(selectPremiumButton);
     await tester.pumpAndSettle();
 
     // Step 1: Payment Method
@@ -162,9 +163,10 @@ void main() {
     expect(tester.takeException(), isNull);
 
     // Select plan to reach step 1 (Payment method)
-    final selectBasicButton = find.widgetWithText(ElevatedButton, 'Select Plan - Basic');
-    await tester.scrollUntilVisible(selectBasicButton, 100);
-    await tester.tap(selectBasicButton);
+    final selectPremiumButton =
+        find.widgetWithText(ElevatedButton, 'Select Plan - Premium');
+    await tester.scrollUntilVisible(selectPremiumButton, 100);
+    await tester.tap(selectPremiumButton);
     await tester.pumpAndSettle();
 
     // Verify Step 1 (PaymentMethodSelector with Wrap) doesn't overflow
