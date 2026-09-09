@@ -31,7 +31,9 @@ class ProfileBody extends StatelessWidget {
 
     final scrollable = SingleChildScrollView(
       physics: onRefresh != null
-          ? const AlwaysScrollableScrollPhysics()
+          ? const AlwaysScrollableScrollPhysics(
+              parent: ClampingScrollPhysics(),
+            )
           : const ClampingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(
         10,
@@ -65,6 +67,11 @@ class ProfileBody extends StatelessWidget {
       ),
     );
 
+    final content = ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(overscroll: false),
+      child: scrollable,
+    );
+
     return Theme(
       data: theme.copyWith(textTheme: textTheme),
       child: onRefresh != null
@@ -72,13 +79,9 @@ class ProfileBody extends StatelessWidget {
               color: theme.colorScheme.primary,
               backgroundColor: theme.colorScheme.surface,
               onRefresh: onRefresh!,
-              child: scrollable,
+              child: content,
             )
-          : ScrollConfiguration(
-              behavior:
-                  ScrollConfiguration.of(context).copyWith(overscroll: false),
-              child: scrollable,
-            ),
+          : content,
     );
   }
 }

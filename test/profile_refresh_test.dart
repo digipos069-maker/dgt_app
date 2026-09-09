@@ -65,4 +65,26 @@ void main() {
 
     expect(refreshed, isTrue);
   });
+
+  testWidgets('ProfileBody disables StretchingOverscrollIndicator so layout does not stretch',
+      (tester) async {
+    await tester.pumpWidget(
+      Theme(
+        data: ThemeData(platform: TargetPlatform.android),
+        child: _buildTestApp(
+          ProfileBody(
+            user: null,
+            isProfileLoading: false,
+            onPaymentHistory: () {},
+            onLogout: () {},
+            onRefresh: () async {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Verify StretchingOverscrollIndicator is NOT present
+    expect(find.byType(StretchingOverscrollIndicator), findsNothing);
+  });
 }
