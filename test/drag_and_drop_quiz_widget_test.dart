@@ -112,4 +112,23 @@ void main() {
 
     expect(submitted, '2H₂O');
   });
+
+  testWidgets('does not overflow on narrow screens (e.g. width 365)', (tester) async {
+    tester.view.physicalSize = const Size(365.4, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(
+      _buildTestApp(
+        const DragAndDropQuizWidget(
+          number: 1,
+          data: sampleData,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Drop answer here (or tap a choice below)'), findsOneWidget);
+  });
 }

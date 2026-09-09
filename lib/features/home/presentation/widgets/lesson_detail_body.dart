@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 
+import '../../../../core/constants/api_constants.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/utils/app_exception.dart';
 import '../../../../localization/app_localizations.dart';
@@ -451,9 +453,21 @@ class _VideoSectionState extends ConsumerState<_VideoSection> {
     _controller = null;
     await previousController?.dispose();
 
-    final videoUrl = widget.detail.mainVideoUrl.trim();
+    final rawVideoUrl = widget.detail.mainVideoUrl.trim();
+    if (rawVideoUrl.isEmpty) {
+      _isVideoInitializing = false;
+      _videoHasError = true;
+      if (mounted) setState(() {});
+      return;
+    }
+
+    final videoUrl = rawVideoUrl.startsWith('/')
+        ? '${ApiConstants.baseUrl}$rawVideoUrl'
+        : rawVideoUrl;
+
     final uri = Uri.tryParse(videoUrl);
     if (uri == null || !uri.hasScheme) {
+      developer.log('Invalid video URL scheme: "$videoUrl"', name: 'dgt.video');
       _isVideoInitializing = false;
       _videoHasError = true;
       if (mounted) setState(() {});
@@ -472,7 +486,13 @@ class _VideoSectionState extends ConsumerState<_VideoSection> {
       await controller.initialize();
       await controller.setVolume(1);
       await controller.play();
-    } on Object {
+    } on Object catch (e, st) {
+      developer.log(
+        'Failed to initialize video at: $videoUrl',
+        name: 'dgt.video',
+        error: e,
+        stackTrace: st,
+      );
       await controller.dispose();
       _videoHasError = true;
       if (identical(_controller, controller)) {

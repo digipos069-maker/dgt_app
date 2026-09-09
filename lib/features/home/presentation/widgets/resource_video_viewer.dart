@@ -1,6 +1,9 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
+import '../../../../core/constants/api_constants.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../domain/models/resource_document_model.dart';
@@ -30,8 +33,19 @@ class _ResourceVideoViewerState extends State<ResourceVideoViewer> {
     _controller = null;
     await previousController?.dispose();
 
-    final uri = Uri.tryParse(widget.document.sourceUrl);
+    final rawSourceUrl = widget.document.sourceUrl.trim();
+    if (rawSourceUrl.isEmpty) {
+      if (mounted) setState(() => _hasError = true);
+      return;
+    }
+
+    final sourceUrl = rawSourceUrl.startsWith('/')
+        ? '${ApiConstants.baseUrl}$rawSourceUrl'
+        : rawSourceUrl;
+
+    final uri = Uri.tryParse(sourceUrl);
     if (uri == null || !uri.hasScheme) {
+      developer.log('Invalid video URL scheme: "$sourceUrl"', name: 'dgt.video');
       if (mounted) setState(() => _hasError = true);
       return;
     }
@@ -41,7 +55,13 @@ class _ResourceVideoViewerState extends State<ResourceVideoViewer> {
     try {
       await controller.initialize();
       if (mounted) setState(() {});
-    } on Object {
+    } on Object catch (e, st) {
+      developer.log(
+        'Failed to initialize resource video at: $sourceUrl',
+        name: 'dgt.video',
+        error: e,
+        stackTrace: st,
+      );
       await controller.dispose();
       if (mounted) {
         setState(() {

@@ -189,33 +189,44 @@ class _DragAndDropQuizWidgetState extends State<DragAndDropQuizWidget> {
           child: Center(
             child: hasItem
                 ? _buildDroppedItemChip(theme, isValidation, isCorrect)
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        isHovering
-                            ? Icons.download
-                            : Icons.drag_indicator,
-                        color: isHovering
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.outline,
-                        size: 20,
-                      ),
-                      const SizedBox(width: AppSizes.spacing8),
-                      Text(
-                        isHovering
-                            ? 'Release to drop here'
-                            : 'Drop answer here (or tap a choice below)',
-                        style: theme.textTheme.bodyMedium?.copyWith(
+                : Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSizes.spacing12,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isHovering
+                              ? Icons.download
+                              : Icons.drag_indicator,
                           color: isHovering
                               ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurfaceVariant,
-                          fontWeight: isHovering
-                              ? FontWeight.w700
-                              : FontWeight.w500,
+                              : theme.colorScheme.outline,
+                          size: 20,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: AppSizes.spacing8),
+                        Flexible(
+                          child: Text(
+                            isHovering
+                                ? 'Release to drop here'
+                                : 'Drop answer here (or tap a choice below)',
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: isHovering
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurfaceVariant,
+                              fontWeight: isHovering
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
           ),
         );
