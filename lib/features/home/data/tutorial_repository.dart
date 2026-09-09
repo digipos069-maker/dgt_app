@@ -21,7 +21,6 @@ class TutorialRepository {
     required String token,
     int page = 1,
     int limit = 10,
-    int? offset,
   }) async {
     final rawResponse = await _apiService.fetchTutorials(
       subjectId: subjectId,
@@ -30,7 +29,6 @@ class TutorialRepository {
       token: token,
       page: page,
       limit: limit,
-      offset: offset,
     );
 
     final (rawList, resolvedPage, hasMore) = _extractDataAndPagination(

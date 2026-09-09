@@ -179,15 +179,13 @@ class _LessonListContentState extends ConsumerState<_LessonListContent> {
     if (_isLoadingMore || widget.bundle.isFetchingMore) return;
 
     // 1. If server pagination has more items, trigger API loadMore
-    if (widget.bundle.hasMore) {
-      if (widget.tutorialRequest != null) {
-        setState(() {
-          _isLoadingMore = true;
-        });
-        ref
-            .read(tutorialBundleProvider(widget.tutorialRequest!).notifier)
-            .loadMore();
-      }
+    if (widget.bundle.hasMore && widget.tutorialRequest != null) {
+      setState(() {
+        _isLoadingMore = true;
+      });
+      ref
+          .read(tutorialBundleProvider(widget.tutorialRequest!).notifier)
+          .loadMore();
       return;
     }
 
@@ -216,10 +214,7 @@ class _LessonListContentState extends ConsumerState<_LessonListContent> {
     final lessons = widget.bundle.lessons
         .take(_visibleCount)
         .toList(growable: false);
-    final hasMore =
-        widget.bundle.hasMore || (_visibleCount < widget.bundle.lessons.length);
-    final showLoading =
-        hasMore || widget.bundle.isFetchingMore || _isLoadingMore;
+    final showLoading = widget.bundle.isFetchingMore || _isLoadingMore;
     final totalItemCount = 1 + lessons.length + (showLoading ? 1 : 0);
 
     return ListView.builder(

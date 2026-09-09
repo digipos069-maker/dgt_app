@@ -84,4 +84,67 @@ void main() {
     );
     expect(find.text('Lesson #15'), findsOneWidget);
   });
+
+  testWidgets('loading spinner is hidden when idle and when all items loaded', (
+    tester,
+  ) async {
+    final mockLessons = List.generate(
+      5,
+      (index) => LessonModel(
+        courseId: 'algebra',
+        id: 'lesson-$index',
+        title: 'Lesson #$index',
+        titleKey: 'Lesson $index',
+        type: LessonType.reading,
+        durationMinutes: 10,
+        isCompleted: false,
+      ),
+    );
+
+    final mockBundle = CourseLessonBundle(
+      courseId: 'algebra',
+      appBarTitleKey: 'Algebra',
+      titleKey: 'chapterAlgebra',
+      descriptionKey: 'lessonBundleAlgebraDescription',
+      hasMore: false,
+      isFetchingMore: false,
+      lessons: mockLessons,
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          lessonBundleProvider('algebra').overrideWith(
+            (ref) async => mockBundle,
+          ),
+        ],
+        child: const MaterialApp(
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: [Locale('en'), Locale('km')],
+          home: Scaffold(
+            body: LessonListBody(courseId: 'algebra'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    // Verify lessons are rendered
+    expect(find.text('Lesson #0'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Lesson #4'),
+      100,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Lesson #4'), findsOneWidget);
+
+    // Verify loading indicator is NOT displayed
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
 }
