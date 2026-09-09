@@ -27,22 +27,25 @@ class BillingCycleToggle extends StatelessWidget {
           color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
         ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _ToggleItem(
-            title: context.l10n.text('monthly'),
-            isSelected: selectedCycle.isMonthly,
-            onTap: () => onCycleChanged(BillingCycle.monthly),
-          ),
-          const SizedBox(width: 4),
-          _ToggleItem(
-            title: context.l10n.text('yearly'),
-            badge: context.l10n.text('savePercent'),
-            isSelected: selectedCycle.isYearly,
-            onTap: () => onCycleChanged(BillingCycle.yearly),
-          ),
-        ],
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _ToggleItem(
+              title: context.l10n.text('monthly'),
+              isSelected: selectedCycle.isMonthly,
+              onTap: () => onCycleChanged(BillingCycle.monthly),
+            ),
+            const SizedBox(width: 4),
+            _ToggleItem(
+              title: context.l10n.text('yearly'),
+              badge: context.l10n.text('savePercent'),
+              isSelected: selectedCycle.isYearly,
+              onTap: () => onCycleChanged(BillingCycle.yearly),
+            ),
+          ],
+        ),
       ),
     );
   }

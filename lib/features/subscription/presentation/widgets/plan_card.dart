@@ -113,38 +113,38 @@ class PlanCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: AppSizes.spacing16),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      plan.formattedPrice(cycle),
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: theme.colorScheme.secondary,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      cycle.isMonthly
-                          ? context.l10n.text('perMonth')
-                          : context.l10n.text('perYear'),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    if (cycle.isYearly) ...[
-                      const Spacer(),
-                      Text(
-                        '(${plan.monthlyEquivalentPrice()}${context.l10n.text('perMonth')})',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFF166534),
-                          fontWeight: FontWeight.w700,
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: plan.formattedPrice(cycle),
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          color: theme.colorScheme.secondary,
                         ),
                       ),
+                      const TextSpan(text: ' '),
+                      TextSpan(
+                        text: cycle.isMonthly
+                            ? context.l10n.text('perMonth')
+                            : context.l10n.text('perYear'),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (cycle.isYearly) ...[
+                        const TextSpan(text: '  '),
+                        TextSpan(
+                          text: '(${plan.monthlyEquivalentPrice()}${context.l10n.text('perMonth')})',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: const Color(0xFF166534),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
                 const Divider(height: 28),
                 for (final feature in plan.features) ...[
@@ -189,12 +189,17 @@ class PlanCard extends StatelessWidget {
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        '${context.l10n.text('selectPlan')} - ${plan.name}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14,
+                      Flexible(
+                        child: Text(
+                          '${context.l10n.text('selectPlan')} - ${plan.name}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 6),

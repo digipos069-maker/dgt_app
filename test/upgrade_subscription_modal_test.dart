@@ -58,17 +58,17 @@ void main() {
     expect(find.text('Monthly'), findsOneWidget);
     expect(find.text('Yearly'), findsOneWidget);
     expect(find.text('Save 20%'), findsOneWidget);
-    expect(find.text('\$89.99'), findsOneWidget); // Default Pro yearly price
+    expect(find.textContaining('\$89.99'), findsWidgets); // Pro yearly price
 
     // Toggle to Monthly
     await tester.tap(find.text('Monthly'));
     await tester.pumpAndSettle();
-    expect(find.text('\$9.99'), findsOneWidget); // Monthly Pro price
+    expect(find.textContaining('\$9.99'), findsWidgets); // Monthly Pro price
 
     // Toggle back to Yearly
     await tester.tap(find.text('Yearly'));
     await tester.pumpAndSettle();
-    expect(find.text('\$89.99'), findsOneWidget);
+    expect(find.textContaining('\$89.99'), findsWidgets);
 
     // Select Pro Plan
     final selectProButton = find.widgetWithText(ElevatedButton, 'Select Plan - Pro');
@@ -126,5 +126,50 @@ void main() {
     await tester.tap(find.text('View Payment History'));
     await tester.pumpAndSettle();
     expect(navigatedToHistory, isTrue);
+  });
+
+  testWidgets('Modal does not overflow on narrow screens', (tester) async {
+    // Test on small 320px width device screen
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    await tester.pumpWidget(
+      _buildTestApp(
+        Builder(
+          builder: (context) {
+            return Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  showUpgradeSubscriptionModal(
+                    context: context,
+                    onNavigateToPaymentHistory: () {},
+                  );
+                },
+                child: const Text('Open'),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    // Verify Step 0 (Plan selection & BillingCycleToggle) doesn't overflow
+    expect(tester.takeException(), isNull);
+
+    // Select plan to reach step 1 (Payment method)
+    final selectBasicButton = find.widgetWithText(ElevatedButton, 'Select Plan - Basic');
+    await tester.scrollUntilVisible(selectBasicButton, 100);
+    await tester.tap(selectBasicButton);
+    await tester.pumpAndSettle();
+
+    // Verify Step 1 (PaymentMethodSelector with Wrap) doesn't overflow
+    expect(tester.takeException(), isNull);
+    expect(find.text('Bank Transfer'), findsOneWidget);
+    expect(find.text('ABA / Bakong KHQR'), findsOneWidget);
   });
 }

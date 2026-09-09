@@ -339,12 +339,17 @@ class _UpgradeSubscriptionModalState extends State<UpgradeSubscriptionModal> {
           onPressed: () => _goToStep(2),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'Continue with ${context.l10n.text('bankTransfer')}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14,
+              Flexible(
+                child: Text(
+                  'Continue with ${context.l10n.text('bankTransfer')}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               const SizedBox(width: 6),
