@@ -58,9 +58,9 @@ class BankDetailsCard extends StatelessWidget {
                   color: theme.colorScheme.primary,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.account_balance_rounded,
-                  color: theme.colorScheme.onPrimary,
+                  color: Colors.white,
                   size: 24,
                 ),
               ),

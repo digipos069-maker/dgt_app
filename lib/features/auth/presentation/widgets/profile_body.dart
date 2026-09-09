@@ -105,7 +105,7 @@ class _SubscriptionInformation extends StatelessWidget {
                 key: const Key('profile_upgrade_button'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: theme.colorScheme.primary,
-                  foregroundColor: theme.colorScheme.onPrimary,
+                  foregroundColor: Colors.white,
                   minimumSize: const Size(0, 38),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 14,
@@ -117,10 +117,15 @@ class _SubscriptionInformation extends StatelessWidget {
                   elevation: 1,
                 ),
                 onPressed: onUpgrade,
-                icon: const Icon(Icons.rocket_launch_rounded, size: 16),
+                icon: const Icon(
+                  Icons.rocket_launch_rounded,
+                  size: 16,
+                  color: Colors.white,
+                ),
                 label: Text(
                   context.l10n.text('upgrade'),
                   style: const TextStyle(
+                    color: Colors.white,
                     fontWeight: FontWeight.w800,
                     fontSize: 13,
                   ),

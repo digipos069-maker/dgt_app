@@ -115,7 +115,7 @@ class SubscriptionSuccessDialog extends StatelessWidget {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
-                foregroundColor: theme.colorScheme.onPrimary,
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -128,6 +128,7 @@ class SubscriptionSuccessDialog extends StatelessWidget {
               child: Text(
                 context.l10n.text('viewPaymentHistory'),
                 style: const TextStyle(
+                  color: Colors.white,
                   fontWeight: FontWeight.w800,
                   fontSize: 14,
                 ),

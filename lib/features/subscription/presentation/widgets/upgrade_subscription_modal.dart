@@ -330,7 +330,7 @@ class _UpgradeSubscriptionModalState extends State<UpgradeSubscriptionModal> {
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: theme.colorScheme.primary,
-            foregroundColor: theme.colorScheme.onPrimary,
+            foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
@@ -345,6 +345,7 @@ class _UpgradeSubscriptionModalState extends State<UpgradeSubscriptionModal> {
                 child: Text(
                   'Continue with ${context.l10n.text('bankTransfer')}',
                   style: const TextStyle(
+                    color: Colors.white,
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
                   ),
@@ -353,7 +354,11 @@ class _UpgradeSubscriptionModalState extends State<UpgradeSubscriptionModal> {
                 ),
               ),
               const SizedBox(width: 6),
-              const Icon(Icons.arrow_forward_rounded, size: 16),
+              const Icon(
+                Icons.arrow_forward_rounded,
+                size: 16,
+                color: Colors.white,
+              ),
             ],
           ),
         ),
@@ -395,7 +400,7 @@ class _UpgradeSubscriptionModalState extends State<UpgradeSubscriptionModal> {
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: theme.colorScheme.primary,
-            foregroundColor: theme.colorScheme.onPrimary,
+            foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
@@ -414,11 +419,16 @@ class _UpgradeSubscriptionModalState extends State<UpgradeSubscriptionModal> {
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.check_circle_outline_rounded, size: 18),
+                    const Icon(
+                      Icons.check_circle_outline_rounded,
+                      size: 18,
+                      color: Colors.white,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       context.l10n.text('submitPayment'),
                       style: const TextStyle(
+                        color: Colors.white,
                         fontWeight: FontWeight.w800,
                         fontSize: 14,
                       ),

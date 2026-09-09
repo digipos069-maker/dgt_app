@@ -94,7 +94,7 @@ class _ToggleItem extends StatelessWidget {
               title,
               style: theme.textTheme.labelLarge?.copyWith(
                 color: isSelected
-                    ? theme.colorScheme.onPrimary
+                    ? Colors.white
                     : theme.colorScheme.onSurfaceVariant,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
               ),

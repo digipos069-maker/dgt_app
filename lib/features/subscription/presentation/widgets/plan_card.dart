@@ -59,8 +59,8 @@ class PlanCard extends StatelessWidget {
               child: Text(
                 context.l10n.text('mostPopular'),
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: theme.colorScheme.onPrimary,
+                style: const TextStyle(
+                  color: Colors.white,
                   fontSize: 11,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 0.5,
@@ -180,7 +180,7 @@ class PlanCard extends StatelessWidget {
                   onPressed: onSelect,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: theme.colorScheme.primary,
-                    foregroundColor: theme.colorScheme.onPrimary,
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -195,6 +195,7 @@ class PlanCard extends StatelessWidget {
                         child: Text(
                           '${context.l10n.text('selectPlan')} - ${plan.name}',
                           style: const TextStyle(
+                            color: Colors.white,
                             fontWeight: FontWeight.w800,
                             fontSize: 14,
                           ),
@@ -203,7 +204,11 @@ class PlanCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 6),
-                      const Icon(Icons.arrow_forward_rounded, size: 16),
+                      const Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 16,
+                        color: Colors.white,
+                      ),
                     ],
                   ),
                 ),

@@ -92,7 +92,7 @@ class _MethodCard extends StatelessWidget {
               child: Icon(
                 icon,
                 color: isSelected
-                    ? theme.colorScheme.onPrimary
+                    ? Colors.white
                     : theme.colorScheme.onPrimaryContainer,
                 size: 26,
               ),
