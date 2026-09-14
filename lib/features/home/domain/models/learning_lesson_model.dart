@@ -1,3 +1,6 @@
+export 'lesson_track.dart';
+import 'lesson_track.dart';
+
 class LearningLessonModel {
   const LearningLessonModel({
     required this.id,
@@ -10,6 +13,7 @@ class LearningLessonModel {
     required this.rating,
     required this.learnerCount,
     required this.isLocked,
+    this.trackType,
   });
 
   factory LearningLessonModel.fromJson(Object? value) {
@@ -57,6 +61,9 @@ class LearningLessonModel {
           _readInt(value['enrolledCount']) ??
           0,
       isLocked: value['isLocked'] == true || value['locked'] == true,
+      trackType:
+          _readInt(value['track_type']) ??
+          _readInt(value['trackType']),
     );
   }
 
@@ -70,6 +77,9 @@ class LearningLessonModel {
   final double rating;
   final int learnerCount;
   final bool isLocked;
+  final int? trackType;
+
+  LessonTrack? get track => LessonTrack.fromId(trackType);
 
   static String _readString(Map<String, dynamic> json, List<String> keys) {
     for (final key in keys) {

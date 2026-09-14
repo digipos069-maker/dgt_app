@@ -9,6 +9,8 @@ import '../../../../theme/app_colors.dart';
 import '../../application/learning_lesson_controller.dart';
 import '../../domain/models/learning_lesson_model.dart';
 import '../pages/lesson_list_page.dart';
+import 'lesson_track_badge.dart';
+import 'lesson_track_filter_strip.dart';
 
 class LearningCenterBody extends ConsumerStatefulWidget {
   const LearningCenterBody({
@@ -314,7 +316,7 @@ class _SubjectCategoryCard extends StatelessWidget {
   }
 }
 
-class _LessonResults extends StatelessWidget {
+class _LessonResults extends StatefulWidget {
   const _LessonResults({
     required this.lessonsState,
     required this.gradeId,
@@ -330,13 +332,20 @@ class _LessonResults extends StatelessWidget {
   final VoidCallback onRetry;
 
   @override
+  State<_LessonResults> createState() => _LessonResultsState();
+}
+
+class _LessonResultsState extends State<_LessonResults> {
+  int? _selectedTrack;
+
+  @override
   Widget build(BuildContext context) {
-    return lessonsState.when(
+    return widget.lessonsState.when(
       loading: () => const Padding(
         padding: EdgeInsets.symmetric(vertical: 48),
         child: Center(child: CircularProgressIndicator()),
       ),
-      error: (_, _) => _LessonsError(onRetry: onRetry),
+      error: (_, _) => _LessonsError(onRetry: widget.onRetry),
       data: (bundle) {
         if (bundle.lessons.isEmpty) return const _EmptyLessons();
         return _buildLessonCards(bundle);
@@ -345,21 +354,66 @@ class _LessonResults extends StatelessWidget {
   }
 
   Widget _buildLessonCards(LearningLessonBundle bundle) {
-    final lessons = bundle.lessons;
+    final availableTracks = bundle.lessons
+        .map((l) => l.trackType)
+        .whereType<int>()
+        .toSet();
+
+    final filteredLessons = _selectedTrack == null
+        ? bundle.lessons
+        : bundle.lessons
+            .where((l) => l.trackType == _selectedTrack)
+            .toList(growable: false);
+
     final showLoading = bundle.isFetchingMore;
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (var index = 0; index < lessons.length; index++) ...[
-          _LessonCard(
-            lesson: lessons[index],
-            gradeId: gradeId,
-            gradeNumber: gradeNumber,
-            subjectId: subjectId,
-            usePrimaryStyle: index.isEven,
+        if (availableTracks.isNotEmpty) ...[
+          LessonTrackFilterStrip(
+            selectedTrack: _selectedTrack,
+            availableTracks: availableTracks,
+            onTrackSelected: (track) {
+              setState(() => _selectedTrack = track);
+            },
           ),
           const SizedBox(height: AppSizes.spacing24),
         ],
+        if (filteredLessons.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSizes.spacing32),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.filter_list_off_outlined,
+                    size: 40,
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+                  const SizedBox(height: AppSizes.spacing8),
+                  Text(
+                    'មិនមានមេរៀនសម្រាប់ ${LessonTrackConstants.getTrackName(_selectedTrack) ?? ''} នៅឡើយទេ',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          for (var index = 0; index < filteredLessons.length; index++) ...[
+            _LessonCard(
+              lesson: filteredLessons[index],
+              gradeId: widget.gradeId,
+              gradeNumber: widget.gradeNumber,
+              subjectId: widget.subjectId,
+              usePrimaryStyle: index.isEven,
+            ),
+            const SizedBox(height: AppSizes.spacing24),
+          ],
         if (showLoading)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: AppSizes.spacing24),
@@ -464,13 +518,12 @@ class _LessonCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         _LessonIcon(subjectId: subjectId),
                         const Spacer(),
-                        _RatingBadge(
-                          rating: lesson.rating > 0 ? lesson.rating : 4.8,
-                        ),
+                        if (lesson.trackType != null)
+                          LessonTrackBadge(trackType: lesson.trackType),
                       ],
                     ),
                     const SizedBox(height: AppSizes.spacing20),
@@ -544,34 +597,6 @@ class _LessonIcon extends StatelessWidget {
         _subjectIcon(subjectId),
         color: AppColors.secondary,
         size: 28,
-      ),
-    );
-  }
-}
-
-class _RatingBadge extends StatelessWidget {
-  const _RatingBadge({required this.rating});
-
-  final double rating;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.82),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.star, size: 16),
-          const SizedBox(width: 4),
-          Text(
-            rating.toStringAsFixed(1),
-            style: const TextStyle(fontWeight: FontWeight.w900),
-          ),
-        ],
       ),
     );
   }
