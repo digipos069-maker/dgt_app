@@ -1,5 +1,18 @@
+import 'package:flutter/foundation.dart';
+
 abstract final class ApiConstants {
-  static const baseUrl = 'http://192.168.56.1:3002';
+  static const productionBaseUrl = 'https://api.digital-teachers.com';
+  static const localBaseUrl = 'http://192.168.56.1:3002';
+
+  /// Base URL configured automatically:
+  /// - `flutter run` (debug mode): `http://192.168.56.1:3002`
+  /// - `flutter build` (release / production mode): `https://api.digital-teachers.com`
+  /// - Can also be overridden at build/run time via:
+  ///   `--dart-define=API_BASE_URL=https://...`
+  static const baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: kDebugMode ? localBaseUrl : productionBaseUrl,
+  );
   static const loginPath = '/api/auth/login';
   static const registerPath = '/api/auth/register';
   static const currentUserPath = '/api/auth/me';
