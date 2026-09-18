@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 class MockResourceApiService extends ResourceApiService {
   @override
-  Future<List<ExamResourceModel>> fetchExamTypes({required String token}) async {
+  Future<List<ExamResourceModel>> fetchExamTypes({String? token}) async {
     return [
       const ExamResourceModel(
         id: 'bac-ii',
