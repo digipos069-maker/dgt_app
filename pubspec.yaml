@@ -22,6 +22,7 @@ dependencies:
   http: ^1.6.0
   google_fonts: ^8.1.0
   video_player: ^2.10.0
+  syncfusion_flutter_pdfviewer: ^34.2.8
   firebase_core: ^4.12.1
   firebase_messaging: ^16.4.3
 

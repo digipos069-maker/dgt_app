@@ -123,6 +123,8 @@ class AppLocalizations {
       'resourcePageOf': 'Page {current} of {total}',
       'resourceVideoLoadFailed':
           'The video could not be loaded. Check your connection and try again.',
+      'resourcePdfLoadFailed':
+          'The PDF document could not be loaded. Check your connection and try again.',
       'profileTitle': 'Profile',
       'profileLearner': 'DGT Learner',
       'personalInformation': 'Personal information',
@@ -422,6 +424,8 @@ class AppLocalizations {
       'resourcePageOf': 'ទំព័រ {current} នៃ {total}',
       'resourceVideoLoadFailed':
           'មិនអាចទាញយកវីដេអូបានទេ។ សូមពិនិត្យការតភ្ជាប់ ហើយព្យាយាមម្ដងទៀត។',
+      'resourcePdfLoadFailed':
+          'មិនអាចទាញយកឯកសារ PDF បានទេ។ សូមពិនិត្យការតភ្ជាប់ ហើយព្យាយាមម្ដងទៀត។',
       'profileTitle': 'គណនី',
       'profileLearner': 'សិស្ស DGT',
       'personalInformation': 'ព័ត៌មានផ្ទាល់ខ្លួន',

@@ -1,7 +1,10 @@
+import 'dart:developer' as developer;
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
+import '../../../../core/constants/api_constants.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../domain/models/resource_document_model.dart';
@@ -16,42 +19,75 @@ class ResourcePdfViewer extends StatefulWidget {
 }
 
 class _ResourcePdfViewerState extends State<ResourcePdfViewer> {
-  final TransformationController _transformationController =
-      TransformationController();
+  late PdfViewerController _pdfViewerController;
+  Key _pdfViewerKey = UniqueKey();
   int _currentPage = 1;
-  double _scale = 1;
+  int _pageCount = 1;
+  double _scale = 1.0;
+  bool _isLoading = true;
+  bool _hasError = false;
 
-  int get _pageCount => math.max(widget.document.pageCount, 1);
+  @override
+  void initState() {
+    super.initState();
+    _pdfViewerController = PdfViewerController();
+    _pageCount = math.max(widget.document.pageCount, 1);
+  }
+
+  @override
+  void didUpdateWidget(covariant ResourcePdfViewer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.document.sourceUrl != widget.document.sourceUrl) {
+      _retry();
+    }
+  }
 
   @override
   void dispose() {
-    _transformationController.dispose();
+    _pdfViewerController.dispose();
     super.dispose();
   }
 
-  void _changePage(int page) {
-    setState(() => _currentPage = page.clamp(1, _pageCount));
-    _resetZoom();
+  void _retry() {
+    setState(() {
+      _hasError = false;
+      _isLoading = true;
+      _currentPage = 1;
+      _scale = 1.0;
+      _pdfViewerKey = UniqueKey();
+    });
   }
 
-  void _changeScale(double scale) {
-    final nextScale = scale.clamp(0.8, 2.5);
+  String? _resolvePdfUrl() {
+    final raw = widget.document.sourceUrl.trim();
+    if (raw.isEmpty) return null;
+    final resolved = raw.startsWith('/') ? '${ApiConstants.baseUrl}$raw' : raw;
+    final uri = Uri.tryParse(resolved);
+    if (uri == null || !uri.hasScheme) return null;
+    return resolved;
+  }
+
+  void _zoomIn() {
+    final nextScale = (_pdfViewerController.zoomLevel + 0.25).clamp(1.0, 3.0);
+    _pdfViewerController.zoomLevel = nextScale;
     setState(() => _scale = nextScale);
-    _transformationController.value = Matrix4.diagonal3Values(
-      nextScale,
-      nextScale,
-      1,
-    );
+  }
+
+  void _zoomOut() {
+    final nextScale = (_pdfViewerController.zoomLevel - 0.25).clamp(1.0, 3.0);
+    _pdfViewerController.zoomLevel = nextScale;
+    setState(() => _scale = nextScale);
   }
 
   void _resetZoom() {
-    setState(() => _scale = 1);
-    _transformationController.value = Matrix4.identity();
+    _pdfViewerController.zoomLevel = 1.0;
+    setState(() => _scale = 1.0);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final resolvedUrl = _resolvePdfUrl();
 
     return Container(
       decoration: BoxDecoration(
@@ -66,47 +102,89 @@ class _ResourcePdfViewerState extends State<ResourcePdfViewer> {
       child: Column(
         children: [
           _PdfToolbar(
-            currentPage: _currentPage,
-            pageCount: _pageCount,
             scale: _scale,
-            onZoomOut: () => _changeScale(_scale - 0.2),
-            onZoomIn: () => _changeScale(_scale + 0.2),
-            onReset: _resetZoom,
+            onZoomOut: (!_hasError && _scale > 1.0) ? _zoomOut : null,
+            onZoomIn: (!_hasError && _scale < 3.0) ? _zoomIn : null,
+            onReset:
+                (!_hasError && (_scale - 1.0).abs() > 0.01) ? _resetZoom : null,
           ),
           Container(
             height: 560,
             color: const Color(0xFF29313D),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final pageWidth = math.min(constraints.maxWidth - 40, 390.0);
-
-                return InteractiveViewer(
-                  transformationController: _transformationController,
-                  minScale: 0.8,
-                  maxScale: 2.5,
-                  boundaryMargin: const EdgeInsets.all(80),
-                  child: Center(
-                    child: SizedBox(
-                      width: pageWidth,
-                      height: pageWidth * 1.414,
-                      child: _PdfPagePreview(
-                        document: widget.document,
-                        page: _currentPage,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                if (resolvedUrl != null && !_hasError)
+                  Positioned.fill(
+                    child: ClipRect(
+                      child: SfPdfViewer.network(
+                        resolvedUrl,
+                        key: _pdfViewerKey,
+                        controller: _pdfViewerController,
+                        canShowScrollHead: false,
+                        canShowScrollStatus: false,
+                        canShowPaginationDialog: false,
+                        canShowPageLoadingIndicator: false,
+                        onDocumentLoaded: (PdfDocumentLoadedDetails details) {
+                          if (mounted) {
+                            setState(() {
+                              _isLoading = false;
+                              _pageCount = math.max(
+                                details.document.pages.count,
+                                1,
+                              );
+                            });
+                          }
+                        },
+                        onDocumentLoadFailed:
+                            (PdfDocumentLoadFailedDetails details) {
+                              developer.log(
+                                'Failed to load PDF from $resolvedUrl: ${details.error} - ${details.description}',
+                                name: 'dgt.pdf',
+                              );
+                              if (mounted) {
+                                setState(() {
+                                  _isLoading = false;
+                                  _hasError = true;
+                                });
+                              }
+                            },
+                        onPageChanged: (PdfPageChangedDetails details) {
+                          if (mounted) {
+                            setState(() {
+                              _currentPage = details.newPageNumber;
+                            });
+                          }
+                        },
+                        onZoomLevelChanged: (PdfZoomDetails details) {
+                          if (mounted) {
+                            setState(() {
+                              _scale = details.newZoomLevel;
+                            });
+                          }
+                        },
                       ),
                     ),
                   ),
-                );
-              },
+                if (_isLoading && !_hasError && resolvedUrl != null)
+                  const Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                if (_hasError || resolvedUrl == null)
+                  _PdfError(onRetry: _retry),
+              ],
             ),
           ),
           _PdfPageControls(
             currentPage: _currentPage,
             pageCount: _pageCount,
-            onPrevious: _currentPage > 1
-                ? () => _changePage(_currentPage - 1)
+            onPrevious: (!_hasError && _currentPage > 1)
+                ? () => _pdfViewerController.previousPage()
                 : null,
-            onNext: _currentPage < _pageCount
-                ? () => _changePage(_currentPage + 1)
+            onNext: (!_hasError && _currentPage < _pageCount)
+                ? () => _pdfViewerController.nextPage()
                 : null,
           ),
         ],
@@ -117,20 +195,16 @@ class _ResourcePdfViewerState extends State<ResourcePdfViewer> {
 
 class _PdfToolbar extends StatelessWidget {
   const _PdfToolbar({
-    required this.currentPage,
-    required this.pageCount,
     required this.scale,
     required this.onZoomOut,
     required this.onZoomIn,
     required this.onReset,
   });
 
-  final int currentPage;
-  final int pageCount;
   final double scale;
-  final VoidCallback onZoomOut;
-  final VoidCallback onZoomIn;
-  final VoidCallback onReset;
+  final VoidCallback? onZoomOut;
+  final VoidCallback? onZoomIn;
+  final VoidCallback? onReset;
 
   @override
   Widget build(BuildContext context) {
@@ -181,90 +255,6 @@ class _PdfToolbar extends StatelessWidget {
   }
 }
 
-class _PdfPagePreview extends StatelessWidget {
-  const _PdfPagePreview({required this.document, required this.page});
-
-  final ResourceDocumentModel document;
-  final int page;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Material(
-      color: Colors.white,
-      elevation: 10,
-      child: Padding(
-        padding: const EdgeInsets.all(AppSizes.spacing24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.school_outlined, color: theme.colorScheme.primary),
-                const SizedBox(width: AppSizes.spacing8),
-                Expanded(
-                  child: Text(
-                    document.subjectName,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: theme.colorScheme.secondary,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-                Text(
-                  '${document.year}',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-            const Divider(height: AppSizes.spacing32),
-            Text(
-              document.title,
-              style: theme.textTheme.titleLarge?.copyWith(
-                color: theme.colorScheme.secondary,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: AppSizes.spacing12),
-            Text(
-              document.description,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: AppSizes.spacing24),
-            for (var index = 0; index < 7; index++) ...[
-              Container(
-                width: index.isEven ? double.infinity : 230,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE5E8EC),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
-              const SizedBox(height: AppSizes.spacing12),
-            ],
-            const Spacer(),
-            Align(
-              alignment: Alignment.center,
-              child: Text(
-                '$page',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _PdfPageControls extends StatelessWidget {
   const _PdfPageControls({
     required this.currentPage,
@@ -287,7 +277,15 @@ class _PdfPageControls extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          IconButton.filledTonal(
+          IconButton.filled(
+            style: IconButton.styleFrom(
+              backgroundColor: const Color(0xFF032EA1),
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: const Color(
+                0xFF032EA1,
+              ).withValues(alpha: 0.38),
+              disabledForegroundColor: Colors.white38,
+            ),
             onPressed: onPrevious,
             icon: const Icon(Icons.chevron_left),
           ),
@@ -303,11 +301,62 @@ class _PdfPageControls extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSizes.spacing16),
-          IconButton.filledTonal(
+          IconButton.filled(
+            style: IconButton.styleFrom(
+              backgroundColor: const Color(0xFF032EA1),
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: const Color(
+                0xFF032EA1,
+              ).withValues(alpha: 0.38),
+              disabledForegroundColor: Colors.white38,
+            ),
             onPressed: onNext,
             icon: const Icon(Icons.chevron_right),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PdfError extends StatelessWidget {
+  const _PdfError({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSizes.spacing24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.picture_as_pdf_outlined,
+              color: Colors.white70,
+              size: 48,
+            ),
+            const SizedBox(height: AppSizes.spacing12),
+            Text(
+              context.l10n.text('resourcePdfLoadFailed'),
+              textAlign: TextAlign.center,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.white),
+            ),
+            const SizedBox(height: AppSizes.spacing16),
+            FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF032EA1),
+                foregroundColor: Colors.white,
+              ),
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh, size: 18),
+              label: Text(context.l10n.text('retry')),
+            ),
+          ],
+        ),
       ),
     );
   }
