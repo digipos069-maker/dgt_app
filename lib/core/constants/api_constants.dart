@@ -27,6 +27,9 @@ abstract final class ApiConstants {
   static const videoCompletionPath = '/api/video/complete';
   static const examsTypesPath = '/api/exams/types';
   static const examsDocumentsPath = '/api/exams/documents';
+  static const mobileResourceByYearPath = '/api/m/resource-by-year';
+  static const mobileResourcesPath = '/api/m/resources';
+  static const mobileResourceListPath = '/api/m/resource-list';
   static const uploadPayslipPath = '/api/payment/upload-payslip';
   static const bankTransferPaymentPath = '/api/payment/bank-transfer';
   static const upgradeSubscriptionPath = '/api/upgrade-subscription';

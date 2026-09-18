@@ -14,7 +14,6 @@ final examResourcesProvider = FutureProvider.autoDispose
         _ => null,
       };
       final token = user?.token;
-      if (token == null || token.isEmpty) throw Exception('Unauthorized');
 
       return await ref
           .watch(resourceRepositoryProvider)
@@ -48,7 +47,6 @@ final resourceYearsProvider = FutureProvider.autoDispose
         _ => null,
       };
       final token = user?.token;
-      if (token == null || token.isEmpty) throw Exception('Unauthorized');
 
       return await ref
           .watch(resourceRepositoryProvider)
@@ -65,12 +63,14 @@ class ResourcesByYearRequest {
     required this.year,
     required this.languageCode,
     this.subjectId,
+    this.search,
   });
 
   final String examId;
   final int year;
   final String languageCode;
   final String? subjectId;
+  final String? search;
 
   @override
   bool operator ==(Object other) =>
@@ -78,10 +78,11 @@ class ResourcesByYearRequest {
       other.examId == examId &&
       other.year == year &&
       other.languageCode == languageCode &&
-      other.subjectId == subjectId;
+      other.subjectId == subjectId &&
+      other.search == search;
 
   @override
-  int get hashCode => Object.hash(examId, year, languageCode, subjectId);
+  int get hashCode => Object.hash(examId, year, languageCode, subjectId, search);
 }
 
 class ResourcesByYearNotifier extends AsyncNotifier<ResourceDocumentBundle> {
@@ -101,7 +102,6 @@ class ResourcesByYearNotifier extends AsyncNotifier<ResourceDocumentBundle> {
       _ => null,
     };
     final token = user?.token;
-    if (token == null || token.isEmpty) throw Exception('Unauthorized');
 
     return await ref.read(resourceRepositoryProvider).fetchResourcesByYear(
       token: token,
@@ -109,6 +109,7 @@ class ResourcesByYearNotifier extends AsyncNotifier<ResourceDocumentBundle> {
       year: arg.year,
       languageCode: arg.languageCode,
       subjectId: arg.subjectId,
+      search: arg.search,
       page: page,
     );
   }
@@ -140,7 +141,7 @@ class ResourcesByYearNotifier extends AsyncNotifier<ResourceDocumentBundle> {
         hasMore: newBundle.hasMore,
         isFetchingMore: false,
       ));
-    } catch (e, st) {
+    } catch (_) {
       state = AsyncData(currentBundle.copyWith(isFetchingMore: false)); // Revert fetching state
       // We don't throw to avoid wiping out the existing list, but ideally we'd show a snackbar
     }

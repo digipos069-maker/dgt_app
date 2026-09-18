@@ -16,45 +16,91 @@ class ResourceRepository {
   final ResourceApiService apiService;
 
   Future<List<ExamResourceModel>> fetchResources({
-    required String token,
+    String? token,
     required String languageCode,
   }) async {
-    final apiResources = await apiService.fetchExamTypes(token: token);
-    
-    final isKhmer = languageCode == 'km';
-    final staticResources = [
-      ExamResourceModel(
-        id: 'outstanding-student',
-        examName: isKhmer ? 'ប្រលងសិស្សពូកែ' : 'Outstanding Student Exam',
-        icon: 'trophy',
-        shortDescription: isKhmer ? 'វិញ្ញាសាប្រឡងសិស្សពូកែថ្នាក់ជាតិ' : 'National outstanding student exams',
-      ),
-      ExamResourceModel(
-        id: 'study-document',
-        examName: isKhmer ? 'ឯកសារសិក្សា' : 'Document for study',
-        icon: 'book',
-        shortDescription: isKhmer ? 'ឯកសារមេរៀន និងលំហាត់សម្រាប់សិក្សា' : 'Study materials and exercises',
-      ),
-    ];
+    try {
+      final apiResources = await apiService.fetchExamTypes(token: token);
+      if (apiResources.isNotEmpty) {
+        return apiResources;
+      }
+    } catch (_) {}
 
-    return [...apiResources, ...staticResources];
+    // Fallback to /api/m/resource-by-year examTypes
+    try {
+      final breakdownJson = await apiService.fetchResourceByYear(token: token);
+      final rawExamTypes = (breakdownJson['examTypes'] ?? breakdownJson['data']) as List<dynamic>? ?? [];
+      if (rawExamTypes.isNotEmpty) {
+        return rawExamTypes
+            .whereType<Map<String, dynamic>>()
+            .map(ExamResourceModel.fromJson)
+            .toList();
+      }
+    } catch (_) {}
+
+    final isKhmer = languageCode == 'km';
+    final mockList = isKhmer ? _khmerMockData : _englishMockData;
+    return mockList.map((e) => ExamResourceModel.fromJson(e)).toList();
   }
 
   Future<ResourceYearBundle> fetchResourceYears({
-    required String token,
+    String? token,
     required String examId,
     required String languageCode,
   }) async {
     final resources = await fetchResources(token: token, languageCode: languageCode);
     final exam = _findExam(resources, examId);
+    final parsedExamId = int.tryParse(examId);
 
+    try {
+      final json = await apiService.fetchResourceByYear(token: token);
+      final rawYears = (json['years'] ?? json['data']) as List<dynamic>? ?? [];
+
+      if (rawYears.isNotEmpty) {
+        final years = <ResourceYearModel>[];
+
+        for (final item in rawYears) {
+          if (item is! Map<String, dynamic>) continue;
+          final yearNum = item['year'] as int? ?? int.tryParse('${item['year']}') ?? 0;
+          if (yearNum == 0) continue;
+
+          int count = 0;
+          final examTypes = (item['examTypes'] ?? item['data']) as List<dynamic>? ?? [];
+          if (parsedExamId != null) {
+            for (final et in examTypes) {
+              if (et is Map<String, dynamic>) {
+                final etId = et['id'] as int? ?? int.tryParse('${et['id']}');
+                if (etId == parsedExamId) {
+                  count = et['total'] as int? ??
+                      et['totalDocuments'] as int? ??
+                      int.tryParse('${et['total'] ?? et['totalDocuments']}') ??
+                      0;
+                  break;
+                }
+              }
+            }
+          } else {
+            count = item['total'] as int? ?? int.tryParse('${item['total']}') ?? 0;
+          }
+
+          years.add(ResourceYearModel(year: yearNum, resourceCount: count));
+        }
+
+        if (years.isNotEmpty) {
+          years.sort((a, b) => b.year.compareTo(a.year));
+          return ResourceYearBundle(exam: exam, years: years);
+        }
+      }
+    } catch (_) {}
+
+    // Fallback if network is offline or no years returned
     return ResourceYearBundle(
       exam: exam,
       years: List<ResourceYearModel>.generate(
-        (DateTime.now().year - 2009), // Generates years down to 2010
+        (DateTime.now().year - 2014),
         (index) => ResourceYearModel(
           year: DateTime.now().year - index,
-          resourceCount: 12 - (index % 7),
+          resourceCount: 0,
         ),
         growable: false,
       ),
@@ -62,53 +108,55 @@ class ResourceRepository {
   }
 
   Future<ResourceDocumentBundle> fetchResourcesByYear({
-    required String token,
+    String? token,
     required String examId,
     required int year,
     required String languageCode,
     String? subjectId,
+    String? search,
     int page = 1,
+    int limit = 10,
   }) async {
     final resources = await fetchResources(token: token, languageCode: languageCode);
     final exam = _findExam(resources, examId);
-    
-    // For static exam types that don't exist in backend DB, we might want to map their IDs
-    // But since user's API returns `examType: { id: 4, name: ... }`, we assume examId maps directly 
-    // to examTypeId, unless it's a string like 'study-document'. If it's a non-numeric string, 
-    // we just pass it to API (API might handle slug or we return empty if error).
-    
-    final jsonResponse = await apiService.fetchDocuments(
+    final parsedExamId = int.tryParse(examId);
+    final parsedSubjectId = subjectId != null ? int.tryParse(subjectId) : null;
+
+    final jsonResponse = await apiService.fetchMobileResources(
       token: token,
-      examTypeId: examId,
       year: year,
-      subjectId: subjectId,
+      examTypeId: parsedExamId,
+      subjectId: parsedSubjectId,
+      search: search,
       page: page,
-      limit: 10,
+      limit: limit,
     );
 
     final data = jsonResponse['data'] as List<dynamic>? ?? [];
-    final meta = jsonResponse['meta'] as Map<String, dynamic>? ?? {};
-    
-    final documents = data.map((e) => ResourceDocumentModel.fromJson(e as Map<String, dynamic>)).toList();
-    
+    final metaJson = jsonResponse['meta'] as Map<String, dynamic>?;
+    final meta = ResourcePaginationMeta.fromJson(metaJson);
+
+    final documents = data
+        .whereType<Map<String, dynamic>>()
+        .map(ResourceDocumentModel.fromJson)
+        .toList();
+
     final subjectsSet = <String>{};
     final subjects = <ResourceSubjectModel>[];
     for (final doc in documents) {
-      if (subjectsSet.add(doc.subjectId)) {
+      if (doc.subjectId.isNotEmpty && subjectsSet.add(doc.subjectId)) {
         subjects.add(ResourceSubjectModel(id: doc.subjectId, name: doc.subjectName));
       }
     }
-
-    final totalPages = meta['totalPages'] as int? ?? 1;
-    final hasMore = page < totalPages;
 
     return ResourceDocumentBundle(
       exam: exam,
       year: year,
       subjects: subjects,
       documents: documents,
-      page: page,
-      hasMore: hasMore,
+      page: meta.page,
+      hasMore: meta.hasNextPage,
+      meta: meta,
     );
   }
 
@@ -118,7 +166,12 @@ class ResourceRepository {
   ) {
     return resources.firstWhere(
       (resource) => resource.id == examId,
-      orElse: () => throw StateError('Unknown exam resource: $examId'),
+      orElse: () => ExamResourceModel(
+        id: examId,
+        examName: 'Exam $examId',
+        icon: 'exam',
+        shortDescription: '',
+      ),
     );
   }
 
