@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -15,29 +16,75 @@ class AuthApiService {
     required String password,
   }) async {
     final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.loginPath}');
-    final response = await _client
-        .post(
-          uri,
-          headers: const {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: jsonEncode({
-            if (email.contains('@')) 'email': email else 'phone': email,
-            'password': password,
-          }),
-        )
-        .timeout(const Duration(seconds: 15));
-    final jsonBody = _decodeBody(response.body);
+    final response = await _sendLoginRequest(uri, email, password);
+    final jsonBody = _decodeLoginResponse(response);
 
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw AppException(_readMessage(jsonBody) ?? 'Login failed');
-    }
-    if (jsonBody['success'] == false) {
-      throw AppException(_readMessage(jsonBody) ?? 'Login failed');
+    if (response.statusCode < 200 ||
+        response.statusCode >= 300 ||
+        jsonBody['success'] == false) {
+      throw AppException(
+        _readMessage(jsonBody) ?? _loginFailureMessage(response.statusCode),
+        statusCode: response.statusCode,
+      );
     }
 
     return jsonBody;
+  }
+
+  Future<http.Response> _sendLoginRequest(
+    Uri uri,
+    String email,
+    String password,
+  ) async {
+    try {
+      return await _client
+          .post(
+            uri,
+            headers: const {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              if (email.contains('@')) 'email': email else 'phone': email,
+              'password': password,
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
+    } on TimeoutException {
+      throw const AppException(
+        'The login server took too long to respond. Please try again.',
+      );
+    } on http.ClientException {
+      throw const AppException(
+        'Cannot connect to the login server. Check your connection and try again.',
+      );
+    }
+  }
+
+  Map<String, dynamic> _decodeLoginResponse(http.Response response) {
+    try {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map<String, dynamic>) return decoded;
+    } on FormatException {
+      // Proxies and security gateways can return HTML instead of API JSON.
+    }
+
+    throw AppException(
+      response.statusCode < 200 || response.statusCode >= 300
+          ? _loginFailureMessage(response.statusCode)
+          : 'The login server returned an invalid response. Please try again later.',
+      statusCode: response.statusCode,
+    );
+  }
+
+  String _loginFailureMessage(int statusCode) {
+    return switch (statusCode) {
+      401 => 'The email, phone number, or password is incorrect.',
+      403 => 'Access to the login server was denied. Please contact support.',
+      429 => 'Too many login attempts. Please wait before trying again.',
+      >= 500 => 'The login server is unavailable. Please try again later.',
+      _ => 'Login failed. Please try again or contact support.',
+    };
   }
 
   Future<Map<String, dynamic>> register({
