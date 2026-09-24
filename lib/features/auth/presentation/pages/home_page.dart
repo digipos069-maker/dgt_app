@@ -423,13 +423,11 @@ class _SubjectGrid extends StatelessWidget {
     _SubjectItem('homeSubjectMath', Icons.calculate, _HomeColors.secondary),
     _SubjectItem('homeSubjectChemistry', Icons.science, _HomeColors.primary),
     _SubjectItem('homeSubjectBiology', Icons.biotech, _HomeColors.secondary),
-    _SubjectItem('homeSubjectHistory', Icons.history_edu, _HomeColors.primary),
     _SubjectItem(
       'homeSubjectPhysics',
       Icons.rocket_launch,
       _HomeColors.secondary,
     ),
-    _SubjectItem('homeSubjectKhmer', Icons.menu_book, _HomeColors.primary),
   ];
 
   @override
