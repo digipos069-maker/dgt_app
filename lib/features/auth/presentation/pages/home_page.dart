@@ -11,6 +11,7 @@ import '../../../../theme/app_colors.dart';
 import '../../../home/presentation/widgets/main_bottom_navigation.dart';
 import '../../../home/application/daily_goal_controller.dart';
 import '../../application/auth_controller.dart';
+import '../widgets/home_subject_grid.dart';
 import 'profile_page.dart';
 
 class HomePage extends ConsumerWidget {
@@ -158,7 +159,7 @@ class _LearningColumn extends StatelessWidget {
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: AppSizes.spacing16),
-        const _SubjectGrid(),
+        const HomeSubjectGrid(),
         const SizedBox(height: AppSizes.spacing32),
         Text(
           context.l10n.text('homeRecommendedLessons'),
@@ -412,94 +413,6 @@ class _LinearProgressSummary extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _SubjectGrid extends StatelessWidget {
-  const _SubjectGrid();
-
-  static const _subjects = [
-    _SubjectItem('homeSubjectMath', Icons.calculate, _HomeColors.secondary),
-    _SubjectItem('homeSubjectChemistry', Icons.science, _HomeColors.primary),
-    _SubjectItem('homeSubjectBiology', Icons.biotech, _HomeColors.secondary),
-    _SubjectItem(
-      'homeSubjectPhysics',
-      Icons.rocket_launch,
-      _HomeColors.secondary,
-    ),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    final columns = width >= 920 ? 4 : 2;
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: _subjects.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: columns,
-        crossAxisSpacing: AppSizes.spacing16,
-        mainAxisSpacing: AppSizes.spacing16,
-        childAspectRatio: width >= 620 ? 1.05 : 1.15,
-      ),
-      itemBuilder: (context, index) => _SubjectTile(subject: _subjects[index]),
-    );
-  }
-}
-
-class _SubjectTile extends StatelessWidget {
-  const _SubjectTile({required this.subject});
-
-  final _SubjectItem subject;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Material(
-      color: subject.color.withValues(alpha: 0.12),
-      borderRadius: BorderRadius.circular(24),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(24),
-        onTap: () {},
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: subject.color.withValues(alpha: 0.22),
-              width: 2,
-            ),
-          ),
-          padding: const EdgeInsets.all(AppSizes.spacing16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: subject.color.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(subject.icon, color: subject.color, size: 30),
-              ),
-              const SizedBox(height: AppSizes.spacing12),
-              Text(
-                context.l10n.text(subject.titleKey),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
@@ -1046,14 +959,6 @@ class _ArtworkCircle extends StatelessWidget {
       ),
     );
   }
-}
-
-class _SubjectItem {
-  const _SubjectItem(this.titleKey, this.icon, this.color);
-
-  final String titleKey;
-  final IconData icon;
-  final Color color;
 }
 
 class _LessonItem {
