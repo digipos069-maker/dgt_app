@@ -6,9 +6,7 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../../home/presentation/widgets/main_bottom_navigation.dart';
 import '../../application/profile_controller.dart';
-import '../widgets/language_menu_button.dart';
 import '../widgets/payment_history_body.dart';
-import '../widgets/theme_toggle_button.dart';
 import 'profile_page.dart';
 
 class PaymentHistoryPage extends ConsumerWidget {
@@ -28,11 +26,6 @@ class PaymentHistoryPage extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back),
         ),
         title: Text(context.l10n.text('paymentHistory')),
-        actions: const [
-          LanguageMenuButton(),
-          ThemeToggleButton(),
-          SizedBox(width: AppSizes.spacing8),
-        ],
       ),
       body: profileState.when(
         data: (user) => PaymentHistoryBody(

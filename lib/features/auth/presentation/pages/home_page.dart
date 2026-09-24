@@ -11,8 +11,6 @@ import '../../../../theme/app_colors.dart';
 import '../../../home/presentation/widgets/main_bottom_navigation.dart';
 import '../../../home/application/daily_goal_controller.dart';
 import '../../application/auth_controller.dart';
-import '../widgets/language_menu_button.dart';
-import '../widgets/theme_toggle_button.dart';
 import 'profile_page.dart';
 
 class HomePage extends ConsumerWidget {
@@ -41,8 +39,6 @@ class HomePage extends ConsumerWidget {
           titleSpacing: AppSizes.spacing16,
           title: Image.asset(AppAssets.logo, height: 40, fit: BoxFit.contain),
           actions: [
-            const LanguageMenuButton(),
-            const ThemeToggleButton(),
             IconButton(
               tooltip: l10n.text('profileTitle'),
               onPressed: () => context.goNamed(ProfilePage.routeName),
@@ -92,10 +88,9 @@ class _HomeDashboardContent extends StatelessWidget {
     const horizontalPadding = 10.0;
 
     return ScrollConfiguration(
-      behavior: ScrollConfiguration.of(context).copyWith(
-        overscroll: false,
-        physics: const ClampingScrollPhysics(),
-      ),
+      behavior: ScrollConfiguration.of(
+        context,
+      ).copyWith(overscroll: false, physics: const ClampingScrollPhysics()),
       child: SingleChildScrollView(
         physics: const ClampingScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(
@@ -105,38 +100,38 @@ class _HomeDashboardContent extends StatelessWidget {
           AppSizes.pageBottomPadding,
         ),
         child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1280),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _WelcomeSummary(username: username),
-              const SizedBox(height: AppSizes.spacing24),
-              if (isWide)
-                const Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(flex: 8, child: _LearningColumn()),
-                    SizedBox(width: AppSizes.spacing32),
-                    Expanded(flex: 4, child: _StatsColumn()),
-                  ],
-                )
-              else
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _LearningColumn(),
-                    SizedBox(height: AppSizes.spacing32),
-                    _StatsColumn(),
-                  ],
-                ),
-            ],
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1280),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _WelcomeSummary(username: username),
+                const SizedBox(height: AppSizes.spacing24),
+                if (isWide)
+                  const Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 8, child: _LearningColumn()),
+                      SizedBox(width: AppSizes.spacing32),
+                      Expanded(flex: 4, child: _StatsColumn()),
+                    ],
+                  )
+                else
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _LearningColumn(),
+                      SizedBox(height: AppSizes.spacing32),
+                      _StatsColumn(),
+                    ],
+                  ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
 
 class _LearningColumn extends StatelessWidget {
@@ -672,7 +667,7 @@ class _DailyGoalCard extends ConsumerWidget {
                     builder: (context) {
                       int targetVideos = goalState.value?.targetVideos ?? 3;
                       int targetQuizzes = goalState.value?.targetQuizzes ?? 15;
-                      
+
                       return StatefulBuilder(
                         builder: (context, setState) {
                           return AlertDialog(
@@ -681,27 +676,57 @@ class _DailyGoalCard extends ConsumerWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text('${context.l10n.text('homeVideos')}:'),
                                     Row(
                                       children: [
-                                        IconButton(onPressed: () => setState(() => targetVideos = (targetVideos - 1).clamp(1, 100)), icon: const Icon(Icons.remove)),
+                                        IconButton(
+                                          onPressed: () => setState(
+                                            () => targetVideos =
+                                                (targetVideos - 1).clamp(
+                                                  1,
+                                                  100,
+                                                ),
+                                          ),
+                                          icon: const Icon(Icons.remove),
+                                        ),
                                         Text('$targetVideos'),
-                                        IconButton(onPressed: () => setState(() => targetVideos++), icon: const Icon(Icons.add)),
+                                        IconButton(
+                                          onPressed: () =>
+                                              setState(() => targetVideos++),
+                                          icon: const Icon(Icons.add),
+                                        ),
                                       ],
                                     ),
                                   ],
                                 ),
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text('${context.l10n.text('homeQuizzes')}:'),
+                                    Text(
+                                      '${context.l10n.text('homeQuizzes')}:',
+                                    ),
                                     Row(
                                       children: [
-                                        IconButton(onPressed: () => setState(() => targetQuizzes = (targetQuizzes - 1).clamp(1, 100)), icon: const Icon(Icons.remove)),
+                                        IconButton(
+                                          onPressed: () => setState(
+                                            () => targetQuizzes =
+                                                (targetQuizzes - 1).clamp(
+                                                  1,
+                                                  100,
+                                                ),
+                                          ),
+                                          icon: const Icon(Icons.remove),
+                                        ),
                                         Text('$targetQuizzes'),
-                                        IconButton(onPressed: () => setState(() => targetQuizzes++), icon: const Icon(Icons.add)),
+                                        IconButton(
+                                          onPressed: () =>
+                                              setState(() => targetQuizzes++),
+                                          icon: const Icon(Icons.add),
+                                        ),
                                       ],
                                     ),
                                   ],
@@ -709,19 +734,29 @@ class _DailyGoalCard extends ConsumerWidget {
                               ],
                             ),
                             actions: [
-                              TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.text('homeCancel'))),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text(context.l10n.text('homeCancel')),
+                              ),
                               TextButton(
                                 onPressed: () {
-                                  ref.read(dailyGoalControllerProvider.notifier).updateGoal(targetVideos: targetVideos, targetQuizzes: targetQuizzes);
+                                  ref
+                                      .read(
+                                        dailyGoalControllerProvider.notifier,
+                                      )
+                                      .updateGoal(
+                                        targetVideos: targetVideos,
+                                        targetQuizzes: targetQuizzes,
+                                      );
                                   Navigator.pop(context);
-                                }, 
+                                },
                                 child: Text(context.l10n.text('homeSave')),
                               ),
                             ],
                           );
-                        }
+                        },
                       );
-                    }
+                    },
                   );
                 },
                 tooltip: 'Edit Goal',
@@ -741,11 +776,11 @@ class _DailyGoalCard extends ConsumerWidget {
               if (goal == null) return const SizedBox.shrink();
 
               // Calculate overall percentage based on videos and quizzes
-              final videoProgress = goal.targetVideos > 0 
-                  ? (goal.completedVideos / goal.targetVideos).clamp(0.0, 1.0) 
+              final videoProgress = goal.targetVideos > 0
+                  ? (goal.completedVideos / goal.targetVideos).clamp(0.0, 1.0)
                   : 1.0;
-              final quizProgress = goal.targetQuizzes > 0 
-                  ? (goal.completedQuizzes / goal.targetQuizzes).clamp(0.0, 1.0) 
+              final quizProgress = goal.targetQuizzes > 0
+                  ? (goal.completedQuizzes / goal.targetQuizzes).clamp(0.0, 1.0)
                   : 1.0;
               final overallProgress = (videoProgress + quizProgress) / 2;
               final percent = (overallProgress * 100).round();
@@ -768,7 +803,10 @@ class _DailyGoalCard extends ConsumerWidget {
                         Center(
                           child: Text(
                             '$percent%',
-                            style: const TextStyle(fontSize: 27, fontWeight: FontWeight.w800),
+                            style: const TextStyle(
+                              fontSize: 27,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                         ),
                       ],
@@ -788,7 +826,9 @@ class _DailyGoalCard extends ConsumerWidget {
             },
             loading: () => const CircularProgressIndicator(),
             error: (err, stack) => Text(
-              context.l10n.text('homeErrorLoadingGoal').replaceAll('{error}', '$err'),
+              context.l10n
+                  .text('homeErrorLoadingGoal')
+                  .replaceAll('{error}', '$err'),
               style: TextStyle(color: theme.colorScheme.error, fontSize: 12),
               textAlign: TextAlign.center,
             ),

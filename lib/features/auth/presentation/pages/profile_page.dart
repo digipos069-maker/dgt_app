@@ -8,9 +8,7 @@ import '../../../home/presentation/widgets/main_bottom_navigation.dart';
 import '../../application/auth_controller.dart';
 import '../../application/profile_controller.dart';
 import '../../../subscription/presentation/widgets/upgrade_subscription_modal.dart';
-import '../widgets/language_menu_button.dart';
 import '../widgets/profile_body.dart';
-import '../widgets/theme_toggle_button.dart';
 import 'home_page.dart';
 import 'login_page.dart';
 import 'payment_history_page.dart';
@@ -41,8 +39,6 @@ class ProfilePage extends ConsumerWidget {
         ),
         title: Text(context.l10n.text('profileTitle')),
         actions: [
-          const LanguageMenuButton(),
-          const ThemeToggleButton(),
           IconButton(
             tooltip: context.l10n.text('notifications'),
             onPressed: () {},

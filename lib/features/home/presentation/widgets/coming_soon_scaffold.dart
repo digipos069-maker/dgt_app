@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/scroll_hiding_header.dart';
 import '../../../../localization/app_localizations.dart';
-import '../../../auth/presentation/widgets/language_menu_button.dart';
-import '../../../auth/presentation/widgets/theme_toggle_button.dart';
 import 'main_bottom_navigation.dart';
 
 class ComingSoonScaffold extends StatelessWidget {
@@ -23,14 +21,7 @@ class ComingSoonScaffold extends StatelessWidget {
     final theme = Theme.of(context);
 
     return ScrollHidingHeaderScaffold(
-      header: AppBar(
-        title: Text(title),
-        actions: const [
-          LanguageMenuButton(),
-          ThemeToggleButton(),
-          SizedBox(width: AppSizes.spacing8),
-        ],
-      ),
+      header: AppBar(title: Text(title)),
       body: SafeArea(
         child: Center(
           child: Padding(
