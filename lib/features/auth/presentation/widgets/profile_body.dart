@@ -570,7 +570,7 @@ class _ProfilePanel extends StatelessWidget {
       padding: padding,
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
         border: Border.all(
           color: theme.colorScheme.secondary.withValues(alpha: 0.22),
           width: 1.5,
