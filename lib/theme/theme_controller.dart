@@ -16,15 +16,16 @@ class ThemeController extends Notifier<ThemeMode> {
     return switch (storedTheme) {
       'light' => ThemeMode.light,
       'dark' => ThemeMode.dark,
-      _ => ThemeMode.system,
+      _ => ThemeMode.light,
     };
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
-    state = mode;
+    final selectedMode = mode == ThemeMode.dark ? ThemeMode.dark : ThemeMode.light;
+    state = selectedMode;
     await ref
         .read(localStorageServiceProvider)
-        .writeString(StorageKeys.themeMode, mode.name);
+        .writeString(StorageKeys.themeMode, selectedMode.name);
   }
 
   Future<void> toggleTheme() async {
