@@ -68,6 +68,19 @@ class MultipleChoiceQuizWidget extends StatelessWidget {
             fontWeight: FontWeight.w700,
           ),
         ),
+        if (question.questionImageUrl != null &&
+            question.questionImageUrl!.trim().isNotEmpty) ...[
+          const SizedBox(height: AppSizes.spacing12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+            child: Image.network(
+              question.questionImageUrl!.trim(),
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) =>
+                  const SizedBox.shrink(),
+            ),
+          ),
+        ],
         const SizedBox(height: AppSizes.spacing16),
         LayoutBuilder(
           builder: (context, constraints) {
@@ -91,6 +104,53 @@ class MultipleChoiceQuizWidget extends StatelessWidget {
             );
           },
         ),
+        if ((isSubmitted || isCorrect != null) &&
+            question.textExplain != null &&
+            question.textExplain!.trim().isNotEmpty) ...[
+          const SizedBox(height: AppSizes.spacing16),
+          Container(
+            padding: const EdgeInsets.all(AppSizes.spacing12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+              border: Border.all(
+                color: theme.colorScheme.primary.withValues(alpha: 0.25),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 20,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: AppSizes.spacing8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Explanation',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: AppSizes.spacing4),
+                      MixedLatexText(
+                        text: question.textExplain!.trim(),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: AppSizes.spacing16),
         if (onSubmit != null)
           Align(

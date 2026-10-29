@@ -101,6 +101,7 @@ class LessonDetailModel {
     required this.questions,
     this.mainVideoUrl = '',
     this.videoThumbnail = '',
+    this.actualLessonId,
   });
 
   final String courseId;
@@ -115,4 +116,5 @@ class LessonDetailModel {
   final List<QuizQuestionModel> questions;
   final String mainVideoUrl;
   final String videoThumbnail;
+  final int? actualLessonId;
 }

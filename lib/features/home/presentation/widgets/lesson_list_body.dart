@@ -13,6 +13,8 @@ import '../../application/tutorial_controller.dart';
 import '../../domain/models/lesson_model.dart';
 import '../pages/lesson_detail_page.dart';
 import '../pages/learning_center_page.dart';
+import '../pages/quiz_by_lesson_page.dart';
+import 'quiz/quiz_button.dart';
 import 'lesson_list_skeleton.dart';
 
 class LessonListBody extends ConsumerWidget {
@@ -240,7 +242,10 @@ class _LessonListContentState extends ConsumerState<_LessonListContent> {
           item = Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _LessonSummaryCard(bundle: widget.bundle),
+              _LessonSummaryCard(
+                bundle: widget.bundle,
+                courseId: widget.courseId,
+              ),
               const SizedBox(height: AppSizes.spacing32),
               Text(
                 context.l10n.text('lessonsTitle'),
@@ -254,14 +259,25 @@ class _LessonListContentState extends ConsumerState<_LessonListContent> {
           );
         } else if (index <= lessons.length) {
           final lesson = lessons[index - 1];
-          item = Padding(
-            padding: const EdgeInsets.only(bottom: AppSizes.spacing16),
-            child: _LessonTile(
-              lesson: lesson,
-              gradeId: widget.gradeId,
-              gradeNumber: widget.gradeNumber,
-              subjectId: widget.subjectId,
-            ),
+          final isLast = index == lessons.length && !widget.bundle.hasMore;
+          item = Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSizes.spacing16),
+                child: _LessonTile(
+                  lesson: lesson,
+                  gradeId: widget.gradeId,
+                  gradeNumber: widget.gradeNumber,
+                  subjectId: widget.subjectId,
+                ),
+              ),
+              if (isLast) ...[
+                const SizedBox(height: AppSizes.spacing8),
+                _LessonEndQuizCard(courseId: widget.courseId),
+                const SizedBox(height: AppSizes.spacing16),
+              ],
+            ],
           );
         } else {
           item = const Padding(
@@ -336,10 +352,43 @@ class _LessonHeader extends StatelessWidget {
   }
 }
 
+void _openLessonQuiz(BuildContext context, String courseId) {
+  final parsed = int.tryParse(courseId);
+  final digits = RegExp(r'\d+').firstMatch(courseId)?.group(0);
+  final digitsId = digits != null ? int.tryParse(digits) : null;
+  final lessonId = (parsed != null && parsed > 0)
+      ? parsed
+      : (digitsId != null && digitsId > 0)
+          ? digitsId
+          : 10;
+  try {
+    context.pushNamed(
+      QuizByLessonPage.routeName,
+      pathParameters: {'lessonId': lessonId.toString()},
+    );
+  } on Object catch (_) {
+    try {
+      Navigator.of(context, rootNavigator: true).push(
+        MaterialPageRoute<void>(
+          builder: (_) => QuizByLessonPage(lessonId: lessonId),
+        ),
+      );
+    } on Object catch (_) {
+      try {
+        context.push('/quiz-by-lesson/$lessonId');
+      } on Object catch (_) {}
+    }
+  }
+}
+
 class _LessonSummaryCard extends StatelessWidget {
-  const _LessonSummaryCard({required this.bundle});
+  const _LessonSummaryCard({
+    required this.bundle,
+    required this.courseId,
+  });
 
   final CourseLessonBundle bundle;
+  final String courseId;
 
   @override
   Widget build(BuildContext context) {
@@ -378,16 +427,27 @@ class _LessonSummaryCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.school, color: AppColors.secondary),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.school, color: AppColors.secondary),
+                    ),
+                    QuizButton(
+                      onPressed: () => _openLessonQuiz(context, courseId),
+                      label: context.l10n.text('testYourKnowledge'),
+                      icon: Icons.quiz_outlined,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: AppSizes.spacing24),
+                const SizedBox(height: AppSizes.spacing20),
                 Text(
                   context.l10n.text(bundle.titleKey),
                   style: theme.textTheme.titleLarge?.copyWith(
@@ -404,6 +464,89 @@ class _LessonSummaryCard extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LessonEndQuizCard extends StatelessWidget {
+  const _LessonEndQuizCard({required this.courseId});
+
+  final String courseId;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(AppSizes.spacing20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.brandButton.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.emoji_events_outlined,
+                  size: 24,
+                  color: AppColors.brandButton,
+                ),
+              ),
+              const SizedBox(width: AppSizes.spacing12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.text('finalSummaryQuizTitle'),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.secondary,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: AppSizes.spacing4),
+                    Text(
+                      context.l10n.text('finalSummaryQuizSubtitle'),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSizes.spacing16),
+          Align(
+            alignment: Alignment.centerRight,
+            child: QuizButton(
+              onPressed: () => _openLessonQuiz(context, courseId),
+              label: context.l10n.text('testYourKnowledge'),
+              icon: Icons.quiz_outlined,
             ),
           ),
         ],

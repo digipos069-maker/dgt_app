@@ -21,8 +21,11 @@ import '../../../auth/application/auth_controller.dart';
 import '../../domain/models/lesson_model.dart';
 import '../../domain/models/quiz_submission_result.dart';
 import '../pages/lesson_list_page.dart';
+import '../pages/quiz_by_lesson_page.dart';
+import '../../../../theme/app_colors.dart';
 import 'lesson_detail_skeleton.dart';
 import 'quiz/lesson_quiz_section.dart';
+import 'quiz/quiz_button.dart';
 
 class LessonDetailBody extends ConsumerWidget {
   const LessonDetailBody({
@@ -60,7 +63,12 @@ class LessonDetailBody extends ConsumerWidget {
     return Theme(
       data: theme.copyWith(textTheme: battambangTheme),
       child: detailState.when(
-        data: (detail) => LessonDetailContent(detail: detail, onBack: onBack),
+        data: (detail) => LessonDetailContent(
+          detail: detail,
+          courseId: courseId,
+          lessonId: lessonId,
+          onBack: onBack,
+        ),
         error: (_, _) => Center(child: Text(context.l10n.text('authFailed'))),
         loading: () => const LessonDetailSkeleton(),
       ),
@@ -69,9 +77,17 @@ class LessonDetailBody extends ConsumerWidget {
 }
 
 class LessonDetailContent extends ConsumerStatefulWidget {
-  const LessonDetailContent({required this.detail, this.onBack, super.key});
+  const LessonDetailContent({
+    required this.detail,
+    this.courseId,
+    this.lessonId,
+    this.onBack,
+    super.key,
+  });
 
   final LessonDetailModel detail;
+  final String? courseId;
+  final String? lessonId;
   final VoidCallback? onBack;
 
   @override
@@ -275,6 +291,12 @@ class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
 
   @override
   Widget build(BuildContext context) {
+    final resolvedLessonId = widget.detail.actualLessonId ??
+        int.tryParse(widget.detail.courseId) ??
+        int.tryParse(widget.detail.lessonId) ??
+        int.tryParse(widget.courseId ?? '') ??
+        int.tryParse(widget.lessonId ?? '');
+
     return SafeArea(
       child: Column(
         children: [
@@ -339,11 +361,161 @@ class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
                             onSubmit: _submitQuestion,
                           ),
                         ),
+                        const SizedBox(height: AppSizes.spacing24),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSizes.spacing4,
+                          ),
+                          child: _LessonFinalSummaryQuizCard(
+                            lessonId: resolvedLessonId,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LessonFinalSummaryQuizCard extends StatelessWidget {
+  const _LessonFinalSummaryQuizCard({
+    required this.lessonId,
+  });
+
+  final int? lessonId;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final targetId = (lessonId != null && lessonId! > 0) ? lessonId! : 10;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(AppSizes.spacing20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.brandButton.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.emoji_events_outlined,
+                  size: 24,
+                  color: AppColors.brandButton,
+                ),
+              ),
+              const SizedBox(width: AppSizes.spacing12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.text('finalSummaryQuizTitle'),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.secondary,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: AppSizes.spacing4),
+                    Text(
+                      context.l10n.text('finalSummaryQuizSubtitle'),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSizes.spacing16),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.spacing12,
+              vertical: AppSizes.spacing8,
+            ),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(AppSizes.cardRadius / 2),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.checklist_rtl_rounded,
+                  size: 18,
+                  color: AppColors.brandButton,
+                ),
+                const SizedBox(width: AppSizes.spacing8),
+                Text(
+                  context.l10n.text('summaryQuestionsCount'),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  context.l10n.text('homeQuizzes'),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: AppColors.brandButton,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSizes.spacing16),
+          Align(
+            alignment: Alignment.centerRight,
+            child: QuizButton(
+              onPressed: () {
+                try {
+                  context.pushNamed(
+                    QuizByLessonPage.routeName,
+                    pathParameters: {'lessonId': targetId.toString()},
+                  );
+                } on Object catch (_) {
+                  try {
+                    Navigator.of(context, rootNavigator: true).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => QuizByLessonPage(lessonId: targetId),
+                      ),
+                    );
+                  } on Object catch (_) {
+                    try {
+                      context.push('/quiz-by-lesson/$targetId');
+                    } on Object catch (_) {}
+                  }
+                }
+              },
+              label: context.l10n.text('testYourKnowledge'),
+              icon: Icons.quiz_outlined,
             ),
           ),
         ],

@@ -194,6 +194,12 @@ class QuizQuestionModel {
     this.type = QuizType.multipleChoice,
     this.matchingData,
     this.dragAndDropData,
+    this.correctAnswer,
+    this.textExplain,
+    this.videoExplainUrl,
+    this.questionImageUrl,
+    this.tutorialId,
+    this.tutorialTitle,
   });
 
   const QuizQuestionModel.multipleChoice({
@@ -201,6 +207,12 @@ class QuizQuestionModel {
     required this.questionKey,
     required this.options,
     this.quizId,
+    this.correctAnswer,
+    this.textExplain,
+    this.videoExplainUrl,
+    this.questionImageUrl,
+    this.tutorialId,
+    this.tutorialTitle,
   }) : type = QuizType.multipleChoice,
        matchingData = null,
        dragAndDropData = null;
@@ -210,6 +222,12 @@ class QuizQuestionModel {
     required this.matchingData,
     this.questionKey = '',
     this.quizId,
+    this.correctAnswer,
+    this.textExplain,
+    this.videoExplainUrl,
+    this.questionImageUrl,
+    this.tutorialId,
+    this.tutorialTitle,
   }) : type = QuizType.matching,
        options = const [],
        dragAndDropData = null;
@@ -219,6 +237,12 @@ class QuizQuestionModel {
     required this.dragAndDropData,
     this.questionKey = '',
     this.quizId,
+    this.correctAnswer,
+    this.textExplain,
+    this.videoExplainUrl,
+    this.questionImageUrl,
+    this.tutorialId,
+    this.tutorialTitle,
   }) : type = QuizType.dragAndDrop,
        options = const [],
        matchingData = null;
@@ -302,6 +326,30 @@ class QuizQuestionModel {
         ? rawQuizId
         : int.tryParse(rawQuizId?.toString() ?? '');
 
+    final correctAnswer = quizData?['correct']?.toString() ??
+        json['correct']?.toString() ??
+        json['correctAnswer']?.toString() ??
+        quizData?['correctAnswer']?.toString();
+    final textExplain = json['textExplain']?.toString() ??
+        quizData?['textExplain']?.toString();
+    final videoExplainUrl = json['videoExplainUrl']?.toString() ??
+        quizData?['videoExplainUrl']?.toString();
+    final questionImageUrl = json['questionImageUrl']?.toString() ??
+        json['imageUrl']?.toString() ??
+        quizData?['questionImageUrl']?.toString() ??
+        quizData?['imageUrl']?.toString();
+    final rawTutorialId = json['tutorialId'] ??
+        json['tutorial_id'] ??
+        quizData?['tutorialId'] ??
+        quizData?['tutorial_id'];
+    final tutorialId = rawTutorialId is int
+        ? rawTutorialId
+        : int.tryParse(rawTutorialId?.toString() ?? '');
+    final tutorialObj = json['tutorial'];
+    final tutorialTitle = tutorialObj is Map<String, dynamic>
+        ? tutorialObj['title']?.toString()
+        : null;
+
     return QuizQuestionModel(
       id: json['id']?.toString() ?? '',
       quizId: quizId,
@@ -318,6 +366,12 @@ class QuizQuestionModel {
       options: options,
       matchingData: matchingData,
       dragAndDropData: dragAndDropData,
+      correctAnswer: correctAnswer,
+      textExplain: textExplain,
+      videoExplainUrl: videoExplainUrl,
+      questionImageUrl: questionImageUrl,
+      tutorialId: tutorialId,
+      tutorialTitle: tutorialTitle,
     );
   }
 
@@ -328,4 +382,10 @@ class QuizQuestionModel {
   final List<QuizOptionModel> options;
   final MatchingQuizData? matchingData;
   final DragAndDropQuizData? dragAndDropData;
+  final String? correctAnswer;
+  final String? textExplain;
+  final String? videoExplainUrl;
+  final String? questionImageUrl;
+  final int? tutorialId;
+  final String? tutorialTitle;
 }

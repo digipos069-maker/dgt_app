@@ -158,6 +158,7 @@ class TutorialRepository {
       questions: questions,
       mainVideoUrl: tutorial.mainVideoUrl,
       videoThumbnail: tutorial.videoThumbnail,
+      actualLessonId: tutorial.lessonId > 0 ? tutorial.lessonId : int.tryParse(courseId),
     );
   }
 

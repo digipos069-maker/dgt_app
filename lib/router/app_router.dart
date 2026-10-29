@@ -19,6 +19,7 @@ import '../features/home/presentation/pages/lesson_list_page.dart';
 import '../features/home/presentation/pages/resource_page.dart';
 import '../features/home/presentation/pages/resource_years_page.dart';
 import '../features/home/presentation/pages/resource_list_by_years_page.dart';
+import '../features/home/presentation/pages/quiz_by_lesson_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final isAuthenticated = ref.watch(
@@ -106,6 +107,40 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             subjectId: _queryInt(state, 'subjectId'),
           ),
         ),
+      ),
+      GoRoute(
+        path: QuizByLessonPage.routePath,
+        name: QuizByLessonPage.routeName,
+        pageBuilder: (context, state) {
+          final paramId = int.tryParse(state.pathParameters['lessonId'] ?? '');
+          final queryId = _queryInt(state, 'lessonId');
+          final lessonId = (paramId != null && paramId > 0)
+              ? paramId
+              : (queryId != null && queryId > 0)
+                  ? queryId
+                  : 10;
+          return _noTransitionPage(
+            state,
+            QuizByLessonPage(
+              lessonId: lessonId,
+              size: _queryInt(state, 'size') ?? 15,
+            ),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/quiz-by-lesson',
+        name: 'quiz-by-lesson-query',
+        pageBuilder: (context, state) {
+          final queryId = _queryInt(state, 'lessonId');
+          return _noTransitionPage(
+            state,
+            QuizByLessonPage(
+              lessonId: (queryId != null && queryId > 0) ? queryId : 10,
+              size: _queryInt(state, 'size') ?? 15,
+            ),
+          );
+        },
       ),
       GoRoute(
         path: BasicCoursePage.routePath,

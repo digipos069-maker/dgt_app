@@ -274,6 +274,12 @@ class AppLocalizations {
           'Check your understanding of force and motion.',
       'lessonQuizSubtitleNarrative':
           'Check your understanding of narrative structure.',
+      'finalSummaryQuizTitle': 'Final Summary Quiz',
+      'finalSummaryQuizSubtitle':
+          'Test your complete understanding after completing this lesson.',
+      'startFinalQuiz': 'Start Final Quiz',
+      'testYourKnowledge': 'Test your knowledge',
+      'summaryQuestionsCount': '15 Summary Questions',
       'questionPrefix': 'Question ',
       'submitQuiz': 'Submit quiz',
       'quizSelectAnswer': 'Select an answer before submitting.',
@@ -574,6 +580,12 @@ class AppLocalizations {
           'សាកល្បងចំណេះដឹងរបស់អ្នកអំពីកម្លាំង និងចលនា។',
       'lessonQuizSubtitleNarrative':
           'សាកល្បងចំណេះដឹងរបស់អ្នកអំពីរចនាសម្ព័ន្ធនិទានកថា។',
+      'finalSummaryQuizTitle': 'កម្រងសំណួរបញ្ចប់មេរៀន',
+      'finalSummaryQuizSubtitle':
+          'វាស់ស្ទង់ការយល់ដឹងទាំងស្រុងរបស់អ្នកបន្ទាប់ពីរៀនចប់មេរៀននេះ។',
+      'startFinalQuiz': 'ចាប់ផ្តើមកម្រងសំណួរ',
+      'testYourKnowledge': 'ធ្វើតេស្តចំណេះដឹងរបស់អ្នក',
+      'summaryQuestionsCount': 'សំណួរសរុប ១៥',
       'questionPrefix': 'សំណួរទី',
       'submitQuiz': 'បញ្ចូន',
       'quizSelectAnswer': 'សូមជ្រើសរើសចម្លើយមុនពេលបញ្ជូន។',
