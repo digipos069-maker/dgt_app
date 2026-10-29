@@ -31,6 +31,7 @@ abstract final class ApiConstants {
   static const mobileResourcesPath = '/api/m/resources';
   static const mobileResourceListPath = '/api/m/resource-list';
   static const mobileExamTestsPath = '/api/m/exam-tests';
+  static const mobileExamTestAttemptsPath = '/api/m/exam-test-attempts';
   static const mobileQuizByLessonPath = '/api/m/quiz-by-lesson';
   static const uploadPayslipPath = '/api/payment/upload-payslip';
   static const bankTransferPaymentPath = '/api/payment/bank-transfer';

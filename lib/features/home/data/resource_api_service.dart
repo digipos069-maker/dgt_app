@@ -147,6 +147,63 @@ class ResourceApiService {
     return _getJson(uri, token: token, callerName: 'fetchExamTestDetail');
   }
 
+  /// The logged-in student's saved test results ("ការសិក្សារបស់ខ្ញុំ").
+  /// Path: `GET /api/m/exam-test-attempts?page=1&limit=10` (requires login)
+  /// Response: `{ data: [Attempt...], summary: {...}, meta: {...} }`
+  Future<Map<String, dynamic>> fetchMyExamTestAttempts({
+    required String token,
+    int page = 1,
+    int limit = 10,
+  }) {
+    final uri = Uri.parse(
+      '${ApiConstants.baseUrl}${ApiConstants.mobileExamTestAttemptsPath}',
+    ).replace(queryParameters: sanitizeQueryParams(page: page, limit: limit));
+
+    return _getJson(uri, token: token, callerName: 'fetchMyExamTestAttempts');
+  }
+
+  /// Submit a finished exam test; graded and saved on the server.
+  /// Path: `POST /api/m/exam-tests/:id/submit` (requires login)
+  /// Body: `{ startedAt, answers: [{ quizId, answer }] }`
+  Future<Map<String, dynamic>> submitExamTest({
+    required String testId,
+    required String token,
+    required List<Map<String, Object?>> answers,
+    DateTime? startedAt,
+  }) async {
+    final uri = Uri.parse(
+      '${ApiConstants.baseUrl}${ApiConstants.mobileExamTestsPath}/'
+      '${Uri.encodeComponent(testId)}/submit',
+    );
+
+    final response = await _client
+        .post(
+          uri,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({
+            if (startedAt != null)
+              'startedAt': startedAt.toUtc().toIso8601String(),
+            'answers': answers,
+          }),
+        )
+        .timeout(const Duration(seconds: 20));
+
+    final jsonBody = _decodeBody(response.body);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final message = _readMessage(jsonBody) ??
+          'Failed to submit test (Status ${response.statusCode})';
+      throw HttpException(message, uri: uri);
+    }
+    if (jsonBody is! Map<String, dynamic>) {
+      throw HttpException('Invalid submit response', uri: uri);
+    }
+    return jsonBody;
+  }
+
   /// Fetches exam types from `/api/exams/types`
   Future<List<ExamResourceModel>> fetchExamTypes({
     String? token,

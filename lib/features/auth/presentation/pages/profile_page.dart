@@ -12,6 +12,7 @@ import '../widgets/profile_body.dart';
 import 'home_page.dart';
 import 'login_page.dart';
 import 'payment_history_page.dart';
+import '../../../home/presentation/pages/my_study_page.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
@@ -51,6 +52,7 @@ class ProfilePage extends ConsumerWidget {
         user: profileUser,
         isProfileLoading: profileState.isLoading,
         onPaymentHistory: () => context.goNamed(PaymentHistoryPage.routeName),
+        onMyStudy: () => context.pushNamed(MyStudyPage.routeName),
         onUpgradeSubscription: () => showUpgradeSubscriptionModal(
           context: context,
           onNavigateToPaymentHistory: () =>

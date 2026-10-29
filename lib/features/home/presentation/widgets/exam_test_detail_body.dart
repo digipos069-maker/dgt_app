@@ -7,7 +7,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../../../theme/app_colors.dart';
+import '../../../auth/application/auth_controller.dart';
 import '../../application/resource_controller.dart';
+import '../../data/resource_repository.dart';
 import '../../domain/models/exam_test_model.dart';
 import '../../domain/models/quiz_models.dart';
 import 'exam_test_list_body.dart';
@@ -18,8 +20,9 @@ enum _ExamPhase { intro, inProgress, finished }
 /// Loads `GET /api/m/exam-tests/:id` and runs the test:
 /// intro → timed test (answer everything, submit once) → result + review.
 ///
-/// Grading is done on the device from `quizData` because there is no
-/// "submit test" endpoint yet. See `_grade()`.
+/// Submitting sends the answers to `POST /api/m/exam-tests/:id/submit`, which
+/// grades and saves the attempt. If that fails (offline, not logged in), the
+/// test is graded on the device from `quizData` instead (see `_grade()`).
 class ExamTestDetailBody extends ConsumerWidget {
   const ExamTestDetailBody({required this.testId, super.key});
 
@@ -55,16 +58,16 @@ class ExamTestDetailBody extends ConsumerWidget {
   }
 }
 
-class _ExamTestRunner extends StatefulWidget {
+class _ExamTestRunner extends ConsumerStatefulWidget {
   const _ExamTestRunner({required this.detail, super.key});
 
   final ExamTestDetail detail;
 
   @override
-  State<_ExamTestRunner> createState() => _ExamTestRunnerState();
+  ConsumerState<_ExamTestRunner> createState() => _ExamTestRunnerState();
 }
 
-class _ExamTestRunnerState extends State<_ExamTestRunner> {
+class _ExamTestRunnerState extends ConsumerState<_ExamTestRunner> {
   _ExamPhase _phase = _ExamPhase.intro;
 
   // Answers keyed by question id.
@@ -75,6 +78,11 @@ class _ExamTestRunnerState extends State<_ExamTestRunner> {
   // Set after submitting.
   Map<String, bool> _results = const {};
   Map<String, String?> _correctOptionIds = const {};
+  bool _isSubmitting = false;
+
+  /// Server-graded result; null when the attempt could not be saved and
+  /// the result shown is the on-device fallback.
+  ExamTestSubmitResult? _serverResult;
 
   Timer? _timer;
   DateTime? _startedAt;
@@ -83,6 +91,11 @@ class _ExamTestRunnerState extends State<_ExamTestRunner> {
   Duration _timeUsed = Duration.zero;
 
   final ScrollController _scrollController = ScrollController();
+
+  /// Turned on when the student taps Submit with blank answers, so every
+  /// unanswered question is highlighted until it gets an answer.
+  bool _showMissing = false;
+  final Map<String, GlobalKey> _questionKeys = {};
 
   ExamTestModel get _test => widget.detail.test;
   List<ExamTestQuestion> get _questions => widget.detail.questions;
@@ -105,6 +118,9 @@ class _ExamTestRunnerState extends State<_ExamTestRunner> {
       _dragAnswers.clear();
       _results = const {};
       _correctOptionIds = const {};
+      _serverResult = null;
+      _isSubmitting = false;
+      _showMissing = false;
       _startedAt = now;
       _endsAt = _test.durationMinutes > 0
           ? now.add(Duration(minutes: _test.durationMinutes))
@@ -130,38 +146,151 @@ class _ExamTestRunnerState extends State<_ExamTestRunner> {
     }
   }
 
-  /// Manual submit is only allowed once every question is answered
-  /// (the button is disabled until then). Time-up still auto-submits.
+  /// Manual submit is blocked while any question is blank: the blank ones
+  /// are highlighted and the first one is scrolled into view.
+  /// (Time-up still auto-submits whatever has been answered.)
   void _submit() {
-    if (_answeredCount < _questions.length) return;
-    _finish();
+    final missing = _questions
+        .where((q) => !_isAnswered(q.question))
+        .toList();
+    if (missing.isEmpty) {
+      _finish();
+      return;
+    }
+
+    setState(() => _showMissing = true);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          backgroundColor: Theme.of(context).colorScheme.error,
+          content: Text(
+            context.l10n
+                .text('examTestAnswerAllError')
+                .replaceAll('{count}', '${missing.length}'),
+          ),
+        ),
+      );
+
+    final firstContext = _questionKeys[missing.first.question.id]?.currentContext;
+    if (firstContext != null) {
+      Scrollable.ensureVisible(
+        firstContext,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+        alignment: 0.05,
+      );
+    }
   }
 
-  void _finish({bool timeUp = false}) {
-    if (_phase != _ExamPhase.inProgress) return;
+  Future<void> _finish({bool timeUp = false}) async {
+    if (_phase != _ExamPhase.inProgress || _isSubmitting) return;
     _timer?.cancel();
-    final graded = _grade();
+    var timeUsed = DateTime.now().difference(_startedAt ?? DateTime.now());
+    if (_endsAt != null && timeUp) {
+      timeUsed = Duration(minutes: _test.durationMinutes);
+    }
     setState(() {
-      _results = graded.results;
-      _correctOptionIds = graded.correctOptionIds;
-      _timeUsed = DateTime.now().difference(_startedAt ?? DateTime.now());
-      if (_endsAt != null && timeUp) {
-        _timeUsed = Duration(minutes: _test.durationMinutes);
-      }
+      _isSubmitting = true;
       _remaining = Duration.zero;
+    });
+
+    // 1. Send to the server (grades + saves the attempt).
+    final server = await _submitToServer();
+    if (!mounted) return;
+    if (server != null) {
+      // So "My study" shows this attempt next time it is opened.
+      ref.invalidate(myExamTestAttemptsProvider);
+    }
+
+    // 2. Fallback / review helpers from the local copy of quizData.
+    final local = _grade();
+
+    setState(() {
+      _isSubmitting = false;
+      _serverResult = server;
+      if (server != null) {
+        _results = {
+          for (final item in _questions)
+            item.question.id:
+                server.results[_quizIdOf(item.question)]?.isCorrect ?? false,
+        };
+        _correctOptionIds = {
+          for (final item in _questions)
+            if (item.question.type == QuizType.multipleChoice)
+              item.question.id:
+                  _findCorrectOptionId(
+                    item.question,
+                    server.results[_quizIdOf(item.question)]?.correctAnswer
+                        ?.toString(),
+                  ) ??
+                  local.correctOptionIds[item.question.id],
+        };
+      } else {
+        _results = local.results;
+        _correctOptionIds = local.correctOptionIds;
+      }
+      _timeUsed = timeUsed;
       _phase = _ExamPhase.finished;
     });
     _scrollToTop();
 
-    if (timeUp) {
+    final messages = [
+      if (timeUp) context.l10n.text('examTestTimeUp'),
+      if (server == null) context.l10n.text('examTestNotSaved'),
+    ];
+    if (messages.isNotEmpty) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(content: Text(context.l10n.text('examTestTimeUp'))),
-        );
+        ..showSnackBar(SnackBar(content: Text(messages.join('\n'))));
     }
-    // TODO(exam-test): POST the attempt to the backend once a
-    // "submit exam test" endpoint exists, and use its score instead.
+  }
+
+  int? _quizIdOf(QuizQuestionModel q) => q.quizId ?? int.tryParse(q.id);
+
+  /// `[{quizId, answer}]` in the shapes the backend grades:
+  /// choice → option id ("A"/value), drag & drop → dropped text,
+  /// matching → {stemId: optionId}. Blank questions are left out.
+  List<Map<String, Object?>> _answerPayload() {
+    final payload = <Map<String, Object?>>[];
+    for (final item in _questions) {
+      final q = item.question;
+      final quizId = _quizIdOf(q);
+      if (quizId == null) continue;
+      final Object? answer = switch (q.type) {
+        QuizType.multipleChoice => _choiceAnswers[q.id],
+        QuizType.dragAndDrop => _dragAnswers[q.id],
+        QuizType.matching =>
+          (_matchingAnswers[q.id]?.isNotEmpty ?? false)
+              ? _matchingAnswers[q.id]
+              : null,
+      };
+      if (answer == null || (answer is String && answer.isEmpty)) continue;
+      payload.add({'quizId': quizId, 'answer': answer});
+    }
+    return payload;
+  }
+
+  Future<ExamTestSubmitResult?> _submitToServer() async {
+    final authState = ref.read(authControllerProvider);
+    final token = switch (authState) {
+      AsyncData(:final value) => value?.token,
+      _ => null,
+    };
+    if (token == null || token.isEmpty) return null;
+
+    try {
+      return await ref
+          .read(resourceRepositoryProvider)
+          .submitExamTest(
+            testId: _test.id,
+            token: token,
+            answers: _answerPayload(),
+            startedAt: _startedAt,
+          );
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> _handleLeave() async {
@@ -239,7 +368,7 @@ class _ExamTestRunnerState extends State<_ExamTestRunner> {
       final q = item.question;
       switch (q.type) {
         case QuizType.multipleChoice:
-          final correctId = _findCorrectOptionId(q);
+          final correctId = _findCorrectOptionId(q, q.correctAnswer);
           correctIds[q.id] = correctId;
           final selected = _choiceAnswers[q.id];
           results[q.id] = selected != null && selected == correctId;
@@ -258,8 +387,8 @@ class _ExamTestRunnerState extends State<_ExamTestRunner> {
     return (results: results, correctOptionIds: correctIds);
   }
 
-  String? _findCorrectOptionId(QuizQuestionModel q) {
-    final correct = q.correctAnswer?.trim();
+  String? _findCorrectOptionId(QuizQuestionModel q, String? correctAnswer) {
+    final correct = correctAnswer?.trim();
     if (correct == null || correct.isEmpty) return null;
     String normalize(String v) => v.trim().replaceAll(RegExp(r'\s+'), '');
 
@@ -285,6 +414,10 @@ class _ExamTestRunnerState extends State<_ExamTestRunner> {
   }
 
   bool get _passed => _scaledScore >= _test.passingScore;
+
+  int get _resultTotalScore =>
+      _serverResult?.totalScore ??
+      (_test.totalScore > 0 ? _test.totalScore : widget.detail.totalPoints);
 
   // ── UI ──────────────────────────────────────────────────────────────────
 
@@ -337,12 +470,13 @@ class _ExamTestRunnerState extends State<_ExamTestRunner> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           _ResultCard(
-                            score: _scaledScore,
-                            totalScore: _test.totalScore > 0
-                                ? _test.totalScore
-                                : widget.detail.totalPoints,
-                            passingScore: _test.passingScore,
-                            passed: _passed,
+                            score: _serverResult?.score ?? _scaledScore,
+                            totalScore: _resultTotalScore,
+                            passingScore:
+                                _serverResult?.passingScore ??
+                                _test.passingScore,
+                            passed: _serverResult?.passed ?? _passed,
+                            savedToServer: _serverResult != null,
                             correct: _results.values.where((r) => r).length,
                             incorrect: _questions
                                 .where(
@@ -379,6 +513,7 @@ class _ExamTestRunnerState extends State<_ExamTestRunner> {
               _SubmitBar(
                 answered: _answeredCount,
                 total: _questions.length,
+                isSubmitting: _isSubmitting,
                 onSubmit: _submit,
               ),
           ],
@@ -394,7 +529,9 @@ class _ExamTestRunnerState extends State<_ExamTestRunner> {
         for (final (index, item) in _questions.indexed) ...[
           if (index > 0) const SizedBox(height: AppSizes.spacing12),
           _QuestionCard(
+            key: _questionKeys.putIfAbsent(item.question.id, GlobalKey.new),
             points: item.points,
+            missing: !review && _showMissing && !_isAnswered(item.question),
             result: review ? _results[item.question.id] : null,
             child: QuizQuestionDispatcher(
               // Rebuild the widget fresh on retake so local state resets.
@@ -712,11 +849,13 @@ class _SubmitBar extends StatelessWidget {
     required this.answered,
     required this.total,
     required this.onSubmit,
+    this.isSubmitting = false,
   });
 
   final int answered;
   final int total;
   final VoidCallback onSubmit;
+  final bool isSubmitting;
 
   @override
   Widget build(BuildContext context) {
@@ -770,9 +909,16 @@ class _SubmitBar extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  // Disabled until every question has an answer.
-                  onPressed: canSubmit ? onSubmit : null,
-                  icon: const Icon(Icons.send_rounded),
+                  // Always tappable; _submit() validates and highlights
+                  // blank questions instead of submitting.
+                  onPressed: total > 0 && !isSubmitting ? onSubmit : null,
+                  icon: isSubmitting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.send_rounded),
                   label: Text(
                     '${context.l10n.text('examTestSubmit')} ($answered/$total)',
                   ),
@@ -791,6 +937,8 @@ class _QuestionCard extends StatelessWidget {
     required this.points,
     required this.child,
     this.result,
+    this.missing = false,
+    super.key,
   });
 
   final int points;
@@ -799,6 +947,9 @@ class _QuestionCard extends StatelessWidget {
   /// null while taking the test; true/false in review.
   final bool? result;
 
+  /// Blank answer after the student tried to submit.
+  final bool missing;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -806,7 +957,7 @@ class _QuestionCard extends StatelessWidget {
     final borderColor = switch (result) {
       true => AppColors.success,
       false => AppColors.error,
-      null => colors.outlineVariant,
+      null => missing ? colors.error : colors.outlineVariant,
     };
 
     return Container(
@@ -814,7 +965,10 @@ class _QuestionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(AppSizes.cardRadius),
-        border: Border.all(color: borderColor, width: result == null ? 1 : 1.5),
+        border: Border.all(
+          color: borderColor,
+          width: result == null && !missing ? 1 : 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -827,6 +981,19 @@ class _QuestionCard extends StatelessWidget {
                   size: 18,
                   color: borderColor,
                 ),
+              if (missing) ...[
+                Icon(Icons.error_outline, size: 18, color: colors.error),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    context.l10n.text('examTestAnswerRequired'),
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: colors.error,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -856,6 +1023,7 @@ class _QuestionCard extends StatelessWidget {
 
 class _ResultCard extends StatelessWidget {
   const _ResultCard({
+    required this.savedToServer,
     required this.score,
     required this.totalScore,
     required this.passingScore,
@@ -867,6 +1035,7 @@ class _ResultCard extends StatelessWidget {
     required this.onRetake,
   });
 
+  final bool savedToServer;
   final double score;
   final int totalScore;
   final int passingScore;
@@ -959,6 +1128,31 @@ class _ResultCard extends StatelessWidget {
             style: theme.textTheme.bodySmall?.copyWith(
               color: colors.onSurfaceVariant,
             ),
+          ),
+          const SizedBox(height: AppSizes.spacing8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                savedToServer
+                    ? Icons.cloud_done_outlined
+                    : Icons.cloud_off_outlined,
+                size: 16,
+                color: savedToServer ? AppColors.success : colors.error,
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  l10n.text(
+                    savedToServer ? 'examTestSaved' : 'examTestNotSaved',
+                  ),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: savedToServer ? AppColors.success : colors.error,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: AppSizes.spacing16),
           Row(

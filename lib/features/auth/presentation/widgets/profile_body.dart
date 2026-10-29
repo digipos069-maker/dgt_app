@@ -12,6 +12,7 @@ class ProfileBody extends StatelessWidget {
     required this.isProfileLoading,
     required this.onPaymentHistory,
     required this.onLogout,
+    this.onMyStudy,
     this.onUpgradeSubscription,
     this.onRefresh,
     super.key,
@@ -21,6 +22,7 @@ class ProfileBody extends StatelessWidget {
   final bool isProfileLoading;
   final VoidCallback onPaymentHistory;
   final VoidCallback onLogout;
+  final VoidCallback? onMyStudy;
   final VoidCallback? onUpgradeSubscription;
   final RefreshCallback? onRefresh;
 
@@ -48,6 +50,10 @@ class ProfileBody extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _ProfileIdentity(user: user),
+              if (onMyStudy != null) ...[
+                const SizedBox(height: AppSizes.spacing16),
+                Center(child: _MyStudyButton(onPressed: onMyStudy!)),
+              ],
               const SizedBox(height: AppSizes.spacing32),
               _PersonalInformation(user: user),
               const SizedBox(height: AppSizes.spacing32),
@@ -297,6 +303,32 @@ class _StatusBadge extends StatelessWidget {
           fontWeight: FontWeight.w900,
         ),
       ),
+    );
+  }
+}
+
+/// Small pill button under the profile header → "ការសិក្សារបស់ខ្ញុំ".
+class _MyStudyButton extends StatelessWidget {
+  const _MyStudyButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return FilledButton.icon(
+      onPressed: onPressed,
+      style: FilledButton.styleFrom(
+        foregroundColor: Colors.white,
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        shape: const StadiumBorder(),
+        textStyle: theme.textTheme.labelLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      icon: const Icon(Icons.menu_book_rounded, size: 18),
+      label: Text(context.l10n.text('myStudyTitle')),
     );
   }
 }

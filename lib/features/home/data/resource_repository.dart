@@ -185,6 +185,34 @@ class ResourceRepository {
     return ExamTestDetail.fromJson(json);
   }
 
+  Future<ExamTestAttemptPage> fetchMyExamTestAttempts({
+    required String token,
+    int page = 1,
+    int limit = 10,
+  }) async {
+    final json = await apiService.fetchMyExamTestAttempts(
+      token: token,
+      page: page,
+      limit: limit,
+    );
+    return ExamTestAttemptPage.fromJson(json);
+  }
+
+  Future<ExamTestSubmitResult> submitExamTest({
+    required String testId,
+    required String token,
+    required List<Map<String, Object?>> answers,
+    DateTime? startedAt,
+  }) async {
+    final json = await apiService.submitExamTest(
+      testId: testId,
+      token: token,
+      answers: answers,
+      startedAt: startedAt,
+    );
+    return ExamTestSubmitResult.fromJson(json);
+  }
+
   ExamResourceModel _findExam(
     List<ExamResourceModel> resources,
     String examId,

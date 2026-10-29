@@ -72,13 +72,85 @@ class ExamTestsNotifier extends AsyncNotifier<ExamTestPage> {
   }
 }
 
+// No automatic retry: on failure show the error + retry button right away
+// instead of an endless loading skeleton while Riverpod retries.
+Duration? _noRetry(int retryCount, Object error) => null;
+
 final examTestsProvider =
     AsyncNotifierProvider.autoDispose<ExamTestsNotifier, ExamTestPage>(
       ExamTestsNotifier.new,
+      retry: _noRetry,
     );
 
+/// Thrown when "My study" is opened without a logged-in user.
+class NotLoggedInException implements Exception {
+  const NotLoggedInException();
+}
+
+/// Paginated list of the student's saved test results.
+class MyExamTestAttemptsNotifier extends AsyncNotifier<ExamTestAttemptPage> {
+  static const pageSize = 10;
+
+  String? get _token {
+    final authState = ref.read(authControllerProvider);
+    return switch (authState) {
+      AsyncData(:final value) => value?.token,
+      _ => null,
+    };
+  }
+
+  @override
+  Future<ExamTestAttemptPage> build() {
+    ref.watch(authControllerProvider.select((s) => s.value?.token));
+    final token = _token;
+    if (token == null || token.isEmpty) {
+      throw const NotLoggedInException();
+    }
+    return ref
+        .read(resourceRepositoryProvider)
+        .fetchMyExamTestAttempts(token: token, page: 1, limit: pageSize);
+  }
+
+  Future<void> loadMore() async {
+    final current = state.value;
+    final token = _token;
+    if (current == null ||
+        token == null ||
+        !current.hasNextPage ||
+        current.isFetchingMore ||
+        state.isLoading) {
+      return;
+    }
+
+    state = AsyncData(current.copyWith(isFetchingMore: true));
+    try {
+      final next = await ref
+          .read(resourceRepositoryProvider)
+          .fetchMyExamTestAttempts(
+            token: token,
+            page: current.page + 1,
+            limit: pageSize,
+          );
+      state = AsyncData(
+        next.copyWith(
+          attempts: [...current.attempts, ...next.attempts],
+          isFetchingMore: false,
+        ),
+      );
+    } catch (_) {
+      state = AsyncData(current.copyWith(isFetchingMore: false));
+    }
+  }
+}
+
+final myExamTestAttemptsProvider =
+    AsyncNotifierProvider.autoDispose<
+      MyExamTestAttemptsNotifier,
+      ExamTestAttemptPage
+    >(MyExamTestAttemptsNotifier.new, retry: _noRetry);
+
 final examTestDetailProvider = FutureProvider.autoDispose
-    .family<ExamTestDetail, String>((ref, testId) async {
+    .family<ExamTestDetail, String>(retry: _noRetry, (ref, testId) async {
       final authState = ref.watch(authControllerProvider);
       final token = switch (authState) {
         AsyncData(:final value) => value?.token,
