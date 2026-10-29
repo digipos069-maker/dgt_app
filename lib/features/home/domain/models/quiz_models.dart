@@ -158,20 +158,45 @@ class DragAndDropQuizData {
 }
 
 class QuizOptionModel {
-  const QuizOptionModel({required this.id, required this.labelKey});
+  const QuizOptionModel({
+    required this.id,
+    required this.labelKey,
+    this.imageUrl,
+  });
 
-  factory QuizOptionModel.fromJson(Map<String, dynamic> json) {
+  /// Accepts `{id, text}` / `{id, labelKey}` and image options shaped like
+  /// `{alt, value, imageUrl}` (MULTIPLE_CHOICE_IMAGE).
+  factory QuizOptionModel.fromJson(
+    Map<String, dynamic> json, {
+    String fallbackId = '',
+  }) {
+    final id = (json['id'] ?? json['value'])?.toString() ?? '';
+    final imageUrl = (json['imageUrl'] ?? json['image'])?.toString().trim();
     return QuizOptionModel(
-      id: json['id']?.toString() ?? '',
-      labelKey: (json['labelKey'] ?? json['text'] ?? json['label'] ?? '')
-          .toString(),
+      id: id.isNotEmpty ? id : fallbackId,
+      labelKey:
+          (json['labelKey'] ??
+                  json['text'] ??
+                  json['label'] ??
+                  json['alt'] ??
+                  json['value'] ??
+                  '')
+              .toString(),
+      imageUrl: imageUrl == null || imageUrl.isEmpty ? null : imageUrl,
     );
   }
 
   final String id;
   final String labelKey;
+  final String? imageUrl;
 
-  Map<String, dynamic> toJson() => {'id': id, 'labelKey': labelKey};
+  bool get hasImage => imageUrl != null;
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'labelKey': labelKey,
+    if (imageUrl != null) 'imageUrl': imageUrl,
+  };
 
   @override
   bool operator ==(Object other) =>
@@ -305,7 +330,12 @@ class QuizQuestionModel {
     final options = <QuizOptionModel>[];
     for (final (index, item) in optionsRaw.indexed) {
       if (item is Map<String, dynamic>) {
-        options.add(QuizOptionModel.fromJson(item));
+        options.add(
+          QuizOptionModel.fromJson(
+            item,
+            fallbackId: String.fromCharCode(65 + index),
+          ),
+        );
       } else if (item != null) {
         options.add(
           QuizOptionModel(

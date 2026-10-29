@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/application/auth_controller.dart';
 import '../data/resource_repository.dart';
 import '../domain/models/exam_resource_model.dart';
+import '../domain/models/exam_test_model.dart';
 import '../domain/models/resource_document_model.dart';
 import '../domain/models/resource_year_model.dart';
 
@@ -18,6 +19,75 @@ final examResourcesProvider = FutureProvider.autoDispose
       return await ref
           .watch(resourceRepositoryProvider)
           .fetchResources(token: token, languageCode: languageCode);
+    });
+
+/// Paginated list of exam tests ("ប្រឡងតេស្ត").
+class ExamTestsNotifier extends AsyncNotifier<ExamTestPage> {
+  static const pageSize = 10;
+
+  String? get _token {
+    final authState = ref.read(authControllerProvider);
+    return switch (authState) {
+      AsyncData(:final value) => value?.token,
+      _ => null,
+    };
+  }
+
+  @override
+  Future<ExamTestPage> build() {
+    // Re-fetch when the user logs in or out.
+    ref.watch(authControllerProvider.select((s) => s.value?.token));
+    return ref
+        .read(resourceRepositoryProvider)
+        .fetchExamTests(token: _token, page: 1, limit: pageSize);
+  }
+
+  Future<void> loadMore() async {
+    final current = state.value;
+    if (current == null ||
+        !current.hasNextPage ||
+        current.isFetchingMore ||
+        state.isLoading) {
+      return;
+    }
+
+    state = AsyncData(current.copyWith(isFetchingMore: true));
+    try {
+      final next = await ref
+          .read(resourceRepositoryProvider)
+          .fetchExamTests(
+            token: _token,
+            page: current.page + 1,
+            limit: pageSize,
+          );
+      state = AsyncData(
+        next.copyWith(
+          tests: [...current.tests, ...next.tests],
+          isFetchingMore: false,
+        ),
+      );
+    } catch (_) {
+      state = AsyncData(current.copyWith(isFetchingMore: false));
+    }
+  }
+}
+
+final examTestsProvider =
+    AsyncNotifierProvider.autoDispose<ExamTestsNotifier, ExamTestPage>(
+      ExamTestsNotifier.new,
+    );
+
+final examTestDetailProvider = FutureProvider.autoDispose
+    .family<ExamTestDetail, String>((ref, testId) async {
+      final authState = ref.watch(authControllerProvider);
+      final token = switch (authState) {
+        AsyncData(:final value) => value?.token,
+        _ => null,
+      };
+
+      return ref
+          .watch(resourceRepositoryProvider)
+          .fetchExamTestDetail(testId: testId, token: token);
     });
 
 class ResourceYearsRequest {

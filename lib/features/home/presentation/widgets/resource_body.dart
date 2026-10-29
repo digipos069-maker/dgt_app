@@ -7,6 +7,7 @@ import '../../../../localization/app_localizations.dart';
 import '../../application/resource_controller.dart';
 import '../../domain/models/exam_resource_model.dart';
 import '../pages/resource_years_page.dart';
+import 'exam_test_entry_card.dart';
 
 class ResourceBody extends ConsumerWidget {
   const ResourceBody({super.key});
@@ -18,91 +19,93 @@ class ResourceBody extends ConsumerWidget {
     final theme = Theme.of(context);
     final textTheme = GoogleFonts.battambangTextTheme(theme.textTheme);
 
+    Future<void> onRefresh() async {
+      ref.invalidate(examTestsProvider);
+      final _ = await ref.refresh(examResourcesProvider(languageCode).future);
+    }
+
     return Theme(
       data: theme.copyWith(textTheme: textTheme),
-      child: resourcesState.when(
-        data: (resources) => _ResourceContent(
-          resources: resources,
-          onRefresh: () async {
-            final _ = await ref.refresh(
-              examResourcesProvider(languageCode).future,
-            );
-          },
+      child: ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(overscroll: false),
+        child: RefreshIndicator(
+          onRefresh: onRefresh,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = constraints.maxWidth >= 720 ? 2 : 1;
+
+              return SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: ClampingScrollPhysics(),
+                ),
+                padding: const EdgeInsets.fromLTRB(
+                  10,
+                  24,
+                  10,
+                  AppSizes.pageBottomPadding,
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1100),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const ExamTestEntryCard(),
+                        const SizedBox(height: AppSizes.spacing24),
+                        const _ResourceIntroduction(),
+                        const SizedBox(height: AppSizes.spacing24),
+                        resourcesState.when(
+                          data: (resources) => resources.isEmpty
+                              ? const _EmptyResources()
+                              : _ResourceGrid(
+                                  resources: resources,
+                                  columns: columns,
+                                ),
+                          error: (_, _) => _ResourceError(
+                            onRetry: () => ref.invalidate(
+                              examResourcesProvider(languageCode),
+                            ),
+                          ),
+                          loading: () => const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 48),
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
         ),
-        error: (_, _) => _ResourceError(
-          onRetry: () => ref.invalidate(examResourcesProvider(languageCode)),
-        ),
-        loading: () => const Center(child: CircularProgressIndicator()),
       ),
     );
   }
 }
 
-class _ResourceContent extends StatelessWidget {
-  const _ResourceContent({required this.resources, required this.onRefresh});
+class _ResourceGrid extends StatelessWidget {
+  const _ResourceGrid({required this.resources, required this.columns});
 
   final List<ExamResourceModel> resources;
-  final Future<void> Function() onRefresh;
+  final int columns;
 
   @override
   Widget build(BuildContext context) {
-    if (resources.isEmpty) {
-      return const _EmptyResources();
-    }
-
-    return ScrollConfiguration(
-      behavior: ScrollConfiguration.of(context).copyWith(
-        overscroll: false,
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: resources.length,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: columns,
+        crossAxisSpacing: AppSizes.spacing16,
+        mainAxisSpacing: AppSizes.spacing16,
+        mainAxisExtent: 196,
       ),
-      child: RefreshIndicator(
-        onRefresh: onRefresh,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final columns = constraints.maxWidth >= 720 ? 2 : 1;
-
-            return SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(
-                parent: ClampingScrollPhysics(),
-              ),
-              padding: const EdgeInsets.fromLTRB(
-              10,
-              24,
-              10,
-              AppSizes.pageBottomPadding,
-            ),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1100),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const _ResourceIntroduction(),
-                    const SizedBox(height: AppSizes.spacing24),
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: resources.length,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: columns,
-                        crossAxisSpacing: AppSizes.spacing16,
-                        mainAxisSpacing: AppSizes.spacing16,
-                        mainAxisExtent: 196,
-                      ),
-                      itemBuilder: (context, index) => _ResourceCard(
-                        resource: resources[index],
-                        index: index,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    ),
-  );
-}
+      itemBuilder: (context, index) =>
+          _ResourceCard(resource: resources[index], index: index),
+    );
+  }
 }
 
 class _ResourceIntroduction extends StatelessWidget {
@@ -232,8 +235,6 @@ class _ResourceCard extends StatelessWidget {
   }
 }
 
-
-
 class _ResourceError extends StatelessWidget {
   const _ResourceError({required this.onRetry});
 
@@ -272,7 +273,10 @@ class _EmptyResources extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(child: Text(context.l10n.text('resourceEmpty')));
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSizes.spacing24),
+      child: Center(child: Text(context.l10n.text('resourceEmpty'))),
+    );
   }
 }
 

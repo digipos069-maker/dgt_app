@@ -116,6 +116,37 @@ class ResourceApiService {
     return _getJson(uri, token: token, callerName: 'fetchMobileResourceList');
   }
 
+  /// Exam tests ("ប្រឡងតេស្ត").
+  /// Path: `GET /api/m/exam-tests?page=1&limit=10`
+  /// Response: `{ data: [ExamTest...], meta: {total, page, limit, totalPages, hasNextPage} }`
+  Future<Map<String, dynamic>> fetchExamTests({
+    String? token,
+    int page = 1,
+    int limit = 10,
+  }) {
+    final queryParams = sanitizeQueryParams(page: page, limit: limit);
+    final uri = Uri.parse(
+      '${ApiConstants.baseUrl}${ApiConstants.mobileExamTestsPath}',
+    ).replace(queryParameters: queryParams);
+
+    return _getJson(uri, token: token, callerName: 'fetchExamTests');
+  }
+
+  /// One exam test with its quizzes.
+  /// Path: `GET /api/m/exam-tests/:id`
+  /// Response: `{ data: { ...ExamTest, quizzes: [Quiz...] } }`
+  Future<Map<String, dynamic>> fetchExamTestDetail({
+    required String testId,
+    String? token,
+  }) {
+    final uri = Uri.parse(
+      '${ApiConstants.baseUrl}${ApiConstants.mobileExamTestsPath}/'
+      '${Uri.encodeComponent(testId)}',
+    );
+
+    return _getJson(uri, token: token, callerName: 'fetchExamTestDetail');
+  }
+
   /// Fetches exam types from `/api/exams/types`
   Future<List<ExamResourceModel>> fetchExamTypes({
     String? token,

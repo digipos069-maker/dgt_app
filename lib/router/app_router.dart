@@ -10,6 +10,8 @@ import '../features/auth/presentation/pages/profile_page.dart';
 import '../features/auth/presentation/pages/register_page.dart';
 import '../features/home/presentation/pages/ai_tutor_page.dart';
 import '../features/home/presentation/pages/basic_course_page.dart';
+import '../features/home/presentation/pages/exam_test_detail_page.dart';
+import '../features/home/presentation/pages/exam_test_list_page.dart';
 import '../features/home/presentation/pages/basic_lesson_detail_page.dart';
 import '../features/home/presentation/pages/basic_lesson_list_page.dart';
 import '../features/home/presentation/pages/grade_list_page.dart';
@@ -180,6 +182,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: ResourcePage.routeName,
         pageBuilder: (context, state) =>
             _noTransitionPage(state, const ResourcePage()),
+      ),
+      GoRoute(
+        path: ExamTestListPage.routePath,
+        name: ExamTestListPage.routeName,
+        builder: (context, state) => const ExamTestListPage(),
+      ),
+      GoRoute(
+        path: ExamTestDetailPage.routePath,
+        name: ExamTestDetailPage.routeName,
+        builder: (context, state) =>
+            ExamTestDetailPage(testId: state.pathParameters['testId'] ?? ''),
       ),
       GoRoute(
         path: ResourceYearsPage.routePath,

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/models/exam_resource_model.dart';
+import '../domain/models/exam_test_model.dart';
 import '../domain/models/resource_document_model.dart';
 import '../domain/models/resource_year_model.dart';
 
@@ -158,6 +159,30 @@ class ResourceRepository {
       hasMore: meta.hasNextPage,
       meta: meta,
     );
+  }
+
+  Future<ExamTestPage> fetchExamTests({
+    String? token,
+    int page = 1,
+    int limit = 10,
+  }) async {
+    final json = await apiService.fetchExamTests(
+      token: token,
+      page: page,
+      limit: limit,
+    );
+    return ExamTestPage.fromJson(json);
+  }
+
+  Future<ExamTestDetail> fetchExamTestDetail({
+    required String testId,
+    String? token,
+  }) async {
+    final json = await apiService.fetchExamTestDetail(
+      testId: testId,
+      token: token,
+    );
+    return ExamTestDetail.fromJson(json);
   }
 
   ExamResourceModel _findExam(

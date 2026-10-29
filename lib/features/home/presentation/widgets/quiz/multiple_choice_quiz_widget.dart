@@ -85,11 +85,13 @@ class MultipleChoiceQuizWidget extends StatelessWidget {
         LayoutBuilder(
           builder: (context, constraints) {
             final isWide = constraints.maxWidth >= 620;
+            final hasImages = question.options.any((o) => o.hasImage);
             return GridView.count(
-              crossAxisCount: isWide ? 2 : 1,
+              // Image options sit side by side even on phones.
+              crossAxisCount: isWide || hasImages ? 2 : 1,
               crossAxisSpacing: AppSizes.spacing12,
               mainAxisSpacing: AppSizes.spacing12,
-              mainAxisExtent: 78,
+              mainAxisExtent: hasImages ? 190 : 78,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               children: [
@@ -228,7 +230,9 @@ class _OptionCard extends StatelessWidget {
             horizontal: AppSizes.spacing16,
             vertical: AppSizes.spacing12,
           ),
-          child: Row(
+          child: option.hasImage
+              ? _buildImageContent(context, theme)
+              : Row(
             children: [
               _SelectionCircle(isSelected: isSelected, status: status),
               const SizedBox(width: AppSizes.spacing12),
@@ -267,6 +271,57 @@ class _OptionCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildImageContent(BuildContext context, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              option.imageUrl!,
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, progress) => progress == null
+                  ? child
+                  : const Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+              errorBuilder: (context, error, stackTrace) => ColoredBox(
+                color: theme.colorScheme.surfaceContainerHighest,
+                child: Icon(
+                  Icons.broken_image_outlined,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSizes.spacing8),
+        Row(
+          children: [
+            _SelectionCircle(isSelected: isSelected, status: status),
+            const SizedBox(width: AppSizes.spacing8),
+            Expanded(
+              child: Text(
+                option.labelKey,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
