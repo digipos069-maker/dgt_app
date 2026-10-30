@@ -39,4 +39,5 @@ abstract final class ApiConstants {
   static const aiTutorChatPath = '/api/ai-tutor/chat';
   static const aiTutorChatStreamPath = '/api/ai-tutor/chat/stream';
   static const aiTutorLessonsPath = '/api/ai-tutor/lessons';
+  static const aiTutorUsagePath = '/api/ai-tutor/usage';
 }

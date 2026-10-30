@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../localization/app_localizations.dart';
+import 'ai_tutor_text_styles.dart';
 
 class AiTutorInputBar extends StatefulWidget {
   const AiTutorInputBar({
@@ -28,22 +29,25 @@ class _AiTutorInputBarState extends State<AiTutorInputBar> {
   final _controller = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-    _controller.addListener(() => setState(() {}));
-  }
-
-  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
 
-  bool get _canSend => !widget.isSending && _controller.text.trim().isNotEmpty;
-
   void _submit() {
-    if (!_canSend) return;
-    widget.onSend(_controller.text);
+    if (widget.isSending) return;
+    final trimmed = _controller.text.trim();
+    if (trimmed.isEmpty) return;
+
+    // The length limit is applied here, NOT with TextField.maxLength:
+    // maxLength runs a formatter during IME composition, which breaks
+    // Khmer typing on some keyboards.
+    final characters = trimmed.characters;
+    widget.onSend(
+      characters.length > AiTutorInputBar.maxLength
+          ? characters.take(AiTutorInputBar.maxLength).toString()
+          : trimmed,
+    );
     _controller.clear();
   }
 
@@ -70,16 +74,22 @@ class _AiTutorInputBarState extends State<AiTutorInputBar> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Expanded(
+              // No maxLength / inputFormatters / rebuild-on-keystroke here:
+              // they interfere with Khmer (and other composing) keyboards.
               child: TextField(
                 controller: _controller,
                 minLines: 1,
                 maxLines: 5,
-                maxLength: AiTutorInputBar.maxLength,
-                textInputAction: TextInputAction.newline,
                 keyboardType: TextInputType.multiline,
+                textInputAction: TextInputAction.newline,
+                style: withKhmerFallback(theme.textTheme.bodyLarge),
                 decoration: InputDecoration(
                   hintText: context.l10n.text('aiTutorInputHint'),
-                  counterText: '',
+                  hintStyle: withKhmerFallback(
+                    theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                   isDense: true,
                   filled: true,
                   fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
@@ -91,21 +101,30 @@ class _AiTutorInputBarState extends State<AiTutorInputBar> {
                     borderRadius: BorderRadius.circular(AppSizes.cardRadius),
                     borderSide: BorderSide.none,
                   ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
             ),
             const SizedBox(width: AppSizes.spacing8),
-            widget.isSending
-                ? IconButton.filled(
-                    onPressed: widget.onStop,
-                    tooltip: context.l10n.text('aiTutorStop'),
-                    icon: const Icon(Icons.stop_rounded),
-                  )
-                : IconButton.filled(
-                    onPressed: _canSend ? _submit : null,
-                    tooltip: context.l10n.text('aiTutorSend'),
-                    icon: const Icon(Icons.arrow_upward_rounded),
-                  ),
+            if (widget.isSending)
+              IconButton.filled(
+                onPressed: widget.onStop,
+                tooltip: context.l10n.text('aiTutorStop'),
+                icon: const Icon(Icons.stop_rounded),
+              )
+            else
+              // Only the button listens to the text, so typing never rebuilds the TextField.
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _controller,
+                builder: (context, value, _) => IconButton.filled(
+                  onPressed: value.text.trim().isEmpty ? null : _submit,
+                  tooltip: context.l10n.text('aiTutorSend'),
+                  icon: const Icon(Icons.arrow_upward_rounded),
+                ),
+              ),
           ],
         ),
       ),

@@ -84,6 +84,21 @@ class AiTutorApiService {
     }
   }
 
+  Future<Object?> fetchUsage({required String token}) async {
+    final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.aiTutorUsagePath}');
+    final response = await _client
+        .get(uri, headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'})
+        .timeout(const Duration(seconds: 15));
+    final body = _tryDecode(response.body);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw AppException(
+        _readMessage(body) ?? 'Failed to load AI tutor usage',
+        statusCode: response.statusCode,
+      );
+    }
+    return body;
+  }
+
   Future<Object?> fetchLessons({
     required String token,
     String query = '',

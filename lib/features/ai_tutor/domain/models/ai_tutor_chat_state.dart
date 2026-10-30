@@ -5,15 +5,11 @@ class AiTutorChatState {
   const AiTutorChatState({
     this.messages = const [],
     this.isSending = false,
-    this.remaining,
     this.attachedLesson,
   });
 
   final List<AiTutorMessage> messages;
   final bool isSending;
-
-  /// Questions left today, as reported by the server (null until known).
-  final int? remaining;
 
   /// Lesson the answers are grounded in; null = general study help.
   final AiTutorLessonRef? attachedLesson;
@@ -23,14 +19,12 @@ class AiTutorChatState {
   AiTutorChatState copyWith({
     List<AiTutorMessage>? messages,
     bool? isSending,
-    int? remaining,
     AiTutorLessonRef? attachedLesson,
     bool clearAttachedLesson = false,
   }) {
     return AiTutorChatState(
       messages: messages ?? this.messages,
       isSending: isSending ?? this.isSending,
-      remaining: remaining ?? this.remaining,
       attachedLesson: clearAttachedLesson ? null : (attachedLesson ?? this.attachedLesson),
     );
   }

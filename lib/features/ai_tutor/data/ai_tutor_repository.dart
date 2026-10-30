@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/models/ai_tutor_lesson_ref.dart';
 import '../domain/models/ai_tutor_message.dart';
 import '../domain/models/ai_tutor_stream_event.dart';
+import '../domain/models/ai_tutor_usage.dart';
 import 'ai_tutor_api_service.dart';
 
 final aiTutorRepositoryProvider = Provider<AiTutorRepository>(
@@ -16,6 +17,14 @@ class AiTutorRepository {
 
   /// Only the most recent turns are sent; the server trims further.
   static const maxHistory = 12;
+
+  Future<AiTutorUsage> getUsage({required String token}) async {
+    final json = await _apiService.fetchUsage(token: token);
+    if (json is! Map<String, dynamic>) {
+      throw const FormatException('Invalid AI tutor usage response');
+    }
+    return AiTutorUsage.fromJson(json);
+  }
 
   Future<AiTutorLessonSearchResult> searchLessons({
     required String token,

@@ -11,6 +11,7 @@ import '../domain/models/ai_tutor_chat_state.dart';
 import '../domain/models/ai_tutor_lesson_ref.dart';
 import '../domain/models/ai_tutor_message.dart';
 import '../domain/models/ai_tutor_stream_event.dart';
+import '../domain/models/ai_tutor_usage.dart';
 
 /// Keep a conversation for a while after the student leaves the page,
 /// so going back to the video and returning doesn't wipe the chat.
@@ -37,7 +38,6 @@ class AiTutorController extends Notifier<AiTutorChatState> {
   String _pending = '';
   bool _streamFinished = false;
   String? _streamErrorKey;
-  int? _streamRemaining;
 
   @override
   AiTutorChatState build() {
@@ -126,7 +126,6 @@ class AiTutorController extends Notifier<AiTutorChatState> {
     _pending = '';
     _streamFinished = false;
     _streamErrorKey = null;
-    _streamRemaining = null;
 
     final String token;
     try {
@@ -151,8 +150,10 @@ class AiTutorController extends Notifier<AiTutorChatState> {
               case AiTutorDelta(:final text):
                 _pending += text;
                 _startRevealing();
-              case AiTutorDone(:final remaining):
-                _streamRemaining = remaining;
+              case AiTutorDone(:final usage):
+                if (usage != null) {
+                  ref.read(aiTutorUsageProvider.notifier).set(usage);
+                }
               case AiTutorStreamFailure():
                 _finishStream(errorKey: 'aiTutorErrorGeneric');
             }
@@ -197,10 +198,7 @@ class AiTutorController extends Notifier<AiTutorChatState> {
   /// New chat: clears messages but keeps the attached lesson.
   void clear() {
     stop();
-    state = AiTutorChatState(
-      remaining: state.remaining,
-      attachedLesson: state.attachedLesson,
-    );
+    state = AiTutorChatState(attachedLesson: state.attachedLesson);
   }
 
   /// Marks the stream as over. The reply is finalized once all pending text
@@ -262,8 +260,11 @@ class AiTutorController extends Notifier<AiTutorChatState> {
     state = state.copyWith(
       messages: messages,
       isSending: false,
-      remaining: _streamRemaining,
     );
+    // Out of tokens: reload the allowance so the usage bar shows the reset date.
+    if (errorKey == 'aiTutorLimitReached') {
+      ref.read(aiTutorUsageProvider.notifier).refresh();
+    }
   }
 
   void _updateActive(AiTutorMessage Function(AiTutorMessage) update) {
@@ -305,6 +306,32 @@ class AiTutorController extends Notifier<AiTutorChatState> {
 
   String _nextId() => '${DateTime.now().microsecondsSinceEpoch}-${_idSeed++}';
 }
+
+/// The student's monthly AI tutor token allowance.
+/// Loaded from the server, then updated after every answer.
+class AiTutorUsageNotifier extends AsyncNotifier<AiTutorUsage> {
+  @override
+  Future<AiTutorUsage> build() {
+    final user = switch (ref.watch(authControllerProvider)) {
+      AsyncData(:final value) => value,
+      _ => null,
+    };
+    final token = user?.token;
+    if (token == null || token.isEmpty) {
+      throw const AppException('Authentication is required', statusCode: 401);
+    }
+    return ref.read(aiTutorRepositoryProvider).getUsage(token: token);
+  }
+
+  void set(AiTutorUsage usage) => state = AsyncData(usage);
+
+  void refresh() => ref.invalidateSelf();
+}
+
+final aiTutorUsageProvider =
+    AsyncNotifierProvider.autoDispose<AiTutorUsageNotifier, AiTutorUsage>(
+      AiTutorUsageNotifier.new,
+    );
 
 /// Lessons for the "Add lesson" picker (student's grade by default).
 final aiTutorLessonSearchProvider = FutureProvider.autoDispose

@@ -8,6 +8,7 @@ import 'ai_tutor_input_bar.dart';
 import 'ai_tutor_lesson_context_bar.dart';
 import 'ai_tutor_lesson_picker_sheet.dart';
 import 'ai_tutor_message_bubble.dart';
+import 'ai_tutor_usage_bar.dart';
 import 'ai_tutor_welcome.dart';
 
 /// Message list + lesson chip + input bar for one tutor session.
@@ -32,6 +33,7 @@ class AiTutorChatView extends ConsumerWidget {
 
     return Column(
       children: [
+        const AiTutorUsageBar(),
         Expanded(
           child: Center(
             child: ConstrainedBox(

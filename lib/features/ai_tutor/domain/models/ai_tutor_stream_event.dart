@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'ai_tutor_usage.dart';
+
 /// One Server-Sent Event from `POST /api/ai-tutor/chat/stream`.
 sealed class AiTutorStreamEvent {
   const AiTutorStreamEvent();
@@ -23,7 +25,9 @@ sealed class AiTutorStreamEvent {
     return switch (json['type']) {
       'delta' when json['text'] is String => AiTutorDelta(json['text'] as String),
       'done' => AiTutorDone(
-        remaining: json['remaining'] is num ? (json['remaining'] as num).toInt() : null,
+        usage: json['usage'] is Map<String, dynamic>
+            ? AiTutorUsage.fromJson(json['usage'] as Map<String, dynamic>)
+            : null,
       ),
       'error' => AiTutorStreamFailure(
         json['message'] is String ? json['message'] as String : 'AI tutor error',
@@ -39,8 +43,10 @@ class AiTutorDelta extends AiTutorStreamEvent {
 }
 
 class AiTutorDone extends AiTutorStreamEvent {
-  const AiTutorDone({this.remaining});
-  final int? remaining;
+  const AiTutorDone({this.usage});
+
+  /// Updated allowance after this answer (null if the server didn't send it).
+  final AiTutorUsage? usage;
 }
 
 class AiTutorStreamFailure extends AiTutorStreamEvent {

@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/mixed_latex_text.dart';
 import '../../../../localization/app_localizations.dart';
+import '../../application/ai_tutor_controller.dart';
 import '../../domain/models/ai_tutor_message.dart';
 import 'ai_tutor_avatar.dart';
 import 'ai_tutor_rich_text.dart';
+import 'ai_tutor_text_styles.dart';
 import 'ai_tutor_typing_indicator.dart';
+import 'ai_tutor_upgrade.dart';
 
 /// One chat message. Student questions are right-aligned bubbles; tutor replies
 /// are full-width formatted text next to the tutor avatar (ChatGPT-style).
@@ -67,9 +71,11 @@ class _UserBubble extends StatelessWidget {
             ),
             child: MixedLatexText(
               text: message.text,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                height: 1.5,
-                color: theme.colorScheme.onPrimary,
+              style: withKhmerFallback(
+                theme.textTheme.bodyLarge?.copyWith(
+                  height: 1.5,
+                  color: theme.colorScheme.onPrimary,
+                ),
               ),
             ),
           ),
@@ -101,9 +107,11 @@ class _TutorReply extends StatelessWidget {
       content = AiTutorRichText(
         text: message.text,
         showCursor: message.isStreaming,
-        style: theme.textTheme.bodyLarge?.copyWith(
-          height: 1.6,
-          color: theme.colorScheme.onSurface,
+        style: withKhmerFallback(
+          theme.textTheme.bodyLarge?.copyWith(
+            height: 1.6,
+            color: theme.colorScheme.onSurface,
+          ),
         ),
       );
     }
@@ -154,7 +162,7 @@ class _PickLessonPrompt extends StatelessWidget {
         children: [
           Text(
             context.l10n.text('aiTutorPickLessonFirst'),
-            style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
+            style: withKhmerFallback(theme.textTheme.bodyLarge?.copyWith(height: 1.5)),
           ),
           if (onPickLesson != null) ...[
             const SizedBox(height: AppSizes.spacing12),
@@ -170,16 +178,18 @@ class _PickLessonPrompt extends StatelessWidget {
   }
 }
 
-class _ErrorContent extends StatelessWidget {
+class _ErrorContent extends ConsumerWidget {
   const _ErrorContent({required this.errorKey, this.onRetry});
 
   final String errorKey;
   final VoidCallback? onRetry;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final canRetry = onRetry != null && errorKey != 'aiTutorLimitReached';
+    final isLimit = errorKey == 'aiTutorLimitReached';
+    final canRetry = onRetry != null && !isLimit;
+    final resetsAt = isLimit ? ref.watch(aiTutorUsageProvider).value?.resetsAt : null;
 
     return Container(
       padding: const EdgeInsets.all(AppSizes.spacing12),
@@ -206,6 +216,26 @@ class _ErrorContent extends StatelessWidget {
               ),
             ],
           ),
+          if (resetsAt != null) ...[
+            const SizedBox(height: AppSizes.spacing8),
+            Text(
+              context.l10n
+                  .text('aiTutorLimitResetsOn')
+                  .replaceAll('{date}', formatAiTutorDate(resetsAt)),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onErrorContainer,
+              ),
+            ),
+          ],
+          if (isLimit)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSizes.spacing12),
+              child: FilledButton.icon(
+                onPressed: () => openAiTutorUpgrade(context),
+                icon: const Icon(Icons.workspace_premium_outlined, size: 18),
+                label: Text(context.l10n.text('aiTutorUpgrade')),
+              ),
+            ),
           if (canRetry)
             Align(
               alignment: Alignment.centerRight,
