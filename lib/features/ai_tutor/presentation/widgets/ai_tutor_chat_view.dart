@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_sizes.dart';
 import '../../application/ai_tutor_controller.dart';
+import '../../application/ai_tutor_page_ready_provider.dart';
 import '../../domain/models/ai_tutor_chat_state.dart';
+import 'ai_tutor_chat_skeleton.dart';
 import 'ai_tutor_input_bar.dart';
 import 'ai_tutor_lesson_context_bar.dart';
 import 'ai_tutor_lesson_picker_sheet.dart';
@@ -12,6 +14,7 @@ import 'ai_tutor_usage_bar.dart';
 import 'ai_tutor_welcome.dart';
 
 /// Message list + lesson chip + input bar for one tutor session.
+/// Shows a skeleton on first open until the page can render without jumping.
 class AiTutorChatView extends ConsumerWidget {
   const AiTutorChatView({required this.session, super.key});
 
@@ -22,6 +25,9 @@ class AiTutorChatView extends ConsumerWidget {
     final provider = aiTutorControllerProvider(session);
     final chat = ref.watch(provider);
     final controller = ref.read(provider.notifier);
+    final ready = ref.watch(aiTutorPageReadyProvider);
+    // Coming back to a conversation already in progress: show it right away.
+    final showSkeleton = chat.isEmpty && ready.isLoading;
 
     Future<void> pickLesson() async {
       final picked = await AiTutorLessonPickerSheet.show(
@@ -31,7 +37,23 @@ class AiTutorChatView extends ConsumerWidget {
       if (picked != null) controller.attachLesson(picked);
     }
 
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 250),
+      switchInCurve: Curves.easeOut,
+      switchOutCurve: Curves.easeIn,
+      child: showSkeleton
+          ? const AiTutorChatSkeleton(key: ValueKey('ai-tutor-skeleton'))
+          : _buildContent(chat, controller, pickLesson),
+    );
+  }
+
+  Widget _buildContent(
+    AiTutorChatState chat,
+    AiTutorController controller,
+    Future<void> Function() pickLesson,
+  ) {
     return Column(
+      key: const ValueKey('ai-tutor-content'),
       children: [
         const AiTutorUsageBar(),
         Expanded(
