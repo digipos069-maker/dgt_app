@@ -36,4 +36,7 @@ abstract final class ApiConstants {
   static const uploadPayslipPath = '/api/payment/upload-payslip';
   static const bankTransferPaymentPath = '/api/payment/bank-transfer';
   static const upgradeSubscriptionPath = '/api/upgrade-subscription';
+  static const aiTutorChatPath = '/api/ai-tutor/chat';
+  static const aiTutorChatStreamPath = '/api/ai-tutor/chat/stream';
+  static const aiTutorLessonsPath = '/api/ai-tutor/lessons';
 }

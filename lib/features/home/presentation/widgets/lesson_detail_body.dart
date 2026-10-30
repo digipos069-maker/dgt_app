@@ -20,6 +20,8 @@ import '../../data/daily_goal_repository.dart';
 import '../../../auth/application/auth_controller.dart';
 import '../../domain/models/lesson_model.dart';
 import '../../domain/models/quiz_submission_result.dart';
+import '../../../ai_tutor/presentation/widgets/ai_tutor_lesson_entry_card.dart';
+import '../pages/ai_tutor_page.dart';
 import '../pages/lesson_list_page.dart';
 import '../pages/quiz_by_lesson_page.dart';
 import '../../../../theme/app_colors.dart';
@@ -370,6 +372,26 @@ class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
                             lessonId: resolvedLessonId,
                           ),
                         ),
+                        if (int.tryParse(widget.detail.lessonId) case final tutorialId?
+                            when tutorialId > 0) ...[
+                          const SizedBox(height: AppSizes.spacing16),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSizes.spacing4,
+                            ),
+                            child: AiTutorLessonEntryCard(
+                              onPressed: () => context.pushNamed(
+                                AiTutorPage.routeName,
+                                queryParameters: {
+                                  'tutorialId': tutorialId.toString(),
+                                  'title': context.l10n.text(
+                                    widget.detail.titleKey,
+                                  ),
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),

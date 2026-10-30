@@ -175,8 +175,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AiTutorPage.routePath,
         name: AiTutorPage.routeName,
-        pageBuilder: (context, state) =>
-            _noTransitionPage(state, const AiTutorPage()),
+        pageBuilder: (context, state) {
+          final tutorialId = _queryInt(state, 'tutorialId');
+          return _noTransitionPage(
+            state,
+            AiTutorPage(
+              tutorialId: (tutorialId != null && tutorialId > 0)
+                  ? tutorialId
+                  : null,
+              lessonTitle: state.uri.queryParameters['title'],
+            ),
+          );
+        },
       ),
       GoRoute(
         path: ResourcePage.routePath,
