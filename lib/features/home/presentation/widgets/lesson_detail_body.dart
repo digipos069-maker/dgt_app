@@ -10,7 +10,6 @@ import 'package:video_player/video_player.dart';
 
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/constants/app_sizes.dart';
-import '../../../../core/utils/app_exception.dart';
 import '../../../../localization/app_localizations.dart';
 import '../../application/lesson_controller.dart';
 import '../../application/quiz_controller.dart';
@@ -138,7 +137,7 @@ class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
     if (matchingData == null) return;
 
     if (matches.length < matchingData.stems.length) {
-      _showQuizSnackBar('Please match all terms before submitting.');
+      _showQuizSnackBar(context.l10n.text('quizMatchAllTerms'));
       return;
     }
 
@@ -164,7 +163,7 @@ class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
     if (dragData == null) return;
 
     if (dropped == null || dropped.isEmpty) {
-      _showQuizSnackBar('Please place an answer before submitting.');
+      _showQuizSnackBar(context.l10n.text('quizPlaceAnswer'));
       return;
     }
 
@@ -219,9 +218,15 @@ class _LessonDetailContentState extends ConsumerState<LessonDetailContent> {
             quizId: quizId,
             selectedAnswer: selectedOption.labelKey,
           );
-    } on AppException catch (error) {
-      errorMessage = error.message;
-    } on Object {
+    } on Object catch (error, stackTrace) {
+      // Server and service error messages are English-only, so the student
+      // sees the translated message and the details go to the log.
+      developer.log(
+        'Quiz answer submission failed',
+        name: 'dgt.quiz',
+        error: error,
+        stackTrace: stackTrace,
+      );
       errorMessage = genericFailureMessage;
     } finally {
       if (mounted) {

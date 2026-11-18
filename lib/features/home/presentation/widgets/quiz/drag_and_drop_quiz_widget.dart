@@ -75,7 +75,7 @@ class _DragAndDropQuizWidgetState extends State<DragAndDropQuizWidget> {
 
     final promptText = widget.data.prompt.isNotEmpty
         ? widget.data.prompt
-        : 'Drag or tap the correct answer into the drop zone:';
+        : context.l10n.text('dragQuizDefaultPrompt');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -102,14 +102,6 @@ class _DragAndDropQuizWidgetState extends State<DragAndDropQuizWidget> {
             ),
           ],
         ),
-        const SizedBox(height: AppSizes.spacing8),
-        Text(
-          'Target: ${_formatDroppableId(widget.data.droppableId)}',
-          style: theme.textTheme.labelMedium?.copyWith(
-            color: theme.colorScheme.primary,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
         const SizedBox(height: AppSizes.spacing16),
 
         // Droppable Target Slot
@@ -119,7 +111,7 @@ class _DragAndDropQuizWidgetState extends State<DragAndDropQuizWidget> {
 
         // Draggables Pool
         Text(
-          'Available Choices',
+          context.l10n.text('dragQuizAvailableChoices'),
           style: theme.textTheme.labelMedium?.copyWith(
             fontWeight: FontWeight.w800,
             color: theme.colorScheme.secondary,
@@ -210,8 +202,8 @@ class _DragAndDropQuizWidgetState extends State<DragAndDropQuizWidget> {
                         Flexible(
                           child: Text(
                             isHovering
-                                ? 'Release to drop here'
-                                : 'Drop answer here (or tap a choice below)',
+                                ? context.l10n.text('dragQuizReleaseToDrop')
+                                : context.l10n.text('dragQuizDropHere'),
                             textAlign: TextAlign.center,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -392,10 +384,5 @@ class _DragAndDropQuizWidgetState extends State<DragAndDropQuizWidget> {
         child: chipWidget,
       ),
     );
-  }
-
-  String _formatDroppableId(String id) {
-    if (id.isEmpty) return 'Default Slot';
-    return id.replaceAll('-', ' ').replaceAll('_', ' ').toUpperCase();
   }
 }

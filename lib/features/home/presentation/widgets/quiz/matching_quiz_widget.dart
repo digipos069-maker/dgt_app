@@ -172,7 +172,7 @@ class _MatchingQuizWidgetState extends State<MatchingQuizWidget> {
         ),
         const SizedBox(height: AppSizes.spacing8),
         Text(
-          'Tap a term, then tap a matching definition to connect them.',
+          context.l10n.text('matchingQuizInstruction'),
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
             fontStyle: FontStyle.italic,
@@ -229,7 +229,7 @@ class _MatchingQuizWidgetState extends State<MatchingQuizWidget> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Terms',
+          context.l10n.text('matchingQuizTerms'),
           style: theme.textTheme.labelMedium?.copyWith(
             fontWeight: FontWeight.w800,
             color: theme.colorScheme.secondary,
@@ -261,7 +261,7 @@ class _MatchingQuizWidgetState extends State<MatchingQuizWidget> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Definitions',
+          context.l10n.text('matchingQuizDefinitions'),
           style: theme.textTheme.labelMedium?.copyWith(
             fontWeight: FontWeight.w800,
             color: theme.colorScheme.secondary,

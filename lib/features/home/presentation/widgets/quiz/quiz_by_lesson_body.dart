@@ -1,10 +1,10 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:dgt_app/core/constants/app_sizes.dart';
-import 'package:dgt_app/core/utils/app_exception.dart';
 import 'package:dgt_app/localization/app_localizations.dart';
 import 'package:dgt_app/theme/app_colors.dart';
 import 'package:dgt_app/features/auth/application/auth_controller.dart';
@@ -169,9 +169,15 @@ class _QuizByLessonBodyState extends ConsumerState<QuizByLessonBody> {
               quizId: quizId,
               selectedAnswer: selectedOption.labelKey,
             );
-      } on AppException catch (e) {
-        errorMessage = e.message;
-      } catch (_) {
+      } on Object catch (error, stackTrace) {
+        // Server and service error messages are English-only, so the student
+        // sees the translated message and the details go to the log.
+        developer.log(
+          'Quiz answer submission failed',
+          name: 'dgt.quiz',
+          error: error,
+          stackTrace: stackTrace,
+        );
         errorMessage = defaultSubmitErrorMessage;
       } finally {
         if (mounted) {
@@ -286,9 +292,7 @@ class _QuizByLessonBodyState extends ConsumerState<QuizByLessonBody> {
       body: quizState.when(
         loading: () => const _QuizLoadingView(),
         error: (error, _) => _QuizErrorView(
-          errorMessage: error is AppException
-              ? error.message
-              : context.l10n.text('quizSubmitFailedMessage'),
+          errorMessage: context.l10n.text('quizLoadFailed'),
           onRetry: _refresh,
         ),
         data: (response) {
@@ -421,7 +425,7 @@ class _LessonHeaderCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppSizes.cardRadius),
                   ),
                   child: Text(
-                    'Grade ${lesson.grade!.number}',
+                    '${context.l10n.text('gradePrefix')} ${lesson.grade!.number}',
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: AppColors.brandButton,
                       fontWeight: FontWeight.w700,
@@ -461,7 +465,9 @@ class _LessonHeaderCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppSizes.cardRadius),
                 ),
                 child: Text(
-                  '$totalQuestions Quizzes',
+                  context.l10n
+                      .text('quizCount')
+                      .replaceAll('{count}', '$totalQuestions'),
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
@@ -525,14 +531,20 @@ class _QuizProgressCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Progress: $submittedCount / $totalQuestions',
+                context.l10n
+                    .text('quizProgress')
+                    .replaceAll('{done}', '$submittedCount')
+                    .replaceAll('{total}', '$totalQuestions'),
                 style: theme.textTheme.labelMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: theme.colorScheme.onSurface,
                 ),
               ),
               Text(
-                'Score: $correctCount / $submittedCount',
+                context.l10n
+                    .text('quizScore')
+                    .replaceAll('{correct}', '$correctCount')
+                    .replaceAll('{done}', '$submittedCount'),
                 style: theme.textTheme.labelMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: AppColors.brandButton,
@@ -561,15 +573,15 @@ class _QuizLoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          CircularProgressIndicator(
+          const CircularProgressIndicator(
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.brandButton),
           ),
-          SizedBox(height: AppSizes.spacing16),
-          Text('Loading quizzes...'),
+          const SizedBox(height: AppSizes.spacing16),
+          Text(context.l10n.text('quizLoading')),
         ],
       ),
     );
