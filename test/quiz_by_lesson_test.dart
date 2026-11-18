@@ -207,7 +207,7 @@ void main() {
       expect(find.text('Quiz submitted'), findsOneWidget);
     });
 
-    testWidgets('LessonDetailContent renders Final Summary Quiz card', (tester) async {
+    testWidgets('LessonDetailContent does not show the Final Summary Quiz card', (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -243,9 +243,8 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(find.text('Final Summary Quiz'), findsOneWidget);
-      expect(find.text('15 Summary Questions'), findsOneWidget);
-      expect(find.text('Test your knowledge'), findsOneWidget);
+      expect(find.text('Final Summary Quiz'), findsNothing);
+      expect(find.text('15 Summary Questions'), findsNothing);
     });
 
     testWidgets('LessonListBody renders Test your knowledge button', (tester) async {
