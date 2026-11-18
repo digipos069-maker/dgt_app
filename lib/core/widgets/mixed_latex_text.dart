@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
+/// Renders content text that may contain LaTeX and basic HTML.
+///
+/// - LaTeX: `$inline$` and `$$display$$` are drawn with [Math.tex].
+/// - HTML (from the content editor): paragraphs, line breaks, bold, italic,
+///   underline, strike-through, lists, sub/superscript and `&...;` entities.
+///   Any other tag is removed, so markup never shows up as text.
+///
+/// Text without HTML tags is rendered exactly as written.
 class MixedLatexText extends StatelessWidget {
   const MixedLatexText({
     required this.text,
@@ -27,52 +35,361 @@ class MixedLatexText extends StatelessWidget {
         children: [
           if (prefix?.isNotEmpty == true)
             TextSpan(text: prefix, style: prefixStyle),
-          ..._buildSegments(effectiveStyle),
+          ..._MixedContentParser(text).parse(effectiveStyle),
         ],
       ),
       textAlign: textAlign,
     );
   }
+}
 
-  List<InlineSpan> _buildSegments(TextStyle effectiveStyle) {
-    final spans = <InlineSpan>[];
+/// Turns LaTeX + HTML content into spans. One instance parses one string.
+class _MixedContentParser {
+  _MixedContentParser(this.source)
+    : _isHtml = _knownTagPattern.hasMatch(source);
+
+  final String source;
+  final bool _isHtml;
+
+  final _runs = <_Run>[];
+  final _lists = <_ListState>[];
+  int _bold = 0;
+  int _italic = 0;
+  int _underline = 0;
+  int _strike = 0;
+  int _script = 0; // > 0 superscript, < 0 subscript
+
+  List<InlineSpan> parse(TextStyle baseStyle) {
+    final pattern = _isHtml ? _htmlTokenPattern : _latexPattern;
     var cursor = 0;
 
-    for (final match in _latexPattern.allMatches(text)) {
+    for (final match in pattern.allMatches(source)) {
       if (match.start > cursor) {
-        spans.add(TextSpan(text: text.substring(cursor, match.start)));
+        _addText(source.substring(cursor, match.start));
       }
-
-      final source = match.group(0)!;
-      final isDisplayMath = source.startsWith(r'$$');
-      final delimiterLength = isDisplayMath ? 2 : 1;
-      final expression = source
-          .substring(delimiterLength, source.length - delimiterLength)
-          .trim();
-
-      if (expression.isEmpty) {
-        spans.add(TextSpan(text: source));
+      final token = match.group(0)!;
+      if (token.startsWith(r'$')) {
+        _addMath(token);
       } else {
-        spans.add(
-          WidgetSpan(
-            alignment: PlaceholderAlignment.middle,
-            child: Math.tex(
-              expression,
-              mathStyle: isDisplayMath ? MathStyle.display : MathStyle.text,
-              textStyle: effectiveStyle,
-              onErrorFallback: (_) => Text(source, style: effectiveStyle),
-            ),
-          ),
-        );
+        _handleTag(token);
       }
       cursor = match.end;
     }
+    if (cursor < source.length) _addText(source.substring(cursor));
 
-    if (cursor < text.length) {
-      spans.add(TextSpan(text: text.substring(cursor)));
+    if (_isHtml) _trimTrailingWhitespace();
+    return [for (final run in _runs) run.toSpan(baseStyle)];
+  }
+
+  // ---- text and math -------------------------------------------------------
+
+  void _addText(String raw) {
+    var text = raw;
+    if (_isHtml) {
+      // In HTML, source line breaks and indentation are not meaningful.
+      text = text.replaceAll(_htmlWhitespace, ' ');
+      if (_atLineStart) text = text.trimLeft();
     }
-    return spans;
+    text = _decodeEntities(text);
+    if (text.isEmpty) return;
+    if (_script != 0) text = _toScript(text, superscript: _script > 0);
+    _append(text);
+  }
+
+  void _addMath(String token) {
+    final isDisplay = token.startsWith(r'$$');
+    final delimiterLength = isDisplay ? 2 : 1;
+    final expression = _decodeEntities(
+      token.substring(delimiterLength, token.length - delimiterLength),
+    ).trim();
+
+    if (expression.isEmpty) {
+      _append(token);
+      return;
+    }
+    _runs.add(
+      _Run.math(
+        tex: expression,
+        source: token,
+        isDisplay: isDisplay,
+        format: _currentFormat,
+      ),
+    );
+  }
+
+  void _append(String text) {
+    final format = _currentFormat;
+    final last = _runs.isEmpty ? null : _runs.last;
+    if (last != null && last.tex == null && last.format == format) {
+      last.text += text;
+    } else {
+      _runs.add(_Run.text(text, format));
+    }
+  }
+
+  bool get _atLineStart {
+    for (var i = _runs.length - 1; i >= 0; i--) {
+      final run = _runs[i];
+      if (run.tex != null) return false;
+      if (run.text.isNotEmpty) return run.text.endsWith('\n');
+    }
+    return true;
+  }
+
+  // ---- tags ----------------------------------------------------------------
+
+  void _handleTag(String token) {
+    final match = _tagNamePattern.firstMatch(token);
+    if (match == null) return; // comment
+    final isClosing = match.group(1) == '/';
+    final name = match.group(2)!.toLowerCase();
+    final delta = isClosing ? -1 : 1;
+
+    switch (name) {
+      case 'br':
+        _append('\n');
+      case 'p' || 'div' || 'blockquote' || 'section' || 'article' || 'hr':
+        _blockBoundary();
+      case 'h1' || 'h2' || 'h3' || 'h4' || 'h5' || 'h6':
+        _blockBoundary();
+        _bold = _clamp(_bold + delta);
+      case 'tr' || 'table':
+        _blockBoundary();
+      case 'td' || 'th':
+        if (isClosing) _append('  ');
+      case 'ul' || 'ol':
+        _blockBoundary();
+        if (isClosing) {
+          _popList();
+        } else {
+          _lists.add(_ListState(ordered: name == 'ol'));
+        }
+      case 'li':
+        _blockBoundary();
+        if (!isClosing) _append(_nextListMarker());
+      case 'strong' || 'b':
+        _bold = _clamp(_bold + delta);
+      case 'em' || 'i':
+        _italic = _clamp(_italic + delta);
+      case 'u' || 'ins':
+        _underline = _clamp(_underline + delta);
+      case 's' || 'strike' || 'del':
+        _strike = _clamp(_strike + delta);
+      case 'sup':
+        _script += delta;
+      case 'sub':
+        _script -= delta;
+      default:
+        // span, a, font, img, ... carry no formatting we support; drop them.
+        break;
+    }
+  }
+
+  void _blockBoundary() {
+    if (!_atLineStart) _append('\n');
+  }
+
+  void _popList() {
+    if (_lists.isNotEmpty) _lists.removeLast();
+  }
+
+  String _nextListMarker() {
+    if (_lists.isEmpty) return '• ';
+    final indent = '   ' * (_lists.length - 1);
+    final list = _lists.last;
+    if (!list.ordered) return '$indent• ';
+    list.count++;
+    return '$indent${list.count}. ';
+  }
+
+  void _trimTrailingWhitespace() {
+    while (_runs.isNotEmpty && _runs.last.tex == null) {
+      final last = _runs.last;
+      last.text = last.text.trimRight();
+      if (last.text.isNotEmpty) break;
+      _runs.removeLast();
+    }
+  }
+
+  _Format get _currentFormat => _Format(
+    bold: _bold > 0,
+    italic: _italic > 0,
+    underline: _underline > 0,
+    strike: _strike > 0,
+  );
+
+  static int _clamp(int value) => value < 0 ? 0 : value;
+
+  // ---- helpers -------------------------------------------------------------
+
+  static String _decodeEntities(String text) {
+    if (!text.contains('&')) return text;
+    return text.replaceAllMapped(_entityPattern, (match) {
+      final entity = match.group(1)!;
+      if (entity.startsWith('#')) {
+        final isHex = entity.length > 1 && (entity[1] == 'x' || entity[1] == 'X');
+        final code = int.tryParse(
+          entity.substring(isHex ? 2 : 1),
+          radix: isHex ? 16 : 10,
+        );
+        if (code == null || code <= 0 || code > 0x10FFFF) return match.group(0)!;
+        return String.fromCharCode(code);
+      }
+      return _namedEntities[entity] ?? match.group(0)!;
+    });
+  }
+
+  /// Uses Unicode super/subscript characters (x², H₂O) when every character
+  /// has one; otherwise keeps the text as it is.
+  static String _toScript(String text, {required bool superscript}) {
+    final map = superscript ? _superscripts : _subscripts;
+    final buffer = StringBuffer();
+    for (final rune in text.runes) {
+      final mapped = map[String.fromCharCode(rune)];
+      if (mapped == null) return text;
+      buffer.write(mapped);
+    }
+    return buffer.toString();
   }
 
   static final _latexPattern = RegExp(r'\$\$[\s\S]*?\$\$|\$[^$\r\n]*?\$');
+
+  /// LaTeX first, so `$a<b$` is treated as math and not as a tag.
+  static final _htmlTokenPattern = RegExp(
+    r'\$\$[\s\S]*?\$\$|\$[^$\r\n]*?\$|<!--[\s\S]*?-->|<\/?[a-zA-Z][a-zA-Z0-9]*(?:\s[^<>]*)?\/?>',
+  );
+
+  /// The text only counts as HTML if it has one of these tags, so plain text
+  /// such as "x < 5 and y > 2" is never touched.
+  static final _knownTagPattern = RegExp(
+    r'<\/?(?:p|br|div|span|strong|b|em|i|u|ins|s|strike|del|ul|ol|li|h[1-6]|sup|sub|blockquote|a|font|table|tr|td|th|img|hr|section|article)(?:\s[^<>]*)?\/?>',
+    caseSensitive: false,
+  );
+
+  static final _tagNamePattern = RegExp(r'^<(\/?)([a-zA-Z][a-zA-Z0-9]*)');
+  static final _htmlWhitespace = RegExp(r'[ \t\r\n]+');
+  static final _entityPattern = RegExp(r'&(#[xX][0-9a-fA-F]+|#[0-9]+|[a-zA-Z]+);');
+
+  static const _namedEntities = {
+    'nbsp': ' ',
+    'amp': '&',
+    'lt': '<',
+    'gt': '>',
+    'quot': '"',
+    'apos': "'",
+    'ndash': '–',
+    'mdash': '—',
+    'hellip': '…',
+    'lsquo': '‘',
+    'rsquo': '’',
+    'ldquo': '“',
+    'rdquo': '”',
+    'laquo': '«',
+    'raquo': '»',
+    'bull': '•',
+    'middot': '·',
+    'times': '×',
+    'divide': '÷',
+    'minus': '−',
+    'plusmn': '±',
+    'le': '≤',
+    'ge': '≥',
+    'ne': '≠',
+    'deg': '°',
+    'pi': 'π',
+    'radic': '√',
+    'infin': '∞',
+  };
+
+  static const _superscripts = {
+    '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶',
+    '7': '⁷', '8': '⁸', '9': '⁹', '+': '⁺', '-': '⁻', '−': '⁻', '=': '⁼',
+    '(': '⁽', ')': '⁾', 'n': 'ⁿ', 'i': 'ⁱ', 'x': 'ˣ', ' ': ' ',
+  };
+
+  static const _subscripts = {
+    '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅', '6': '₆',
+    '7': '₇', '8': '₈', '9': '₉', '+': '₊', '-': '₋', '−': '₋', '=': '₌',
+    '(': '₍', ')': '₎', 'n': 'ₙ', 'x': 'ₓ', ' ': ' ',
+  };
+}
+
+class _ListState {
+  _ListState({required this.ordered});
+
+  final bool ordered;
+  int count = 0;
+}
+
+class _Format {
+  const _Format({
+    this.bold = false,
+    this.italic = false,
+    this.underline = false,
+    this.strike = false,
+  });
+
+  final bool bold;
+  final bool italic;
+  final bool underline;
+  final bool strike;
+
+  TextStyle? toStyle() {
+    if (!bold && !italic && !underline && !strike) return null;
+    return TextStyle(
+      fontWeight: bold ? FontWeight.bold : null,
+      fontStyle: italic ? FontStyle.italic : null,
+      decoration: underline || strike
+          ? TextDecoration.combine([
+              if (underline) TextDecoration.underline,
+              if (strike) TextDecoration.lineThrough,
+            ])
+          : null,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is _Format &&
+      other.bold == bold &&
+      other.italic == italic &&
+      other.underline == underline &&
+      other.strike == strike;
+
+  @override
+  int get hashCode => Object.hash(bold, italic, underline, strike);
+}
+
+class _Run {
+  _Run.text(this.text, this.format) : tex = null, source = null, isDisplay = false;
+
+  _Run.math({
+    required String this.tex,
+    required String this.source,
+    required this.isDisplay,
+    required this.format,
+  }) : text = '';
+
+  String text;
+  final String? tex;
+  final String? source;
+  final bool isDisplay;
+  final _Format format;
+
+  InlineSpan toSpan(TextStyle baseStyle) {
+    final style = format.toStyle();
+    final math = tex;
+    if (math == null) return TextSpan(text: text, style: style);
+
+    final mathStyle = style == null ? baseStyle : baseStyle.merge(style);
+    return WidgetSpan(
+      alignment: PlaceholderAlignment.middle,
+      child: Math.tex(
+        math,
+        mathStyle: isDisplay ? MathStyle.display : MathStyle.text,
+        textStyle: mathStyle,
+        onErrorFallback: (_) => Text(source!, style: mathStyle),
+      ),
+    );
+  }
 }
