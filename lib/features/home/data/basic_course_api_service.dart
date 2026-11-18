@@ -5,9 +5,10 @@ import 'package:http/http.dart' as http;
 import '../../../core/constants/api_constants.dart';
 import '../domain/models/basic_lesson_model.dart';
 import '../domain/models/basic_course_model.dart';
+import '../../../core/network/api_http_client_provider.dart';
 
 final basicCourseApiServiceProvider = Provider<BasicCourseApiService>((ref) {
-  return BasicCourseApiService();
+  return BasicCourseApiService(client: ref.watch(apiHttpClientProvider));
 });
 
 class BasicCourseApiService {

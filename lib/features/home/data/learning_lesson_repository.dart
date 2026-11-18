@@ -2,9 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/models/learning_lesson_model.dart';
 import 'learning_lesson_api_service.dart';
+import '../../../core/network/api_http_client_provider.dart';
 
 final learningLessonRepositoryProvider = Provider<LearningLessonRepository>(
-  (ref) => LearningLessonRepository(LearningLessonApiService()),
+  (ref) => LearningLessonRepository(
+    LearningLessonApiService(client: ref.watch(apiHttpClientProvider)),
+  ),
 );
 
 class LearningLessonRepository {

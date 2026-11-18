@@ -5,9 +5,12 @@ import '../domain/models/ai_tutor_message.dart';
 import '../domain/models/ai_tutor_stream_event.dart';
 import '../domain/models/ai_tutor_usage.dart';
 import 'ai_tutor_api_service.dart';
+import '../../../core/network/api_http_client_provider.dart';
 
 final aiTutorRepositoryProvider = Provider<AiTutorRepository>(
-  (ref) => AiTutorRepository(AiTutorApiService()),
+  (ref) => AiTutorRepository(
+    AiTutorApiService(client: ref.watch(apiHttpClientProvider)),
+  ),
 );
 
 class AiTutorRepository {

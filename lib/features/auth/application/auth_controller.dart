@@ -75,6 +75,24 @@ class AuthController extends AsyncNotifier<UserModel?> {
     unawaited(_clearStoredSession());
   }
 
+  /// Ends the session when the API rejects the signed-in user's [token].
+  ///
+  /// Ignored when [token] is not the current session's token, so a late 401
+  /// from an old session cannot sign out a user who has since logged in again.
+  void handleUnauthorized(String token) {
+    final currentToken = switch (state) {
+      AsyncData(:final value) => value?.token,
+      _ => null,
+    };
+    if (currentToken == null || currentToken != token) return;
+
+    developer.log(
+      'Session rejected by the API (401); signing out',
+      name: 'dgt.auth',
+    );
+    logout();
+  }
+
   Future<void> _refreshRestoredSession(UserModel cachedUser) async {
     final token = cachedUser.token;
     if (token == null) return;

@@ -4,9 +4,12 @@ import '../domain/models/lesson_model.dart';
 import '../domain/models/tutorial_detail_model.dart';
 import '../domain/models/tutorial_model.dart';
 import 'tutorial_api_service.dart';
+import '../../../core/network/api_http_client_provider.dart';
 
 final tutorialRepositoryProvider = Provider<TutorialRepository>(
-  (ref) => TutorialRepository(TutorialApiService()),
+  (ref) => TutorialRepository(
+    TutorialApiService(client: ref.watch(apiHttpClientProvider)),
+  ),
 );
 
 class TutorialRepository {

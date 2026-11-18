@@ -2,9 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/models/user_model.dart';
 import 'auth_api_service.dart';
+import '../../../core/network/api_http_client_provider.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  return ApiAuthRepository(AuthApiService());
+  return ApiAuthRepository(
+    AuthApiService(client: ref.watch(apiHttpClientProvider)),
+  );
 });
 
 abstract interface class AuthRepository {

@@ -6,9 +6,10 @@ import 'package:http/http.dart' as http;
 
 import '../../../core/constants/api_constants.dart';
 import '../domain/models/exam_resource_model.dart';
+import '../../../core/network/api_http_client_provider.dart';
 
 final resourceApiServiceProvider = Provider<ResourceApiService>((ref) {
-  return ResourceApiService();
+  return ResourceApiService(client: ref.watch(apiHttpClientProvider));
 });
 
 class ResourceApiService {

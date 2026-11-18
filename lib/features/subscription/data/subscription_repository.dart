@@ -1,9 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'subscription_api_service.dart';
+import '../../../core/network/api_http_client_provider.dart';
 
 final subscriptionApiServiceProvider = Provider<SubscriptionApiService>((ref) {
-  return SubscriptionApiService();
+  return SubscriptionApiService(client: ref.watch(apiHttpClientProvider));
 });
 
 final subscriptionRepositoryProvider = Provider<SubscriptionRepository>((ref) {

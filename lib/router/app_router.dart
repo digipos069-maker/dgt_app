@@ -24,18 +24,30 @@ import '../features/home/presentation/pages/resource_years_page.dart';
 import '../features/home/presentation/pages/resource_list_by_years_page.dart';
 import '../features/home/presentation/pages/quiz_by_lesson_page.dart';
 
+/// Routes that a signed-out user is allowed to open.
+const _publicRoutePaths = {LoginPage.routePath, RegisterPage.routePath};
+
+/// The app's single router.
+///
+/// It is created once and is not rebuilt when the user signs in or out, so the
+/// navigation stack survives session changes. Auth changes are pushed into
+/// [isSignedIn], which makes GoRouter re-run [GoRouter.redirect].
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final isAuthenticated = ref.watch(
-    authControllerProvider.select(
-      (authState) => switch (authState) {
-        AsyncData(:final value) => value != null,
-        _ => false,
-      },
-    ),
+  final isSignedIn = ValueNotifier<bool>(
+    _isSignedIn(ref.read(authControllerProvider)),
+  );
+  ref.listen<bool>(
+    authControllerProvider.select(_isSignedIn),
+    (_, next) => isSignedIn.value = next,
   );
 
   final router = GoRouter(
-    initialLocation: isAuthenticated ? HomePage.routePath : LoginPage.routePath,
+    initialLocation: HomePage.routePath,
+    refreshListenable: isSignedIn,
+    redirect: (context, state) => authRedirect(
+      isSignedIn: isSignedIn.value,
+      location: state.matchedLocation,
+    ),
     routes: [
       GoRoute(
         path: LoginPage.routePath,
@@ -232,9 +244,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 
-  ref.onDispose(router.dispose);
+  ref.onDispose(() {
+    router.dispose();
+    isSignedIn.dispose();
+  });
   return router;
 });
+
+bool _isSignedIn(AsyncValue<Object?> authState) {
+  return switch (authState) {
+    AsyncData(:final value) => value != null,
+    _ => false,
+  };
+}
+
+/// Sends signed-out users to login, and signed-in users away from the
+/// login/register pages. Returns null when no redirect is needed.
+String? authRedirect({required bool isSignedIn, required String location}) {
+  final isPublicRoute = _publicRoutePaths.contains(location);
+  if (!isSignedIn) return isPublicRoute ? null : LoginPage.routePath;
+  if (isPublicRoute) return HomePage.routePath;
+  return null;
+}
 
 int? _queryInt(GoRouterState state, String key) {
   return int.tryParse(state.uri.queryParameters[key] ?? '');

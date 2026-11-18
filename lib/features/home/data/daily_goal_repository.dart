@@ -2,9 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/application/auth_controller.dart';
 import '../domain/models/daily_goal_model.dart';
 import 'daily_goal_api_service.dart';
+import '../../../core/network/api_http_client_provider.dart';
 
 final dailyGoalRepositoryProvider = Provider<DailyGoalRepository>((ref) {
-  return DailyGoalRepository(DailyGoalApiService());
+  return DailyGoalRepository(
+    DailyGoalApiService(client: ref.watch(apiHttpClientProvider)),
+  );
 });
 
 class DailyGoalRepository {

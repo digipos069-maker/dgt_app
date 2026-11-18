@@ -2,9 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/models/grade_model.dart';
 import 'grade_api_service.dart';
+import '../../../core/network/api_http_client_provider.dart';
 
 final gradeRepositoryProvider = Provider<GradeRepository>((ref) {
-  return GradeRepository(GradeApiService());
+  return GradeRepository(
+    GradeApiService(client: ref.watch(apiHttpClientProvider)),
+  );
 });
 
 class GradeRepository {

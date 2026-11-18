@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/models/quiz_by_lesson_model.dart';
 import '../domain/models/quiz_submission_result.dart';
 import 'quiz_api_service.dart';
+import '../../../core/network/api_http_client_provider.dart';
 
 final quizRepositoryProvider = Provider<QuizRepository>(
-  (ref) => QuizRepository(QuizApiService()),
+  (ref) => QuizRepository(
+    QuizApiService(client: ref.watch(apiHttpClientProvider)),
+  ),
 );
 
 class QuizRepository {
