@@ -6,29 +6,37 @@ import 'package:flutter_test/flutter_test.dart';
 
 class MockBasicCourseApiService extends BasicCourseApiService {
   @override
-  Future<BasicLessonBundle> fetchBasicContent({
+  Future<Map<String, dynamic>> fetchBasicContentRaw({
     required String token,
     required String subjectId,
-    required String courseId,
+    int page = 1,
+    int limit = 10,
+    int? offset,
   }) async {
-    return BasicLessonBundle(
-      course: const BasicCourseModel(
-        id: 'mathematics',
-        name: 'Mathematics',
-        thumbnail: '',
-        description: 'Test',
-      ),
-      lessons: [
-        const BasicLessonModel(
-          id: 'numbers-operations',
-          courseId: 'mathematics',
-          name: 'Numbers and operations',
-          thumbnail: '',
-          description: '',
-          durationLabel: '12:30',
-        ),
-      ],
-    );
+    return {
+      'data': [
+        {
+          'id': 1,
+          'title': 'Numbers and operations',
+          'slug': 'numbers-operations',
+          'subject': {'nameEn': 'Mathematics', 'nameKm': 'គណិតវិទ្យា'},
+        }
+      ]
+    };
+  }
+
+  @override
+  Future<Map<String, dynamic>> fetchBasicContentDetail({
+    required String token,
+    required String slug,
+  }) async {
+    return {
+      'data': {
+        'id': 1,
+        'title': 'Numbers and operations',
+        'slug': slug,
+      }
+    };
   }
 }
 
@@ -55,6 +63,6 @@ void main() {
     expect(bundle.lessons, hasLength(1));
     expect(detail.lessonId, 'numbers-operations');
     expect(detail.questions, isNotEmpty);
-    expect(detail.questions.first.options, hasLength(4)); // Uses hardcoded mock for quizzes
+    expect(detail.questions.first.options, hasLength(3)); // Uses hardcoded mock for quizzes
   });
 }

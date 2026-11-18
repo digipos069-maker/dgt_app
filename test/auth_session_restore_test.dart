@@ -98,6 +98,54 @@ void main() {
       expect(container.read(authControllerProvider).value?.token, token);
     },
   );
+
+  test('a 401 for the current token signs the user out', () async {
+    final token = _jwt(
+      expiration: DateTime.now().add(const Duration(hours: 1)),
+    );
+    final storage = _MemoryAuthSessionStorage(_user(token));
+    final container = ProviderContainer(
+      overrides: [
+        authSessionStorageProvider.overrideWithValue(storage),
+        authRepositoryProvider.overrideWithValue(
+          _FakeAuthRepository(_user(token)),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    await container.read(authControllerProvider.future);
+
+    container.read(authControllerProvider.notifier).handleUnauthorized(token);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(container.read(authControllerProvider).value, isNull);
+    expect(storage.savedUser, isNull);
+  });
+
+  test('a late 401 for an old token keeps the new session', () async {
+    final currentToken = _jwt(
+      expiration: DateTime.now().add(const Duration(hours: 1)),
+    );
+    final storage = _MemoryAuthSessionStorage(_user(currentToken));
+    final container = ProviderContainer(
+      overrides: [
+        authSessionStorageProvider.overrideWithValue(storage),
+        authRepositoryProvider.overrideWithValue(
+          _FakeAuthRepository(_user(currentToken)),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    await container.read(authControllerProvider.future);
+
+    container
+        .read(authControllerProvider.notifier)
+        .handleUnauthorized('an-older-token');
+    await Future<void>.delayed(Duration.zero);
+
+    expect(container.read(authControllerProvider).value?.token, currentToken);
+    expect(storage.clearCount, 0);
+  });
 }
 
 class _MemoryAuthSessionStorage implements AuthSessionStorage {
