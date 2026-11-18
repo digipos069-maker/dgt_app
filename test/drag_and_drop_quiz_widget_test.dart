@@ -37,7 +37,7 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('Target: WATER MOLECULE'), findsOneWidget);
+    expect(find.text('Available choices'), findsOneWidget);
     expect(find.byWidgetPredicate((w) => w is Text && w.textSpan?.toPlainText() == '2H₂O'), findsOneWidget);
     expect(find.byWidgetPredicate((w) => w is Text && w.textSpan?.toPlainText() == 'H₂'), findsOneWidget);
     expect(find.byWidgetPredicate((w) => w is Text && w.textSpan?.toPlainText() == 'O₂'), findsOneWidget);
