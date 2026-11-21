@@ -2,7 +2,7 @@ name: dgt_app
 description: A production-ready Flutter starter using clean architecture.
 publish_to: 'none'
 
-version: 1.0.1+5
+version: 1.0.2+6
 
 environment:
   sdk: ^3.11.5
