@@ -1,9 +1,13 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
 /// Renders content text that may contain LaTeX and basic HTML.
 ///
-/// - LaTeX: `$inline$` and `$$display$$` are drawn with [Math.tex].
+/// - LaTeX: `$inline$`, `\(inline\)`, `$$display$$` and `\[display\]` are
+///   drawn with [Math.tex], as are editor formula tags such as
+///   `<span class="ql-formula" data-value="x^2">` (Quill) or `data-latex`.
 /// - HTML (from the content editor): paragraphs, line breaks, bold, italic,
 ///   underline, strike-through, lists, sub/superscript and `&...;` entities.
 ///   Any other tag is removed, so markup never shows up as text.
@@ -59,23 +63,35 @@ class _MixedContentParser {
   int _strike = 0;
   int _script = 0; // > 0 superscript, < 0 subscript
 
+  // While > 0, we are inside an editor formula tag whose LaTeX was already
+  // taken from its attribute, so its rendered inner content is skipped.
+  int _skipDepth = 0;
+  String? _skipTagName;
+
   List<InlineSpan> parse(TextStyle baseStyle) {
     final pattern = _isHtml ? _htmlTokenPattern : _latexPattern;
     var cursor = 0;
 
     for (final match in pattern.allMatches(source)) {
+      final token = match.group(0)!;
+      if (_skipDepth > 0) {
+        if (!_isMathToken(token)) _trackSkippedTag(token);
+        cursor = match.end;
+        continue;
+      }
       if (match.start > cursor) {
         _addText(source.substring(cursor, match.start));
       }
-      final token = match.group(0)!;
-      if (token.startsWith(r'$')) {
+      if (_isMathToken(token)) {
         _addMath(token);
       } else {
         _handleTag(token);
       }
       cursor = match.end;
     }
-    if (cursor < source.length) _addText(source.substring(cursor));
+    if (cursor < source.length && _skipDepth == 0) {
+      _addText(source.substring(cursor));
+    }
 
     if (_isHtml) _trimTrailingWhitespace();
     return [for (final run in _runs) run.toSpan(baseStyle)];
@@ -90,27 +106,39 @@ class _MixedContentParser {
       text = text.replaceAll(_htmlWhitespace, ' ');
       if (_atLineStart) text = text.trimLeft();
     }
-    text = _decodeEntities(text);
+    text = _decodeEntities(text).replaceAll('\u00A0', ' ');
     if (text.isEmpty) return;
     if (_script != 0) text = _toScript(text, superscript: _script > 0);
     _append(text);
   }
 
+  static bool _isMathToken(String token) =>
+      token.startsWith(r'$') ||
+      token.startsWith(r'\(') ||
+      token.startsWith(r'\[');
+
   void _addMath(String token) {
-    final isDisplay = token.startsWith(r'$$');
-    final delimiterLength = isDisplay ? 2 : 1;
+    final isDisplay = token.startsWith(r'$$') || token.startsWith(r'\[');
+    final delimiterLength = token.startsWith(r'$') && !isDisplay ? 1 : 2;
     final expression = _decodeEntities(
       token.substring(delimiterLength, token.length - delimiterLength),
     ).trim();
+    _addMathExpression(expression, source: token, isDisplay: isDisplay);
+  }
 
+  void _addMathExpression(
+    String expression, {
+    required String source,
+    required bool isDisplay,
+  }) {
     if (expression.isEmpty) {
-      _append(token);
+      _append(source);
       return;
     }
     _runs.add(
       _Run.math(
         tex: expression,
-        source: token,
+        source: source,
         isDisplay: isDisplay,
         format: _currentFormat,
       ),
@@ -144,6 +172,23 @@ class _MixedContentParser {
     final isClosing = match.group(1) == '/';
     final name = match.group(2)!.toLowerCase();
     final delta = isClosing ? -1 : 1;
+
+    if (!isClosing) {
+      final formula = _formulaAttributePattern.firstMatch(token);
+      if (formula != null) {
+        final expression = _decodeEntities(
+          formula.group(1) ?? formula.group(2) ?? '',
+        ).trim();
+        if (expression.isNotEmpty) {
+          _addMathExpression(expression, source: expression, isDisplay: false);
+        }
+        if (!token.endsWith('/>')) {
+          _skipDepth = 1;
+          _skipTagName = name;
+        }
+        return;
+      }
+    }
 
     switch (name) {
       case 'br':
@@ -183,6 +228,14 @@ class _MixedContentParser {
         // span, a, font, img, ... carry no formatting we support; drop them.
         break;
     }
+  }
+
+  void _trackSkippedTag(String token) {
+    final match = _tagNamePattern.firstMatch(token);
+    if (match == null || token.endsWith('/>')) return;
+    if (match.group(2)!.toLowerCase() != _skipTagName) return;
+    _skipDepth += match.group(1) == '/' ? -1 : 1;
+    if (_skipDepth == 0) _skipTagName = null;
   }
 
   void _blockBoundary() {
@@ -233,6 +286,7 @@ class _MixedContentParser {
           radix: isHex ? 16 : 10,
         );
         if (code == null || code <= 0 || code > 0x10FFFF) return match.group(0)!;
+        if (code == 0xA0) return ' ';
         return String.fromCharCode(code);
       }
       return _namedEntities[entity] ?? match.group(0)!;
@@ -252,11 +306,13 @@ class _MixedContentParser {
     return buffer.toString();
   }
 
-  static final _latexPattern = RegExp(r'\$\$[\s\S]*?\$\$|\$[^$\r\n]*?\$');
+  static final _latexPattern = RegExp(
+    r'\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|\$[^$\r\n]*?\$',
+  );
 
   /// LaTeX first, so `$a<b$` is treated as math and not as a tag.
   static final _htmlTokenPattern = RegExp(
-    r'\$\$[\s\S]*?\$\$|\$[^$\r\n]*?\$|<!--[\s\S]*?-->|<\/?[a-zA-Z][a-zA-Z0-9]*(?:\s[^<>]*)?\/?>',
+    r'\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|\$[^$\r\n]*?\$|<!--[\s\S]*?-->|<\/?[a-zA-Z][a-zA-Z0-9]*(?:\s[^<>]*)?\/?>',
   );
 
   /// The text only counts as HTML if it has one of these tags, so plain text
@@ -267,11 +323,19 @@ class _MixedContentParser {
   );
 
   static final _tagNamePattern = RegExp(r'^<(\/?)([a-zA-Z][a-zA-Z0-9]*)');
+
+  /// Editor formula tags keep the LaTeX in an attribute, e.g. Quill's
+  /// `<span class="ql-formula" data-value="x^2">` or `data-latex="x^2"`.
+  static final _formulaAttributePattern = RegExp(
+    r'''\sdata-(?:value|latex|formula|tex)\s*=\s*(?:"([^"]*)"|'([^']*)')''',
+  );
   static final _htmlWhitespace = RegExp(r'[ \t\r\n]+');
   static final _entityPattern = RegExp(r'&(#[xX][0-9a-fA-F]+|#[0-9]+|[a-zA-Z]+);');
 
   static const _namedEntities = {
-    'nbsp': ' ',
+    // Editors often put &nbsp; between every word; a real non-breaking space
+    // would turn the whole sentence into one line that cannot wrap.
+    'nbsp': ' ',
     'amp': '&',
     'lt': '<',
     'gt': '>',
@@ -384,12 +448,43 @@ class _Run {
     final mathStyle = style == null ? baseStyle : baseStyle.merge(style);
     return WidgetSpan(
       alignment: PlaceholderAlignment.middle,
-      child: Math.tex(
-        math,
-        mathStyle: isDisplay ? MathStyle.display : MathStyle.text,
-        textStyle: mathStyle,
-        onErrorFallback: (_) => Text(source!, style: mathStyle),
+      child: _ScrollableMath(
+        child: Math.tex(
+          math,
+          mathStyle: isDisplay ? MathStyle.display : MathStyle.text,
+          textStyle: mathStyle,
+          onErrorFallback: (error) {
+            developer.log(
+              'Could not render LaTeX "$math": $error',
+              name: 'dgt.latex',
+            );
+            return Text(source!, style: mathStyle);
+          },
+        ),
       ),
+    );
+  }
+}
+
+/// A formula is one unbreakable block, so a long equation cannot wrap like
+/// text. When it is wider than the space available, let it scroll sideways
+/// instead of spilling outside its card.
+class _ScrollableMath extends StatelessWidget {
+  const _ScrollableMath({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // e.g. a drag-and-drop chip being dragged has no width limit.
+        if (!constraints.hasBoundedWidth) return child;
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: child,
+        );
+      },
     );
   }
 }

@@ -11,6 +11,7 @@ class DragAndDropQuizWidget extends StatefulWidget {
   const DragAndDropQuizWidget({
     required this.number,
     required this.data,
+    this.title,
     this.initialDroppedValue,
     this.onDroppedChanged,
     this.onSubmit,
@@ -22,6 +23,10 @@ class DragAndDropQuizWidget extends StatefulWidget {
 
   final int number;
   final DragAndDropQuizData data;
+
+  /// The question's own title from the API (`question`). Shown first; the
+  /// drag-and-drop data's `prompt` is shown under it when it adds something.
+  final String? title;
   final String? initialDroppedValue;
   final ValueChanged<String?>? onDroppedChanged;
   final ValueChanged<String>? onSubmit;
@@ -73,9 +78,16 @@ class _DragAndDropQuizWidgetState extends State<DragAndDropQuizWidget> {
     final isValidation = widget.showValidation || widget.isSubmitted;
     final isCorrect = _droppedItem != null && widget.data.isCorrect(_droppedItem!);
 
-    final promptText = widget.data.prompt.isNotEmpty
-        ? widget.data.prompt
-        : context.l10n.text('dragQuizDefaultPrompt');
+    final title = context.l10n.text(widget.title ?? '').trim();
+    final prompt = widget.data.prompt.trim();
+    final heading = title.isNotEmpty
+        ? title
+        : prompt.isNotEmpty
+            ? prompt
+            : context.l10n.text('dragQuizDefaultPrompt');
+    final subtitle = title.isNotEmpty && prompt.isNotEmpty && prompt != title
+        ? prompt
+        : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -93,7 +105,7 @@ class _DragAndDropQuizWidgetState extends State<DragAndDropQuizWidget> {
             ),
             Expanded(
               child: MixedLatexText(
-                text: promptText,
+                text: heading,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.onSurface,
                   fontWeight: FontWeight.w700,
@@ -102,6 +114,15 @@ class _DragAndDropQuizWidgetState extends State<DragAndDropQuizWidget> {
             ),
           ],
         ),
+        if (subtitle != null) ...[
+          const SizedBox(height: AppSizes.spacing8),
+          MixedLatexText(
+            text: subtitle,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
         const SizedBox(height: AppSizes.spacing16),
 
         // Droppable Target Slot

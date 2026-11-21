@@ -11,6 +11,7 @@ class MatchingQuizWidget extends StatefulWidget {
   const MatchingQuizWidget({
     required this.number,
     required this.data,
+    this.title,
     this.initialMatches,
     this.onMatchesChanged,
     this.onSubmit,
@@ -22,6 +23,10 @@ class MatchingQuizWidget extends StatefulWidget {
 
   final int number;
   final MatchingQuizData data;
+
+  /// The question's own title from the API (`question`). Shown first; the
+  /// matching data's `description` is shown under it when it adds something.
+  final String? title;
   final Map<String, String>? initialMatches;
   final ValueChanged<Map<String, String>>? onMatchesChanged;
   final ValueChanged<Map<String, String>>? onSubmit;
@@ -130,7 +135,17 @@ class _MatchingQuizWidgetState extends State<MatchingQuizWidget> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final questionPrefix = context.l10n.text('questionPrefix');
-    final description = widget.data.description;
+    final title = context.l10n.text(widget.title ?? '').trim();
+    final description = widget.data.description.trim();
+    final heading = title.isNotEmpty
+        ? title
+        : description.isNotEmpty
+            ? description
+            : context.l10n.text('matchingQuizTitle');
+    final subtitle =
+        title.isNotEmpty && description.isNotEmpty && description != title
+            ? description
+            : null;
     final allPaired = _userMatches.length == widget.data.stems.length &&
         widget.data.stems.isNotEmpty;
 
@@ -150,9 +165,7 @@ class _MatchingQuizWidgetState extends State<MatchingQuizWidget> {
             ),
             Expanded(
               child: MixedLatexText(
-                text: description.isNotEmpty
-                    ? description
-                    : context.l10n.text('matchingQuizTitle'),
+                text: heading,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.onSurface,
                   fontWeight: FontWeight.w700,
@@ -170,6 +183,15 @@ class _MatchingQuizWidgetState extends State<MatchingQuizWidget> {
               ),
           ],
         ),
+        if (subtitle != null) ...[
+          const SizedBox(height: AppSizes.spacing8),
+          MixedLatexText(
+            text: subtitle,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
         const SizedBox(height: AppSizes.spacing8),
         Text(
           context.l10n.text('matchingQuizInstruction'),

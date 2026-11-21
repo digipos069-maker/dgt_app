@@ -56,6 +56,7 @@ class QuizQuestionDispatcher extends StatelessWidget {
         return MatchingQuizWidget(
           number: number,
           data: matchingData,
+          title: question.questionKey,
           initialMatches: matchingMatches,
           onMatchesChanged: onMatchingChanged,
           onSubmit: onSubmit == null ? null : (_) => onSubmit!(),
@@ -72,6 +73,7 @@ class QuizQuestionDispatcher extends StatelessWidget {
         return DragAndDropQuizWidget(
           number: number,
           data: dragData,
+          title: question.questionKey,
           initialDroppedValue: droppedValue,
           onDroppedChanged: onDroppedChanged,
           onSubmit: onSubmit == null ? null : (_) => onSubmit!(),
