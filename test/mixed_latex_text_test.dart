@@ -53,7 +53,7 @@ void main() {
     );
 
     final text = plainText(tester);
-    expect(text, 'The answer is B.\nBecause 2 > 1 & 1 < 2.');
+    expect(text, 'The answer is B.\nBecause 2 > 1 & 1 < 2.');
     expect(text, isNot(contains('<')));
     expect(tester.takeException(), isNull);
   });
@@ -102,4 +102,57 @@ void main() {
 
     expect(plainText(tester), 'If x < 5 and y > 2\nthen stop.');
   });
+
+  testWidgets('renders \( \) and \[ \] delimiters', (tester) async {
+    await pump(tester, r'Solve \(x^2 = 4\) to get \[x = \pm 2\]');
+
+    expect(find.byType(Math), findsNWidgets(2));
+    expect(plainText(tester), isNot(contains(r'\(')));
+  });
+
+  testWidgets('renders \( \) inside HTML', (tester) async {
+    await pump(tester, r'<p>Find \(\frac{1}{2} + \frac{1}{2}\).</p>');
+
+    expect(find.byType(Math), findsOneWidget);
+  });
+
+  testWidgets('renders Quill formula tags from their data-value', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      '<p>Area is <span class="ql-formula" data-value="\\pi r^2">'
+      '<span contenteditable="false"><span class="katex">πr2</span></span>'
+      '</span> square units.</p>',
+    );
+
+    expect(find.byType(Math), findsOneWidget);
+    expect(plainText(tester), isNot(contains('πr2')));
+    expect(plainText(tester), endsWith(' square units.'));
+  });
+
+  testWidgets('a long formula in a narrow box scrolls instead of overflowing', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 200,
+              child: MixedLatexText(
+                text:
+                    r'Solution: $$x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a} = \frac{-5 \pm \sqrt{25 - 24}}{2} = -2 \text{ or } -3$$',
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(SingleChildScrollView), findsOneWidget);
+  });
 }
+
